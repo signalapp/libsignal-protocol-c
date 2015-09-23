@@ -1,0 +1,20 @@
+# Compiled source
+build/
+*.o
+*.so
+*.so.*
+*.a
+
+# IDE-related files
+
+# OS generated files
+.DS_Store*
+Thumbs.db
+
+# Other
+*~
+.*
+*.swp
+core
+*.log
+*.zip
