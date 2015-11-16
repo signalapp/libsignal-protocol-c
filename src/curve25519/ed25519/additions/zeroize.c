@@ -3,7 +3,6 @@
 void zeroize(unsigned char* b, size_t len)
 {
   size_t count = 0;
-  unsigned long retval = 0;
   volatile unsigned char *p = b;
 
   for (count = 0; count < len; count++)
