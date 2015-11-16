@@ -8,7 +8,7 @@ void curve25519_keygen(unsigned char* curve25519_pubkey_out,
                        const unsigned char* curve25519_privkey_in)
 {
   ge_p3 ed; /* Ed25519 pubkey point */
-  fe ed_y, ed_y_plus_one, one_minus_ed_y, inv_one_minus_ed_y;
+  fe ed_y_plus_one, one_minus_ed_y, inv_one_minus_ed_y;
   fe mont_x;
 
   /* Perform a fixed-base multiplication of the Edwards base point,
