@@ -10,13 +10,15 @@ environments. See the [Java library](https://github.com/whispersystems/libaxolot
 ### Build dependencies
 
 * [CMake](http://www.cmake.org/) 2.8.4 or higher
-* [Check](http://check.sourceforge.net/)
-* [OpenSSL](https://www.openssl.org/) 1.0 or higher
+* [Check *1](http://check.sourceforge.net/)
+* [OpenSSL *1](https://www.openssl.org/) 1.0 or higher
+* [LCOV *2](http://ltp.sourceforge.net/coverage/lcov.php)
 
 Most of these dependencies are required just for the unit test suite and
 development of the library itself. When integrating into actual applications,
 you should not need anything beyond CMake. Alternatively, you may integrate
 the code using a build system of your choice.
+Items marked with *1 are required for tests, with *2 are additionaliy required for code coverage.
 
 ### Setting up a fresh source tree
 
@@ -29,7 +31,16 @@ the code using a build system of your choice.
 ### Running the unit tests
 
     $ cd /path/to/libaxolotl-c/build
+    $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 ..
     $ ctest
+
+### Creating the code coverage
+
+    $ cd /path/to/libaxolotl-c/build
+    $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 -DCOVERAGE=1 ..
+    $ make coverage
+
+And find the generated code coverage in `/path/to/libaxolotl-c/build/coverage`
 
 ### Eclipse project setup
 

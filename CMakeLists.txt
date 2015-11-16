@@ -30,6 +30,19 @@ IF(HAVE_MEMSET_S)
 	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_MEMSET_S=1")
 ENDIF(HAVE_MEMSET_S)
 
+IF(COVERAGE)
+	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+	SET(LINK_FLAGS "${LINK_FLAGS} -fprofile-arcs -ftest-coverage")
+
+	add_custom_command(OUTPUT run_coverage
+			COMMAND ctest
+			COMMAND lcov -q --capture --directory src --output-file coverage.info
+			COMMAND genhtml -q coverage.info --output-directory coverage
+			COMMENT Collecting and creating coverage information
+	)
+	add_custom_target( coverage DEPENDS run_coverage )
+ENDIF(COVERAGE)
+
 add_subdirectory(src)
 
 IF(BUILD_TESTING)
