@@ -21,6 +21,7 @@ int test_hmac_sha256_init(void **hmac_context, const uint8_t *key, size_t key_le
 int test_hmac_sha256_update(void *hmac_context, const uint8_t *data, size_t data_len, void *user_data);
 int test_hmac_sha256_final(void *hmac_context, axolotl_buffer **output, void *user_data);
 void test_hmac_sha256_cleanup(void *hmac_context, void *user_data);
+int test_sha512_digest_func(axolotl_buffer **output, const uint8_t *data, size_t data_len, void *user_data);
 int test_encrypt(axolotl_buffer **output,
         int cipher,
         const uint8_t *key, size_t key_len,

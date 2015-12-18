@@ -4,6 +4,7 @@
 #include <string.h>
 #include <openssl/rand.h>
 #include <openssl/hmac.h>
+#include <openssl/sha.h>
 #include <check.h>
 
 #include "axolotl.h"
@@ -223,6 +224,47 @@ const EVP_CIPHER *aes_cipher(int cipher, size_t key_len)
     return 0;
 }
 
+int test_sha512_digest_func(axolotl_buffer **output, const uint8_t *data, size_t data_len, void *user_data)
+{
+    int result = 0;
+    axolotl_buffer *buffer = 0;
+    SHA512_CTX ctx;
+
+    buffer = axolotl_buffer_alloc(SHA512_DIGEST_LENGTH);
+    if(!buffer) {
+        result = AX_ERR_NOMEM;
+        goto complete;
+    }
+
+    result = SHA512_Init(&ctx);
+    if(!result) {
+        result = AX_ERR_UNKNOWN;
+        goto complete;
+    }
+
+    result = SHA512_Update(&ctx, data, data_len);
+    if(!result) {
+        result = AX_ERR_UNKNOWN;
+        goto complete;
+    }
+
+complete:
+    if(buffer) {
+        result = SHA512_Final(axolotl_buffer_data(buffer), &ctx);
+        if(!result) {
+            result = AX_ERR_UNKNOWN;
+        }
+    }
+
+    if(result < 0) {
+        axolotl_buffer_free(buffer);
+    }
+    else {
+        *output = buffer;
+    }
+    return result;
+}
+
 int test_encrypt(axolotl_buffer **output,
         int cipher,
         const uint8_t *key, size_t key_len,
@@ -379,6 +421,7 @@ void setup_test_crypto_provider(axolotl_context *context)
             .hmac_sha256_update_func = test_hmac_sha256_update,
             .hmac_sha256_final_func = test_hmac_sha256_final,
             .hmac_sha256_cleanup_func = test_hmac_sha256_cleanup,
+            .sha512_digest_func = test_sha512_digest_func,
             .encrypt_func = test_encrypt,
             .decrypt_func = test_decrypt,
             .user_data = 0

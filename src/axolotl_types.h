@@ -118,6 +118,14 @@ typedef struct sender_key_record sender_key_record;
 typedef struct group_session_builder group_session_builder;
 typedef struct group_cipher group_cipher;
 
+/*
+ * Fingerprint types
+ */
+typedef struct fingerprint fingerprint;
+typedef struct displayable_fingerprint displayable_fingerprint;
+typedef struct scannable_fingerprint scannable_fingerprint;
+typedef struct fingerprint_generator fingerprint_generator;
+
 #ifdef __cplusplus
 }
 #endif

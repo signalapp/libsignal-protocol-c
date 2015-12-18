@@ -75,3 +75,7 @@ add_test(test_sender_key_record ${CMAKE_CURRENT_BINARY_DIR}/test_sender_key_reco
 add_executable(test_group_cipher test_group_cipher.c ${common_SRCS})
 target_link_libraries(test_group_cipher ${LIBS})
 add_test(test_group_cipher ${CMAKE_CURRENT_BINARY_DIR}/test_group_cipher)
+
+add_executable(test_fingerprint test_fingerprint.c ${common_SRCS})
+target_link_libraries(test_fingerprint ${LIBS})
+add_test(test_fingerprint ${CMAKE_CURRENT_BINARY_DIR}/test_fingerprint)

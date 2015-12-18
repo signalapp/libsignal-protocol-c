@@ -385,6 +385,13 @@ void axolotl_hmac_sha256_cleanup(axolotl_context *context, void *hmac_context)
     context->crypto_provider.hmac_sha256_cleanup_func(hmac_context, context->crypto_provider.user_data);
 }
 
+int axolotl_sha512_digest(axolotl_context *context, axolotl_buffer **output, const uint8_t *data, size_t data_len)
+{
+    assert(context);
+    assert(context->crypto_provider.sha512_digest_func);
+    return context->crypto_provider.sha512_digest_func(output, data, data_len, context->crypto_provider.user_data);
+}
+
 int axolotl_encrypt(axolotl_context *context,
         axolotl_buffer **output,
         int cipher,

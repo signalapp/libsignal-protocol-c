@@ -35,6 +35,8 @@ extern "C" {
 #define AX_ERR_STALE_KEY_EXCHANGE   -1009
 #define AX_ERR_UNTRUSTED_IDENTITY   -1010
 #define AX_ERR_INVALID_PROTO_BUF    -1100
+#define AX_ERR_FP_VERSION_MISMATCH  -1200
+#define AX_ERR_FP_IDENT_MISMATCH    -1201
 
 /*
  * Minimum negative error code value that this library may use.
@@ -275,6 +277,17 @@ typedef struct axolotl_crypto_provider {
      * @param hmac_context private HMAC context pointer
      */
     void (*hmac_sha256_cleanup_func)(void *hmac_context, void *user_data);
+
+    /**
+     * Callback for a SHA512 message digest implementation.
+     * This function is currently only used by the fingerprint generator.
+     *
+     * @param output buffer to be allocated and populated with the ciphertext
+     * @param data pointer to the data
+     * @param data_len length of the data
+     * @return 0 on success, negative on failure
+     */
+    int (*sha512_digest_func)(axolotl_buffer **output, const uint8_t *data, size_t data_len, void *user_data);
 
     /**
      * Callback for an AES encryption implementation.

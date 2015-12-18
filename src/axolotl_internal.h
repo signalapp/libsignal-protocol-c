@@ -34,6 +34,8 @@ int axolotl_hmac_sha256_update(axolotl_context *context, void *hmac_context, con
 int axolotl_hmac_sha256_final(axolotl_context *context, void *hmac_context, axolotl_buffer **output);
 void axolotl_hmac_sha256_cleanup(axolotl_context *context, void *hmac_context);
 
+int axolotl_sha512_digest(axolotl_context *context, axolotl_buffer **output, const uint8_t *data, size_t data_len);
+
 int axolotl_encrypt(axolotl_context *context,
         axolotl_buffer **output,
         int cipher,

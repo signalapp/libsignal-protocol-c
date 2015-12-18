@@ -10,6 +10,7 @@ include_directories(
 set(protobuf_SRCS
 	LocalStorageProtocol.pb-c.c
 	WhisperTextProtocol.pb-c.c
+	FingerprintProtocol.pb-c.c
 )
 
 set(axolotl_SRCS
@@ -49,6 +50,8 @@ set(axolotl_SRCS
 	group_session_builder.h
 	group_cipher.c
 	group_cipher.h
+	fingerprint.c
+	fingerprint.h
 )
 
 add_subdirectory(curve25519)
@@ -80,6 +83,7 @@ INSTALL(
 	sender_key_record.h
 	group_session_builder.h
 	group_cipher.h
+	fingerprint.h
 	DESTINATION include/axolotl
 )
 
