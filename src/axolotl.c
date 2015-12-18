@@ -477,6 +477,29 @@ int axolotl_constant_memcmp(const void *s1, const void *s2, size_t n)
     return result;
 }
 
+void axolotl_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str)
+{
+    assert(buffer);
+    assert(str);
+    buffer->data = (uint8_t *)str;
+    buffer->len = strlen(str);
+}
+
+char *axolotl_str_deserialize_protobuf(ProtobufCBinaryData *buffer)
+{
+    assert(buffer);
+
+    char *str = malloc(buffer->len + 1);
+    if(!str) {
+        return 0;
+    }
+
+    memcpy(str, buffer->data, buffer->len);
+    str[buffer->len] = '\0';
+
+    return str;
+}
+
 /*------------------------------------------------------------------------*/
 
 int axolotl_store_context_create(axolotl_store_context **context, axolotl_context *global_context)

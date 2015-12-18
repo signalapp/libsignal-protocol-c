@@ -418,8 +418,7 @@ int scannable_fingerprint_serialize(axolotl_buffer **buffer, const scannable_fin
     combined_fingerprint.has_version = 1;
 
     if(scannable->local_stable_identifier && scannable->local_identity_key) {
-        local_fingerprint.identifier.data = (uint8_t *)scannable->local_stable_identifier;
-        local_fingerprint.identifier.len = strlen(scannable->local_stable_identifier);
+        axolotl_str_serialize_protobuf(&local_fingerprint.identifier, scannable->local_stable_identifier);
         local_fingerprint.has_identifier = 1;
 
         result = ec_public_key_serialize_protobuf(&local_fingerprint.publickey, scannable->local_identity_key);
@@ -432,8 +431,7 @@ int scannable_fingerprint_serialize(axolotl_buffer **buffer, const scannable_fin
     }
 
     if(scannable->remote_stable_identifier && scannable->remote_identity_key) {
-        remote_fingerprint.identifier.data = (uint8_t *)scannable->remote_stable_identifier;
-        remote_fingerprint.identifier.len = strlen(scannable->remote_stable_identifier);
+        axolotl_str_serialize_protobuf(&remote_fingerprint.identifier, scannable->remote_stable_identifier);
         remote_fingerprint.has_identifier = 1;
 
         result = ec_public_key_serialize_protobuf(&remote_fingerprint.publickey, scannable->remote_identity_key);
@@ -497,9 +495,7 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
 
     if(combined_fingerprint->localfingerprint) {
         if(combined_fingerprint->localfingerprint->has_identifier) {
-            local_stable_identifier = strndup(
-                    (char *)combined_fingerprint->localfingerprint->identifier.data,
-                    combined_fingerprint->localfingerprint->identifier.len);
+            local_stable_identifier = axolotl_str_deserialize_protobuf(&combined_fingerprint->localfingerprint->identifier);
             if(!local_stable_identifier) {
                 result = AX_ERR_NOMEM;
                 goto complete;
@@ -518,9 +514,7 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
 
     if(combined_fingerprint->remotefingerprint) {
         if(combined_fingerprint->remotefingerprint->has_identifier) {
-            remote_stable_identifier = strndup(
-                    (char *)combined_fingerprint->remotefingerprint->identifier.data,
-                    combined_fingerprint->remotefingerprint->identifier.len);
+            remote_stable_identifier = axolotl_str_deserialize_protobuf(&combined_fingerprint->remotefingerprint->identifier);
             if(!remote_stable_identifier) {
                 result = AX_ERR_NOMEM;
                 goto complete;
