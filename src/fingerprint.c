@@ -26,7 +26,7 @@ struct displayable_fingerprint
 struct scannable_fingerprint
 {
     axolotl_type_base base;
-    int version;
+    uint32_t version;
     char *local_stable_identifier;
     ec_public_key *local_identity_key;
     char *remote_stable_identifier;
@@ -352,7 +352,7 @@ void displayable_fingerprint_destroy(axolotl_type_base *type)
 }
 
 int scannable_fingerprint_create(scannable_fingerprint **scannable,
-        int version,
+        uint32_t version,
         const char *local_stable_identifier, ec_public_key *local_identity_key,
         const char *remote_stable_identifier, ec_public_key *remote_identity_key)
 {
@@ -479,7 +479,7 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
 {
     int result = 0;
     Textsecure__CombinedFingerprint *combined_fingerprint = 0;
-    int version = -1;
+    uint32_t version = 0;
     char *local_stable_identifier = 0;
     ec_public_key *local_identity_key = 0;
     char *remote_stable_identifier = 0;

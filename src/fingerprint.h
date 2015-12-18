@@ -54,7 +54,7 @@ const char *displayable_fingerprint_text(displayable_fingerprint *displayable);
 void displayable_fingerprint_destroy(axolotl_type_base *type);
 
 int scannable_fingerprint_create(scannable_fingerprint **scannable,
-        int version,
+        uint32_t version,
         const char *local_stable_identifier, ec_public_key *local_identity_key,
         const char *remote_stable_identifier, ec_public_key *remote_identity_key);
 
