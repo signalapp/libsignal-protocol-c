@@ -584,6 +584,9 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
                 key_exchange_message_get_base_key(message),
                 key_exchange_message_get_ratchet_key(message),
                 key_exchange_message_get_identity_key(message));
+        if(result < 0) {
+            goto complete;
+        }
 
         flags |= KEY_EXCHANGE_SIMULTAENOUS_INITIATE_FLAG;
     }
@@ -596,6 +599,9 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
     result = ratcheting_session_symmetric_initialize(state,
             MIN(key_exchange_message_get_max_version(message), (uint32_t)CIPHERTEXT_CURRENT_VERSION),
             parameters, builder->global_context);
+    if(result < 0) {
+        goto complete;
+    }
 
     result = axolotl_session_store_session(builder->store, builder->remote_address, record);
     if(result < 0) {
@@ -705,6 +711,9 @@ static int session_builder_process_response(session_builder *builder, key_exchan
     result = ratcheting_session_symmetric_initialize(state,
             MIN(key_exchange_message_get_max_version(message), (uint32_t)CIPHERTEXT_CURRENT_VERSION),
             parameters, builder->global_context);
+    if(result < 0) {
+        goto complete;
+    }
 
     result = axolotl_session_store_session(builder->store, builder->remote_address, record);
     if(result < 0) {
