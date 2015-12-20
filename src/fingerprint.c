@@ -194,12 +194,7 @@ complete:
     axolotl_buffer_free(identity_buffer);
     axolotl_buffer_free(hash_buffer);
     axolotl_buffer_free(hash_out_buffer);
-    if(result < 0) {
-        if(display_string) {
-            free(display_string);
-        }
-    }
-    else {
+    if(result >= 0) {
         *display_string = result_string;
     }
     return result;
