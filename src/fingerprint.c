@@ -187,7 +187,11 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
                 ((uint64_t)data[i + 2] & 0xFFL) << 16 |
                 ((uint64_t)data[i + 3] & 0xFFL) << 8 |
                 ((uint64_t)data[i + 4] & 0xFFL);
+#if _WINDOWS
+        sprintf_s(result_string + i, 6, "%05d", (int)(chunk % 100000));
+#else
         snprintf(result_string + i, 6, "%05d", (int)(chunk % 100000));
+#endif
     }
 
 complete:
