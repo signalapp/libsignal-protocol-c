@@ -487,9 +487,10 @@ void axolotl_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str
 
 char *axolotl_str_deserialize_protobuf(ProtobufCBinaryData *buffer)
 {
+    char *str = 0;
     assert(buffer);
 
-    char *str = malloc(buffer->len + 1);
+    str = malloc(buffer->len + 1);
     if(!str) {
         return 0;
     }
