@@ -18,7 +18,7 @@ Most of these dependencies are required just for the unit test suite and
 development of the library itself. When integrating into actual applications,
 you should not need anything beyond CMake. Alternatively, you may integrate
 the code using a build system of your choice.
-Items marked with *1 are required for tests, with *2 are additionaliy required for code coverage.
+Items marked with *1 are required for tests, with *2 are additionally required for code coverage.
 
 ### Setting up a fresh source tree
 
@@ -34,13 +34,14 @@ Items marked with *1 are required for tests, with *2 are additionaliy required f
     $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 ..
     $ ctest
 
-### Creating the code coverage
+### Creating the code coverage report
 
     $ cd /path/to/libaxolotl-c/build
     $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 -DCOVERAGE=1 ..
     $ make coverage
 
-And find the generated code coverage in `/path/to/libaxolotl-c/build/coverage`
+The generated code coverage report can be found in:
+`/path/to/libaxolotl-c/build/coverage`
 
 ### Eclipse project setup
 
@@ -113,8 +114,8 @@ be used as appropriate.
 ## Building a session
 
 A libaxolotl-c client needs to implement four data store callback interfaces:
-axolotl_identity_key_store, axolotl_pre_key_store,
-axolotl_signed_pre_key_store, and axolotl_session_store.
+`axolotl_identity_key_store`, `axolotl_pre_key_store`,
+`axolotl_signed_pre_key_store`, and `axolotl_session_store`.
 These will manage loading and storing of identity, prekeys, signed prekeys,
 and session state.
 
@@ -174,13 +175,16 @@ return, a corresponding way of deallocating an instance of that data type
 is provided.
 
 The more basic and higher level data types provide a type-specific free or
-destroy function. These types include the axolotl_buffers, session_builder,
-session_cipher, and all of the callback contexts.
+destroy function. These types include `axolotl_context`,
+`axolotl_store_context`, `axolotl_buffer`, `axolotl_buffer_list`,
+`axolotl_int_list`, `axolotl_key_helper_pre_key_list_node`, `session_builder`,
+`session_cipher`, `group_session_builder`, `group_cipher`, and
+`fingerprint_generator`.
 
 Most of the other data types, including everything internal, use a reference
 counting mechanism. If you are going to hold onto a reference to one of these
-types, use the AXOLOTL_REF(x) macro to increment its count. If you are done
-with a reference, use AXOLOTL_UNREF(x) to decrement its count. When the count
+types, use the `AXOLOTL_REF(x)` macro to increment its count. If you are done
+with a reference, use `AXOLOTL_UNREF(x)` to decrement its count. When the count
 reaches 0, the type's destructor function is called.
 
 # Legal things
