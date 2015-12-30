@@ -60,6 +60,11 @@ int scannable_fingerprint_create(scannable_fingerprint **scannable,
 
 int scannable_fingerprint_serialize(axolotl_buffer **buffer, const scannable_fingerprint *scannable);
 int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const uint8_t *data, size_t len, axolotl_context *global_context);
+uint32_t scannable_fingerprint_get_version(scannable_fingerprint *scannable);
+const char *scannable_fingerprint_get_local_stable_identifier(scannable_fingerprint *scannable);
+ec_public_key *scannable_fingerprint_get_local_identity_key(scannable_fingerprint *scannable);
+const char *scannable_fingerprint_get_remote_stable_identifier(scannable_fingerprint *scannable);
+ec_public_key *scannable_fingerprint_get_remote_identity_key(scannable_fingerprint *scannable);
 
 /**
  * Compare a scanned QR code with what we expect.

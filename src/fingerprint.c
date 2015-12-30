@@ -549,6 +549,36 @@ complete:
     return result;
 }
 
+uint32_t scannable_fingerprint_get_version(scannable_fingerprint *scannable)
+{
+    assert(scannable);
+    return scannable->version;
+}
+
+const char *scannable_fingerprint_get_local_stable_identifier(scannable_fingerprint *scannable)
+{
+    assert(scannable);
+    return scannable->local_stable_identifier;
+}
+
+ec_public_key *scannable_fingerprint_get_local_identity_key(scannable_fingerprint *scannable)
+{
+    assert(scannable);
+    return scannable->local_identity_key;
+}
+
+const char *scannable_fingerprint_get_remote_stable_identifier(scannable_fingerprint *scannable)
+{
+    assert(scannable);
+    return scannable->remote_stable_identifier;
+}
+
+ec_public_key *scannable_fingerprint_get_remote_identity_key(scannable_fingerprint *scannable)
+{
+    assert(scannable);
+    return scannable->remote_identity_key;
+}
+
 int scannable_fingerprint_compare(scannable_fingerprint *scannable, const scannable_fingerprint *other_scannable)
 {
     if(!other_scannable->remote_identity_key || !other_scannable->local_identity_key ||
