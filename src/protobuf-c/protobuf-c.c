@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2014, Dave Benson and the protobuf-c authors.
+ * Copyright (c) 2008-2015, Dave Benson and the protobuf-c authors.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,14 +50,15 @@
 
 #include "protobuf-c.h"
 
-#if defined(_MSC_VER) && !defined(__cplusplus)
-#define inline __inline
-#endif
-
 #define TRUE				1
 #define FALSE				0
 
 #define PROTOBUF_C__ASSERT_NOT_REACHED() assert(0)
+
+/* Workaround for Microsoft compilers. */
+#ifdef _MSC_VER
+# define inline __inline
+#endif
 
 /**
  * \defgroup internal Internal functions and macros
@@ -173,9 +174,9 @@ do_free(ProtobufCAllocator *allocator, void *data)
  * function.
  */
 static ProtobufCAllocator protobuf_c__allocator = {
-	&system_alloc,
-	&system_free,
-	NULL
+	.alloc = &system_alloc,
+	.free = &system_free,
+	.allocator_data = NULL,
 };
 
 /* === buffer-simple === */
@@ -460,6 +461,39 @@ required_field_get_packed_size(const ProtobufCFieldDescriptor *field,
 }
 
 /**
+ * Calculate the serialized size of a single oneof message field, including
+ * the space needed by the preceding tag. Returns 0 if the oneof field isn't
+ * selected or is not set.
+ *
+ * \param field
+ *      Field descriptor for member.
+ * \param oneof_case
+ *      A pointer to the case enum that selects the field in the oneof.
+ * \param member
+ *      Field to encode.
+ * \return
+ *      Number of bytes required.
+ */
+static size_t
+oneof_field_get_packed_size(const ProtobufCFieldDescriptor *field,
+			    const uint32_t *oneof_case,
+			    const void *member)
+{
+	if (*oneof_case == field->id) {
+		if (field->type == PROTOBUF_C_TYPE_MESSAGE ||
+		    field->type == PROTOBUF_C_TYPE_STRING)
+		{
+			const void *ptr = *(const void * const *) member;
+			if (ptr == NULL || ptr == field->default_value)
+				return 0;
+		}
+	} else {
+		return 0;
+	}
+	return required_field_get_packed_size(field, member);
+}
+
+/**
  * Calculate the serialized size of a single optional message field, including
  * the space needed by the preceding tag. Returns 0 if the optional field isn't
  * set.
@@ -620,7 +654,10 @@ size_t protobuf_c_message_get_packed_size(const ProtobufCMessage *message)
 		if (field->label == PROTOBUF_C_LABEL_REQUIRED) {
 			rv += required_field_get_packed_size(field, member);
 		} else if (field->label == PROTOBUF_C_LABEL_OPTIONAL) {
-			rv += optional_field_get_packed_size(field, qmember, member);
+			if (0 != (field->flags & PROTOBUF_C_FIELD_FLAG_ONEOF))
+				rv += oneof_field_get_packed_size(field, qmember, member);
+			else
+				rv += optional_field_get_packed_size(field, qmember, member);
 		} else {
 			rv += repeated_field_get_packed_size(
 				field,
@@ -1018,6 +1055,40 @@ required_field_pack(const ProtobufCFieldDescriptor *field,
 }
 
 /**
+ * Pack a oneof field and return the number of bytes written. Only packs the
+ * field that is selected by the case enum.
+ *
+ * \param field
+ *      Field descriptor.
+ * \param oneof_case
+ *      A pointer to the case enum that selects the field in the oneof.
+ * \param member
+ *      The field member.
+ * \param[out] out
+ *      Packed value.
+ * \return
+ *      Number of bytes written to `out`.
+ */
+static size_t
+oneof_field_pack(const ProtobufCFieldDescriptor *field,
+		 const uint32_t *oneof_case,
+		 const void *member, uint8_t *out)
+{
+	if (*oneof_case == field->id) {
+		if (field->type == PROTOBUF_C_TYPE_MESSAGE ||
+		    field->type == PROTOBUF_C_TYPE_STRING)
+		{
+			const void *ptr = *(const void * const *) member;
+			if (ptr == NULL || ptr == field->default_value)
+				return 0;
+		}
+	} else {
+		return 0;
+	}
+	return required_field_pack(field, member, out);
+}
+
+/**
  * Pack an optional field and return the number of bytes written.
  *
  * \param field
@@ -1311,6 +1382,7 @@ protobuf_c_message_pack(const ProtobufCMessage *message, uint8_t *out)
 		 * quantifier field of the structure), but the pointer is only
 		 * valid if the field is:
 		 *  - a repeated field, or
+		 *  - a field that is part of a oneof
 		 *  - an optional field that isn't a pointer type
 		 * (Meaning: not a message or a string).
 		 */
@@ -1320,11 +1392,10 @@ protobuf_c_message_pack(const ProtobufCMessage *message, uint8_t *out)
 		if (field->label == PROTOBUF_C_LABEL_REQUIRED) {
 			rv += required_field_pack(field, member, out + rv);
 		} else if (field->label == PROTOBUF_C_LABEL_OPTIONAL) {
-			/*
-			 * Note that qmember is bogus for strings and messages,
-			 * but it isn't used.
-			 */
-			rv += optional_field_pack(field, qmember, member, out + rv);
+			if (0 != (field->flags & PROTOBUF_C_FIELD_FLAG_ONEOF))
+				rv += oneof_field_pack (field, qmember, member, out + rv);
+			else
+				rv += optional_field_pack(field, qmember, member, out + rv);
 		} else {
 			rv += repeated_field_pack(field, *(const size_t *) qmember,
 				member, out + rv);
@@ -1456,6 +1527,39 @@ required_field_pack_to_buffer(const ProtobufCFieldDescriptor *field,
 		PROTOBUF_C__ASSERT_NOT_REACHED();
 	}
 	return rv;
+}
+
+/**
+ * Pack a oneof field to a buffer. Only packs the field that is selected by the case enum.
+ *
+ * \param field
+ *      Field descriptor.
+ * \param oneof_case
+ *      A pointer to the case enum that selects the field in the oneof.
+ * \param member
+ *      The element to be packed.
+ * \param[out] buffer
+ *      Virtual buffer to append data to.
+ * \return
+ *      Number of bytes serialised to `buffer`.
+ */
+static size_t
+oneof_field_pack_to_buffer(const ProtobufCFieldDescriptor *field,
+			   const uint32_t *oneof_case,
+			   const void *member, ProtobufCBuffer *buffer)
+{
+	if (*oneof_case == field->id) {
+		if (field->type == PROTOBUF_C_TYPE_MESSAGE ||
+		    field->type == PROTOBUF_C_TYPE_STRING)
+		{
+			const void *ptr = *(const void *const *) member;
+			if (ptr == NULL || ptr == field->default_value)
+				return 0;
+		}
+	} else {
+		return 0;
+	}
+	return required_field_pack_to_buffer(field, member, buffer);
 }
 
 /**
@@ -1734,12 +1838,21 @@ protobuf_c_message_pack_to_buffer(const ProtobufCMessage *message,
 		if (field->label == PROTOBUF_C_LABEL_REQUIRED) {
 			rv += required_field_pack_to_buffer(field, member, buffer);
 		} else if (field->label == PROTOBUF_C_LABEL_OPTIONAL) {
-			rv += optional_field_pack_to_buffer(
-				field,
-				qmember,
-				member,
-				buffer
-			);
+			if (0 != (field->flags & PROTOBUF_C_FIELD_FLAG_ONEOF)) {
+				rv += oneof_field_pack_to_buffer(
+					field,
+					qmember,
+					member,
+					buffer
+					);
+			} else {
+				rv += optional_field_pack_to_buffer(
+					field,
+					qmember,
+					member,
+					buffer
+					);
+			}
 		} else {
 			rv += repeated_field_pack_to_buffer(
 				field,
@@ -1909,7 +2022,7 @@ merge_messages(ProtobufCMessage *earlier_msg,
 {
 	unsigned i;
 	const ProtobufCFieldDescriptor *fields =
-		earlier_msg->descriptor->fields;
+		latter_msg->descriptor->fields;
 	for (i = 0; i < latter_msg->descriptor->n_fields; i++) {
 		if (fields[i].label == PROTOBUF_C_LABEL_REPEATED) {
 			size_t *n_earlier =
@@ -1957,38 +2070,61 @@ merge_messages(ProtobufCMessage *earlier_msg,
 				*n_earlier = 0;
 				*p_earlier = 0;
 			}
-		} else if (fields[i].type == PROTOBUF_C_TYPE_MESSAGE) {
-			ProtobufCMessage **em =
-				STRUCT_MEMBER_PTR(ProtobufCMessage *,
-						  earlier_msg,
-						  fields[i].offset);
-			ProtobufCMessage **lm =
-				STRUCT_MEMBER_PTR(ProtobufCMessage *,
-						  latter_msg,
-						  fields[i].offset);
-			if (*em != NULL) {
-				if (*lm != NULL) {
-					if (!merge_messages
-					    (*em, *lm, allocator))
-						return FALSE;
-				} else {
-					/* Zero copy the optional message */
-					assert(fields[i].label ==
-					       PROTOBUF_C_LABEL_OPTIONAL);
-					*lm = *em;
-					*em = NULL;
-				}
-			}
 		} else if (fields[i].label == PROTOBUF_C_LABEL_OPTIONAL) {
-			size_t el_size = 0;
+			const ProtobufCFieldDescriptor *field;
+			uint32_t *earlier_case_p = STRUCT_MEMBER_PTR(uint32_t,
+								     earlier_msg,
+								     fields[i].
+								     quantifier_offset);
+			uint32_t *latter_case_p = STRUCT_MEMBER_PTR(uint32_t,
+								    latter_msg,
+								    fields[i].
+								    quantifier_offset);
+
+			if (fields[i].flags & PROTOBUF_C_FIELD_FLAG_ONEOF) {
+				if (*latter_case_p == 0) {
+					/* lookup correct oneof field */
+					int field_index =
+						int_range_lookup(
+							latter_msg->descriptor
+							->n_field_ranges,
+							latter_msg->descriptor
+							->field_ranges,
+							*earlier_case_p);
+					field = latter_msg->descriptor->fields +
+						field_index;
+				} else {
+					/* Oneof is present in the latter message, move on */
+					continue;
+				}
+			} else {
+				field = &fields[i];
+			}
+
 			protobuf_c_boolean need_to_merge = FALSE;
 			void *earlier_elem =
-				STRUCT_MEMBER_P(earlier_msg, fields[i].offset);
+				STRUCT_MEMBER_P(earlier_msg, field->offset);
 			void *latter_elem =
-				STRUCT_MEMBER_P(latter_msg, fields[i].offset);
-			const void *def_val = fields[i].default_value;
+				STRUCT_MEMBER_P(latter_msg, field->offset);
+			const void *def_val = field->default_value;
 
-			switch (fields[i].type) {
+			switch (field->type) {
+			case PROTOBUF_C_TYPE_MESSAGE: {
+				ProtobufCMessage *em = *(ProtobufCMessage **) earlier_elem;
+				ProtobufCMessage *lm = *(ProtobufCMessage **) latter_elem;
+				if (em != NULL) {
+					if (lm != NULL) {
+						if (!merge_messages(em, lm, allocator))
+							return FALSE;
+						/* Already merged */
+						need_to_merge = FALSE;
+					} else {
+						/* Zero copy the message */
+						need_to_merge = TRUE;
+					}
+				}
+				break;
+			}
 			case PROTOBUF_C_TYPE_BYTES: {
 				uint8_t *e_data =
 					((ProtobufCBinaryData *) earlier_elem)->data;
@@ -1996,11 +2132,10 @@ merge_messages(ProtobufCMessage *earlier_msg,
 					((ProtobufCBinaryData *) latter_elem)->data;
 				const ProtobufCBinaryData *d_bd =
 					(ProtobufCBinaryData *) def_val;
-				el_size = sizeof(ProtobufCBinaryData);
 
 				need_to_merge =
 					(e_data != NULL &&
-					 (d_bd != NULL &&
+					 (d_bd == NULL ||
 					  e_data != d_bd->data)) &&
 					(l_data == NULL ||
 					 (d_bd != NULL &&
@@ -2011,26 +2146,23 @@ merge_messages(ProtobufCMessage *earlier_msg,
 				char *e_str = *(char **) earlier_elem;
 				char *l_str = *(char **) latter_elem;
 				const char *d_str = def_val;
-				el_size = sizeof(char *);
 
 				need_to_merge = e_str != d_str && l_str == d_str;
 				break;
 			}
 			default: {
-				el_size = sizeof_elt_in_repeated_array(fields[i].type);
-
-				need_to_merge =
-					STRUCT_MEMBER(protobuf_c_boolean,
-						      earlier_msg,
-						      fields[i].quantifier_offset) &&
-					!STRUCT_MEMBER(protobuf_c_boolean,
-						       latter_msg,
-						       fields[i].quantifier_offset);
+				/* Could be has field or case enum, the logic is
+				 * equivalent, since 0 (FALSE) means not set for
+				 * oneof */
+				need_to_merge = (*earlier_case_p != 0) &&
+						(*latter_case_p == 0);
 				break;
 			}
 			}
 
 			if (need_to_merge) {
+				size_t el_size =
+					sizeof_elt_in_repeated_array(field->type);
 				memcpy(latter_elem, earlier_elem, el_size);
 				/*
 				 * Reset the element from the old message to 0
@@ -2041,16 +2173,11 @@ merge_messages(ProtobufCMessage *earlier_msg,
 				 */
 				memset(earlier_elem, 0, el_size);
 
-				if (fields[i].quantifier_offset != 0) {
-					/* Set the has field, if applicable */
-					STRUCT_MEMBER(protobuf_c_boolean,
-						      latter_msg,
-						      fields[i].
-						      quantifier_offset) = TRUE;
-					STRUCT_MEMBER(protobuf_c_boolean,
-						      earlier_msg,
-						      fields[i].
-						      quantifier_offset) = FALSE;
+				if (field->quantifier_offset != 0) {
+					/* Set the has field or the case enum,
+					 * if applicable */
+					*latter_case_p = *earlier_case_p;
+					*earlier_case_p = 0;
 				}
 			}
 		}
@@ -2349,6 +2476,64 @@ parse_required_member(ScannedMember *scanned_member,
 }
 
 static protobuf_c_boolean
+parse_oneof_member (ScannedMember *scanned_member,
+		    void *member,
+		    ProtobufCMessage *message,
+		    ProtobufCAllocator *allocator)
+{
+	uint32_t *oneof_case = STRUCT_MEMBER_PTR(uint32_t, message,
+					       scanned_member->field->quantifier_offset);
+
+	/* If we have already parsed a member of this oneof, free it. */
+	if (*oneof_case != 0) {
+		/* lookup field */
+		int field_index =
+			int_range_lookup(message->descriptor->n_field_ranges,
+					 message->descriptor->field_ranges,
+					 *oneof_case);
+		const ProtobufCFieldDescriptor *old_field =
+			message->descriptor->fields + field_index;
+		switch (old_field->type) {
+	        case PROTOBUF_C_TYPE_STRING: {
+			char **pstr = member;
+			const char *def = old_field->default_value;
+			if (*pstr != NULL && *pstr != def)
+				do_free(allocator, *pstr);
+			break;
+	        }
+		case PROTOBUF_C_TYPE_BYTES: {
+			ProtobufCBinaryData *bd = member;
+			const ProtobufCBinaryData *def_bd = old_field->default_value;
+			if (bd->data != NULL &&
+			   (def_bd == NULL || bd->data != def_bd->data))
+			{
+				do_free(allocator, bd->data);
+			}
+			break;
+	        }
+		case PROTOBUF_C_TYPE_MESSAGE: {
+			ProtobufCMessage **pmessage = member;
+			const ProtobufCMessage *def_mess = old_field->default_value;
+			if (*pmessage != NULL && *pmessage != def_mess)
+				protobuf_c_message_free_unpacked(*pmessage, allocator);
+			break;
+	        }
+		default:
+			break;
+		}
+
+		size_t el_size = sizeof_elt_in_repeated_array(old_field->type);
+		memset (member, 0, el_size);
+	}
+	if (!parse_required_member (scanned_member, member, allocator, TRUE))
+		return FALSE;
+
+	*oneof_case = scanned_member->tag;
+	return TRUE;
+}
+
+
+static protobuf_c_boolean
 parse_optional_member(ScannedMember *scanned_member,
 		      void *member,
 		      ProtobufCMessage *message,
@@ -2561,8 +2746,13 @@ parse_member(ScannedMember *scanned_member,
 		return parse_required_member(scanned_member, member,
 					     allocator, TRUE);
 	case PROTOBUF_C_LABEL_OPTIONAL:
-		return parse_optional_member(scanned_member, member,
-					     message, allocator);
+		if (0 != (field->flags & PROTOBUF_C_FIELD_FLAG_ONEOF)) {
+			return parse_oneof_member(scanned_member, member,
+						  message, allocator);
+		} else {
+			return parse_optional_member(scanned_member, member,
+						     message, allocator);
+		}
 	case PROTOBUF_C_LABEL_REPEATED:
 		if (scanned_member->wire_type ==
 		    PROTOBUF_C_WIRE_TYPE_LENGTH_PREFIXED &&
@@ -2747,9 +2937,9 @@ protobuf_c_message_unpack(const ProtobufCMessageDescriptor *desc,
 			goto error_cleanup_during_scan;
 		}
 		/*
-                 * \todo Consider optimizing for field[1].id == tag, if field[1]
-                 * exists!
-                 */
+		 * \todo Consider optimizing for field[1].id == tag, if field[1]
+		 * exists!
+		 */
 		if (last_field == NULL || last_field->id != tag) {
 			/* lookup field */
 			int field_index =
@@ -2885,7 +3075,6 @@ protobuf_c_message_unpack(const ProtobufCMessageDescriptor *desc,
 			    STRUCT_MEMBER_PTR(size_t, rv,
 					      field->quantifier_offset);
 			if (*n_ptr != 0) {
-                void *a = 0;
 				unsigned n = *n_ptr;
 				*n_ptr = 0;
 				assert(rv->descriptor != NULL);
@@ -2896,7 +3085,7 @@ protobuf_c_message_unpack(const ProtobufCMessageDescriptor *desc,
                   if (field->label == PROTOBUF_C_LABEL_REPEATED)              \
                     STRUCT_MEMBER (size_t, rv, field->quantifier_offset) = 0; \
                 }
-				a = do_alloc(allocator, siz * n);
+				void *a = do_alloc(allocator, siz * n);
 				if (!a) {
 					CLEAR_REMAINING_N_PTRS();
 					goto error_cleanup;
@@ -2969,14 +3158,26 @@ void
 protobuf_c_message_free_unpacked(ProtobufCMessage *message,
 				 ProtobufCAllocator *allocator)
 {
+	if (message == NULL)
+		return;
+
 	const ProtobufCMessageDescriptor *desc = message->descriptor;
 	unsigned f;
 
 	ASSERT_IS_MESSAGE(message);
+
 	if (allocator == NULL)
 		allocator = &protobuf_c__allocator;
 	message->descriptor = NULL;
 	for (f = 0; f < desc->n_fields; f++) {
+		if (0 != (desc->fields[f].flags & PROTOBUF_C_FIELD_FLAG_ONEOF) &&
+		    desc->fields[f].id !=
+		    STRUCT_MEMBER(uint32_t, message, desc->fields[f].quantifier_offset))
+		{
+			/* This is not the selected oneof, skip it */
+			continue;
+		}
+
 		if (desc->fields[f].label == PROTOBUF_C_LABEL_REPEATED) {
 			size_t n = STRUCT_MEMBER(size_t,
 						 message,
@@ -2985,24 +3186,25 @@ protobuf_c_message_free_unpacked(ProtobufCMessage *message,
 						  message,
 						  desc->fields[f].offset);
 
-			if (desc->fields[f].type == PROTOBUF_C_TYPE_STRING) {
-				unsigned i;
-				for (i = 0; i < n; i++)
-					do_free(allocator, ((char **) arr)[i]);
-			} else if (desc->fields[f].type == PROTOBUF_C_TYPE_BYTES) {
-				unsigned i;
-				for (i = 0; i < n; i++)
-					do_free(allocator, ((ProtobufCBinaryData *) arr)[i].data);
-			} else if (desc->fields[f].type == PROTOBUF_C_TYPE_MESSAGE) {
-				unsigned i;
-				for (i = 0; i < n; i++)
-					protobuf_c_message_free_unpacked(
-						((ProtobufCMessage **) arr)[i],
-						allocator
-					);
-			}
-			if (arr != NULL)
+			if (arr != NULL) {
+				if (desc->fields[f].type == PROTOBUF_C_TYPE_STRING) {
+					unsigned i;
+					for (i = 0; i < n; i++)
+						do_free(allocator, ((char **) arr)[i]);
+				} else if (desc->fields[f].type == PROTOBUF_C_TYPE_BYTES) {
+					unsigned i;
+					for (i = 0; i < n; i++)
+						do_free(allocator, ((ProtobufCBinaryData *) arr)[i].data);
+				} else if (desc->fields[f].type == PROTOBUF_C_TYPE_MESSAGE) {
+					unsigned i;
+					for (i = 0; i < n; i++)
+						protobuf_c_message_free_unpacked(
+							((ProtobufCMessage **) arr)[i],
+							allocator
+						);
+				}
 				do_free(allocator, arr);
+			}
 		} else if (desc->fields[f].type == PROTOBUF_C_TYPE_STRING) {
 			char *str = STRUCT_MEMBER(char *, message,
 						  desc->fields[f].offset);
@@ -3049,15 +3251,14 @@ protobuf_c_message_init(const ProtobufCMessageDescriptor * descriptor,
 protobuf_c_boolean
 protobuf_c_message_check(const ProtobufCMessage *message)
 {
-    unsigned i;
-
-    if (!message ||
+	if (!message ||
 	    !message->descriptor ||
 	    message->descriptor->magic != PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC)
 	{
 		return FALSE;
 	}
 
+	unsigned i;
 	for (i = 0; i < message->descriptor->n_fields; i++) {
 		const ProtobufCFieldDescriptor *f = message->descriptor->fields + i;
 		ProtobufCType type = f->type;
