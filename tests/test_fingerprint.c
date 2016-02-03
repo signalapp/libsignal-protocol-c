@@ -87,7 +87,7 @@ START_TEST(test_expected_fingerprints)
             0xB8, 0x16, 0x71, 0x50, 0x05};
 
     const char *expectedDisplayText =
-            "170425132130519178537525891870742040077993076320374280808288";
+            "280453495159653131690525187060866674650885177562699606988867";
 
     uint8_t expectedScannableBytes[] = {
             0x08, 0x00, 0x12, 0x31, 0x0A, 0x21, 0x05, 0xBB, 0x9D, 0xAD, 0xC3,

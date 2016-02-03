@@ -7,6 +7,9 @@
 #include "FingerprintProtocol.pb-c.h"
 
 #define VERSION 0
+#define SHA512_DIGEST_LENGTH 64
+
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 struct fingerprint
 {
@@ -121,9 +124,12 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
     char *result_string = 0;
     axolotl_buffer *identity_buffer = 0;
     axolotl_buffer *hash_buffer = 0;
+    axolotl_buffer *hash_in_buffer = 0;
     axolotl_buffer *hash_out_buffer = 0;
     uint8_t *data = 0;
     size_t len = 0;
+    uint8_t *in_data = 0;
+    size_t in_len = 0;
     int i = 0;
 
     assert(generator);
@@ -153,12 +159,31 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
     memcpy(data + 2, axolotl_buffer_data(identity_buffer), axolotl_buffer_len(identity_buffer));
     memcpy(data + 2 + axolotl_buffer_len(identity_buffer), stable_identifier, strlen(stable_identifier));
 
+    hash_in_buffer = axolotl_buffer_alloc(MAX(len, SHA512_DIGEST_LENGTH) + axolotl_buffer_len(identity_buffer));
+    if(!hash_in_buffer) {
+        result = AX_ERR_NOMEM;
+        goto complete;
+    }
+
+    in_data = axolotl_buffer_data(hash_in_buffer);
+    in_len = len + axolotl_buffer_len(identity_buffer);
+
     for(i = 0; i < generator->iterations; i++) {
+        data = axolotl_buffer_data(hash_buffer);
+        len = axolotl_buffer_len(hash_buffer);
+        in_len = axolotl_buffer_len(hash_buffer) + axolotl_buffer_len(identity_buffer);
+        memcpy(in_data, data, len);
+        memcpy(in_data + len,
+                axolotl_buffer_data(identity_buffer),
+                axolotl_buffer_len(identity_buffer));
+
         result = axolotl_sha512_digest(generator->global_context,
-                &hash_out_buffer,
-                axolotl_buffer_data(hash_buffer),
-                axolotl_buffer_len(hash_buffer));
+                &hash_out_buffer, in_data, in_len);
         if(result < 0) {
+            goto complete;
+        }
+        if(axolotl_buffer_len(hash_out_buffer) != SHA512_DIGEST_LENGTH) {
+            result = AX_ERR_INVAL;
             goto complete;
         }
 
@@ -197,6 +222,7 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
 complete:
     axolotl_buffer_free(identity_buffer);
     axolotl_buffer_free(hash_buffer);
+    axolotl_buffer_free(hash_in_buffer);
     axolotl_buffer_free(hash_out_buffer);
     if(result >= 0) {
         *display_string = result_string;
