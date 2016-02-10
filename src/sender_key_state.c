@@ -337,6 +337,9 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
                 state_structure->senderkeyid, chain_key,
                 signature_public_key, signature_private_key,
                 global_context);
+        if(result < 0) {
+            goto complete;
+        }
 
         if(state_structure->n_sendermessagekeys > 0) {
             for(i = 0; i < state_structure->n_sendermessagekeys; i++) {
