@@ -71,6 +71,7 @@ int group_cipher_encrypt(group_cipher *cipher,
     sender_key_message *result_message = 0;
     sender_key_record *record = 0;
     sender_key_state *state = 0;
+    ec_private_key *signing_key_private = 0;
     sender_message_key *sender_key = 0;
     sender_chain_key *next_chain_key = 0;
     axolotl_buffer *sender_cipher_key = 0;
@@ -95,6 +96,12 @@ int group_cipher_encrypt(group_cipher *cipher,
         goto complete;
     }
 
+    signing_key_private = sender_key_state_get_signing_key_private(state);
+    if(!signing_key_private) {
+        result = AX_ERR_NO_SESSION;
+        goto complete;
+    }
+
     result = sender_chain_key_create_message_key(sender_key_state_get_chain_key(state), &sender_key);
     if(result < 0) {
         goto complete;
@@ -115,7 +122,7 @@ int group_cipher_encrypt(group_cipher *cipher,
             sender_key_state_get_key_id(state),
             sender_message_key_get_iteration(sender_key),
             axolotl_buffer_data(ciphertext), axolotl_buffer_len(ciphertext),
-            sender_key_state_get_signing_key_private(state),
+            signing_key_private,
             cipher->global_context);
     if(result < 0) {
         goto complete;
