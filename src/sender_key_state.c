@@ -376,6 +376,9 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
             }
         }
     }
+    else {
+        result = AX_ERR_INVALID_PROTO_BUF;
+    }
 
 complete:
     if(chain_key) {
