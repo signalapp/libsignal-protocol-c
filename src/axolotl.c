@@ -186,7 +186,7 @@ struct axolotl_int_list
     UT_array *values;
 };
 
-axolotl_buffer_list *axolotl_buffer_list_alloc()
+axolotl_buffer_list *axolotl_buffer_list_alloc(void)
 {
     axolotl_buffer_list *list = malloc(sizeof(axolotl_buffer_list));
     if(list) {

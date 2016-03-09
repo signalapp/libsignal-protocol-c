@@ -161,7 +161,7 @@ void axolotl_buffer_bzero_free(axolotl_buffer *buffer);
  *
  * @return pointer to the allocated buffer, or 0 on failure
  */
-axolotl_buffer_list *axolotl_buffer_list_alloc();
+axolotl_buffer_list *axolotl_buffer_list_alloc(void);
 
 /**
  * Push the provided buffer onto the head of the list.
@@ -192,7 +192,7 @@ void axolotl_buffer_list_free(axolotl_buffer_list *list);
  *
  * @return pointer to the allocated buffer, or 0 on failure
  */
-axolotl_int_list *axolotl_int_list_alloc();
+axolotl_int_list *axolotl_int_list_alloc(void);
 
 /**
  * Push a new value onto the end of the list
