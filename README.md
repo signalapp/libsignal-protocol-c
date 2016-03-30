@@ -1,9 +1,9 @@
 # Overview
 
 This is a ratcheting forward secrecy protocol that works in synchronous and asynchronous messaging 
-environments. See the [Java library](https://github.com/whispersystems/libaxolotl-java) for more details.
+environments. See the [Java library](https://github.com/whispersystems/libsignal-protocol-java) for more details.
 
-# Building libaxolotl-c
+# Building libsignal-protocol-c
 
 ## Development host setup
 
@@ -22,7 +22,7 @@ Items marked with *1 are required for tests, with *2 are additionally required f
 
 ### Setting up a fresh source tree
 
-    $ cd /path/to/libaxolotl-c
+    $ cd /path/to/libsignal-protocol-c
     $ mkdir build
     $ cd build
     $ cmake -DCMAKE_BUILD_TYPE=Debug ..
@@ -30,18 +30,18 @@ Items marked with *1 are required for tests, with *2 are additionally required f
 
 ### Running the unit tests
 
-    $ cd /path/to/libaxolotl-c/build
+    $ cd /path/to/libsignal-protocol-c/build
     $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 ..
     $ ctest
 
 ### Creating the code coverage report
 
-    $ cd /path/to/libaxolotl-c/build
+    $ cd /path/to/libsignal-protocol-c/build
     $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 -DCOVERAGE=1 ..
     $ make coverage
 
 The generated code coverage report can be found in:
-`/path/to/libaxolotl-c/build/coverage`
+`/path/to/libsignal-protocol-c/build/coverage`
 
 ### Eclipse project setup
 
@@ -71,7 +71,7 @@ CMake toolchain files have been included from the following sources:
 
 ## Library initialization
 
-Before using the library, a libaxolotl-c client needs to initialize a global
+Before using the library, a libsignal-protocol-c client needs to initialize a global
 context. This global context is used to provide callbacks for implementations
 of functions used across the library that need client-specific implementations.
 Refer to "axolotl.h" for detailed documentation on these functions, and the unit
@@ -84,7 +84,7 @@ tests for example implementations.
 
 ## Client install time
 
-At install time, a libaxolotl-c client needs to generate its identity keys,
+At install time, a libsignal-protocol-c client needs to generate its identity keys,
 registration id, and prekeys.
 
     ratchet_identity_key_pair *identity_key_pair;
@@ -113,7 +113,7 @@ be used as appropriate.
 
 ## Building a session
 
-A libaxolotl-c client needs to implement four data store callback interfaces:
+A libsignal-protocol-c client needs to implement four data store callback interfaces:
 `axolotl_identity_key_store`, `axolotl_pre_key_store`,
 `axolotl_signed_pre_key_store`, and `axolotl_session_store`.
 These will manage loading and storing of identity, prekeys, signed prekeys,
@@ -199,7 +199,7 @@ The form and manner of this distribution makes it eligible for export under the 
 
 ## License
 
-Copyright 2015 Open Whisper Systems
+Copyright 2015-2016 Open Whisper Systems
 
 Licensed under the GPLv3: http://www.gnu.org/licenses/gpl-3.0.html
 
