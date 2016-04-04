@@ -207,7 +207,7 @@ int sender_key_state_serialize_prepare(sender_key_state *state, Textsecure__Send
 
     /* Sender message keys */
     if(state->message_keys_head) {
-        unsigned int count;
+        size_t count;
         DL_COUNT(state->message_keys_head, cur_node, count);
 
         if(count > SIZE_MAX / sizeof(Textsecure__SenderKeyStateStructure__SenderMessageKey *)) {

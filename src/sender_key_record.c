@@ -50,7 +50,7 @@ int sender_key_record_serialize(axolotl_buffer **buffer, sender_key_record *reco
     size_t len;
 
     if(record->sender_key_states_head) {
-        unsigned int count;
+        size_t count;
         DL_COUNT(record->sender_key_states_head, cur_node, count);
 
         if(count > SIZE_MAX / sizeof(Textsecure__SenderKeyStateStructure *)) {

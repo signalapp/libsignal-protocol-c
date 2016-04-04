@@ -81,7 +81,7 @@ int session_record_serialize(axolotl_buffer **buffer, const session_record *reco
     }
 
     if(record->previous_states_head) {
-        unsigned int count;
+        size_t count;
         DL_COUNT(record->previous_states_head, cur_node, count);
 
         if(count > SIZE_MAX / sizeof(Textsecure__SessionStructure *)) {
