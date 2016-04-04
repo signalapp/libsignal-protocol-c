@@ -287,9 +287,7 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
     }
 
     if(state->receiver_chain_head) {
-        size_t i = 0;
-
-        unsigned int count;
+        size_t count, i = 0;
         session_state_receiver_chain *cur_node;
         DL_COUNT(state->receiver_chain_head, cur_node, count);
 
@@ -480,9 +478,7 @@ static int session_state_serialize_prepare_chain_message_keys_list(
         Textsecure__SessionStructure__Chain *chain_structure)
 {
     int result = 0;
-    size_t i = 0;
-    
-    unsigned int count;
+    size_t count, i = 0;
     message_keys_node *cur_node;
     DL_COUNT(message_keys_head, cur_node, count);
 
