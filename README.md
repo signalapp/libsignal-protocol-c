@@ -67,7 +67,7 @@ CMake toolchain files have been included from the following sources:
 * [iOS](https://code.google.com/p/ios-cmake/)
 * [BlackBerry 10](https://github.com/blackberry/OGRE/blob/master/src/CMake/toolchain/blackberry.toolchain.cmake)
 
-# Using libaxolotl-c
+# Using libsignal-protocol-c
 
 ## Library initialization
 
