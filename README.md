@@ -9,7 +9,7 @@ environments. See the [Java library](https://github.com/whispersystems/libsignal
 
 ### Build dependencies
 
-* [CMake](http://www.cmake.org/) 2.8.4 or higher
+* [CMake](https://cmake.org/) 2.8.4 or higher
 * [Check *1](http://check.sourceforge.net/)
 * [OpenSSL *1](https://www.openssl.org/) 1.0 or higher
 * [LCOV *2](http://ltp.sourceforge.net/coverage/lcov.php)
@@ -46,7 +46,7 @@ The generated code coverage report can be found in:
 ### Eclipse project setup
 
 CMake provides a tutorial on Eclipse project setup here:
-http://www.cmake.org/Wiki/CMake:Eclipse_UNIX_Tutorial
+https://cmake.org/Wiki/CMake:Eclipse_UNIX_Tutorial
 
 It is recommended to follow the more manual "Option 2," since the Eclipse
 project generator built into CMake tends to be outdated and leads you toward
@@ -54,7 +54,7 @@ a very awkward and occasionally broken project configuration.
 
 ### Protocol Buffers compiler
 
-This project uses serialization code based on [Protocol Buffers](https://code.google.com/p/protobuf/).
+This project uses serialization code based on [Protocol Buffers](https://github.com/google/protobuf).
 Since the official library does not support C, the [protobuf-c](https://github.com/protobuf-c/protobuf-c)
 generator is used instead. For the sake of convenience, the generated code and its dependencies are
 included in the source tree. The generated code can be regenerated at any time by installing the two
@@ -64,7 +64,7 @@ mentioned packages and running "make" in the "protobuf/" subdirectory.
 
 CMake toolchain files have been included from the following sources:
 
-* [iOS](https://code.google.com/p/ios-cmake/)
+* [iOS](https://code.google.com/archive/p/ios-cmake)
 * [BlackBerry 10](https://github.com/blackberry/OGRE/blob/master/src/CMake/toolchain/blackberry.toolchain.cmake)
 
 # Using libsignal-protocol-c
