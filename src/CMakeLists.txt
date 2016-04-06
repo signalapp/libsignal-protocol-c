@@ -57,7 +57,7 @@ set(axolotl_SRCS
 add_subdirectory(curve25519)
 add_subdirectory(protobuf-c)
 
-add_library(axolotl-c
+add_library(signal-protocol-c
 	${protobuf_SRCS}
 	${axolotl_SRCS}
 	$<TARGET_OBJECTS:curve25519>
@@ -87,4 +87,4 @@ INSTALL(
 	DESTINATION include/axolotl
 )
 
-INSTALL(TARGETS axolotl-c DESTINATION lib)
+INSTALL(TARGETS signal-protocol-c DESTINATION lib)

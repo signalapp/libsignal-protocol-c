@@ -22,7 +22,7 @@ set(LIBS ${LIBS}
 	${CHECK_LIBRARIES}
 	${OPENSSL_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
-	axolotl-c
+	signal-protocol-c
 )
 
 set(common_SRCS
