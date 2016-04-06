@@ -170,7 +170,7 @@ on failure, and those errors should be checked for in real usage.
 
 ## Memory management notes
 
-For every custom data type that the libaxolotl-c library can allocate and
+For every custom data type that the libsignal-protocol-c library can allocate and
 return, a corresponding way of deallocating an instance of that data type
 is provided.
 
