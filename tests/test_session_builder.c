@@ -102,232 +102,19 @@ START_TEST(test_basic_pre_key_v2)
             ratchet_identity_key_pair_get_public(bob_identity_key_pair));
     ck_assert_int_eq(result, 0);
 
-    /* Have Alice process Bob's pre key bundle */
+    /*
+     * Have Alice process Bob's pre key bundle, which should fail due to a
+     * missing unsigned pre key.
+     */
     result = session_builder_process_pre_key_bundle(alice_session_builder, bob_pre_key);
-    ck_assert_int_eq(result, 0);
-
-    /* Check that we can load the session state and verify its version */
-    result = axolotl_session_contains_session(alice_store, &bob_address);
-    ck_assert_int_eq(result, 1);
-
-    session_record *loaded_record = 0;
-    session_state *loaded_record_state = 0;
-    result = axolotl_session_load_session(alice_store, &loaded_record, &bob_address);
-    ck_assert_int_eq(result, 0);
-
-    loaded_record_state = session_record_get_state(loaded_record);
-    ck_assert_ptr_ne(loaded_record_state, 0);
-
-    ck_assert_int_eq(session_state_get_session_version(loaded_record_state), 2);
-
-    AXOLOTL_UNREF(loaded_record);
-    loaded_record = 0;
-    loaded_record_state = 0;
-
-    static const char original_message[] = "L'homme est condamné à être libre";
-    size_t original_message_len = sizeof(original_message) - 1;
-    session_cipher *alice_session_cipher = 0;
-    result = session_cipher_create(&alice_session_cipher, alice_store, &bob_address, global_context);
-    ck_assert_int_eq(result, 0);
-
-    ciphertext_message *outgoing_message = 0;
-    result = session_cipher_encrypt(alice_session_cipher, (uint8_t *)original_message, original_message_len, &outgoing_message);
-    ck_assert_int_eq(result, 0);
-
-    ck_assert_int_eq(ciphertext_message_get_type(outgoing_message), CIPHERTEXT_PREKEY_TYPE);
-
-    axolotl_buffer *outgoing_serialized = ciphertext_message_get_serialized(outgoing_message);
-
-    pre_key_whisper_message *incoming_message = 0;
-    result = pre_key_whisper_message_deserialize(&incoming_message,
-            axolotl_buffer_data(outgoing_serialized),
-            axolotl_buffer_len(outgoing_serialized), global_context);
-    ck_assert_int_eq(result, 0);
-
-    session_pre_key *bob_pre_key_record = 0;
-    result = session_pre_key_create(&bob_pre_key_record,
-            session_pre_key_bundle_get_pre_key_id(bob_pre_key),
-            bob_pre_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
-    ck_assert_int_eq(result, 0);
-
-    session_cipher *bob_session_cipher = 0;
-    result = session_cipher_create(&bob_session_cipher, bob_store, &alice_address, global_context);
-    ck_assert_int_eq(result, 0);
-
-    axolotl_buffer *plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message, 0, &plaintext);
-    ck_assert_int_eq(result, 0);
-
-    ck_assert_int_eq(axolotl_session_contains_session(bob_store, &alice_address), 1);
-
-    session_record *alice_recipient_session_record = 0;
-    axolotl_session_load_session(bob_store, &alice_recipient_session_record, &alice_address);
-
-    session_state *alice_recipient_session_state = session_record_get_state(alice_recipient_session_record);
-    ck_assert_int_eq(session_state_get_session_version(alice_recipient_session_state), 2);
-
-    uint8_t *plaintext_data = axolotl_buffer_data(plaintext);
-    size_t plaintext_len = axolotl_buffer_len(plaintext);
-
-    ck_assert_int_eq(original_message_len, plaintext_len);
-    ck_assert_int_eq(memcmp(original_message, plaintext_data, plaintext_len), 0);
-
-    ciphertext_message *bob_outgoing_message = 0;
-    result = session_cipher_encrypt(bob_session_cipher, (uint8_t *)original_message, original_message_len, &bob_outgoing_message);
-    ck_assert_int_eq(result, 0);
-
-    ck_assert_int_eq(ciphertext_message_get_type(bob_outgoing_message), CIPHERTEXT_WHISPER_TYPE);
-
-    axolotl_buffer *alice_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, (whisper_message *)bob_outgoing_message, 0, &alice_plaintext);
-    ck_assert_int_eq(result, 0);
-
-    uint8_t *alice_plaintext_data = axolotl_buffer_data(alice_plaintext);
-    size_t alice_plaintext_len = axolotl_buffer_len(alice_plaintext);
-
-    ck_assert_int_eq(original_message_len, alice_plaintext_len);
-    ck_assert_int_eq(memcmp(original_message, alice_plaintext_data, alice_plaintext_len), 0);
-
-    /* Cleanup */
-    axolotl_buffer_free(alice_plaintext); alice_plaintext = 0;
-    AXOLOTL_UNREF(bob_outgoing_message); bob_outgoing_message = 0;
-    AXOLOTL_UNREF(alice_recipient_session_record); alice_recipient_session_record = 0;
-    axolotl_buffer_free(plaintext); plaintext = 0;
-    AXOLOTL_UNREF(incoming_message); incoming_message = 0;
-    AXOLOTL_UNREF(outgoing_message); outgoing_message = 0;
-    AXOLOTL_UNREF(bob_pre_key); bob_pre_key = 0;
-    session_builder_free(alice_session_builder); alice_session_builder = 0;
-    session_cipher_free(alice_session_cipher); alice_session_cipher = 0;
-
-    fprintf(stderr, "Pre-interaction tests complete\n");
-
-    /* Interaction tests */
-    run_interaction(alice_store, bob_store);
-
-    /* Cleanup state from previous tests that we need to replace */
-    axolotl_store_context_destroy(alice_store); alice_store = 0;
-    AXOLOTL_UNREF(bob_pre_key_pair); bob_pre_key_pair = 0;
-    AXOLOTL_UNREF(bob_identity_key_pair); bob_identity_key_pair = 0;
-    AXOLOTL_UNREF(bob_pre_key_record); bob_pre_key_record = 0;
-
-    /* Create Alice's new session data */
-    setup_test_store_context(&alice_store, global_context);
-    result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
-    ck_assert_int_eq(result, 0);
-    result = session_cipher_create(&alice_session_cipher, alice_store, &bob_address, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Create Bob's new pre key bundle */
-    result = curve_generate_key_pair(global_context, &bob_pre_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    result = session_pre_key_bundle_create(&bob_pre_key,
-            bob_local_registration_id,
-            1, /* device ID */
-            31338, /* pre key ID */
-            ec_key_pair_get_public(bob_pre_key_pair),
-            0, 0, 0, 0,
-            ratchet_identity_key_pair_get_public(bob_identity_key_pair));
-    ck_assert_int_eq(result, 0);
-
-    /* Save the new pre key and signed pre key in Bob's data store */
-    result = session_pre_key_create(&bob_pre_key_record,
-            session_pre_key_bundle_get_pre_key_id(bob_pre_key),
-            bob_pre_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
-    ck_assert_int_eq(result, 0);
-
-    /* Have Alice process Bob's pre key bundle */
-    result = session_builder_process_pre_key_bundle(alice_session_builder, bob_pre_key);
-    ck_assert_int_eq(result, 0);
-
-    /* Have Alice encrypt a message for Bob */
-    result = session_cipher_encrypt(alice_session_cipher, (uint8_t *)original_message, original_message_len, &outgoing_message);
-    ck_assert_int_eq(result, 0);
-
-    ck_assert_int_eq(ciphertext_message_get_type(outgoing_message), CIPHERTEXT_PREKEY_TYPE);
-
-    /* Have Bob try to decrypt the message */
-    pre_key_whisper_message *outgoing_message_copy = 0;
-    result = pre_key_whisper_message_copy(&outgoing_message_copy, (pre_key_whisper_message *)outgoing_message, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* The decrypt should fail with a specific error */
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, outgoing_message_copy, 0, &plaintext);
-    ck_assert_int_eq(result, AX_ERR_UNTRUSTED_IDENTITY);
-    AXOLOTL_UNREF(outgoing_message_copy); outgoing_message_copy = 0;
-    axolotl_buffer_free(plaintext); plaintext = 0;
-
-    result = pre_key_whisper_message_copy(&outgoing_message_copy, (pre_key_whisper_message *)outgoing_message, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Save the identity key to Bob's store */
-    result = axolotl_identity_save_identity(bob_store,
-            alice_address.name, alice_address.name_len,
-            pre_key_whisper_message_get_identity_key(outgoing_message_copy));
-    ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(outgoing_message_copy); outgoing_message_copy = 0;
-
-    /* Try the decrypt again, this time it should succeed */
-    result = pre_key_whisper_message_copy(&outgoing_message_copy, (pre_key_whisper_message *)outgoing_message, global_context);
-    ck_assert_int_eq(result, 0);
-
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, outgoing_message_copy, 0, &plaintext);
-    ck_assert_int_eq(result, AX_SUCCESS);
-    AXOLOTL_UNREF(outgoing_message_copy); outgoing_message_copy = 0;
-
-    plaintext_data = axolotl_buffer_data(plaintext);
-    plaintext_len = axolotl_buffer_len(plaintext);
-
-    ck_assert_int_eq(original_message_len, plaintext_len);
-    ck_assert_int_eq(memcmp(original_message, plaintext_data, plaintext_len), 0);
-
-    AXOLOTL_UNREF(bob_pre_key); bob_pre_key = 0;
-
-    /* Create a new pre key for Bob */
-    ec_public_key *test_public_key = create_test_ec_public_key(global_context);
-
-    ratchet_identity_key_pair *alice_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(alice_store, &alice_identity_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    result = session_pre_key_bundle_create(&bob_pre_key,
-            bob_local_registration_id,
-            1, /* device ID */
-            31337, /* pre key ID */
-            test_public_key,
-            0, 0, 0, 0,
-            ratchet_identity_key_pair_get_public(alice_identity_key_pair));
-    ck_assert_int_eq(result, 0);
-
-    /* Have Alice process Bob's new pre key bundle, which should fail */
-    result = session_builder_process_pre_key_bundle(alice_session_builder, bob_pre_key);
-    ck_assert_int_eq(result, AX_ERR_UNTRUSTED_IDENTITY);
-
-    fprintf(stderr, "Post-interaction tests complete\n");
+    ck_assert_int_eq(result, AX_ERR_INVALID_KEY);
 
     /* Final cleanup */
-    AXOLOTL_UNREF(alice_identity_key_pair);
-    AXOLOTL_UNREF(test_public_key);
     AXOLOTL_UNREF(bob_pre_key);
-    axolotl_buffer_free(plaintext);
-    AXOLOTL_UNREF(outgoing_message);
-    AXOLOTL_UNREF(outgoing_message_copy);
-    AXOLOTL_UNREF(bob_pre_key_record);
     AXOLOTL_UNREF(bob_pre_key_pair);
     AXOLOTL_UNREF(bob_identity_key_pair);
-    session_cipher_free(bob_session_cipher);
     axolotl_store_context_destroy(bob_store);
     session_builder_free(alice_session_builder);
-    session_cipher_free(alice_session_cipher);
     axolotl_store_context_destroy(alice_store);
 }
 END_TEST
@@ -420,7 +207,7 @@ START_TEST(test_basic_pre_key_v3)
     loaded_record_state = 0;
 
     /* Encrypt an outgoing message to send to Bob */
-    static const char original_message[] = "L'homme est condamné à être libre";
+    static const char original_message[] = "L'homme est condamnï¿½ ï¿½ ï¿½tre libre";
     size_t original_message_len = sizeof(original_message) - 1;
     session_cipher *alice_session_cipher = 0;
     result = session_cipher_create(&alice_session_cipher, alice_store, &bob_address, global_context);
@@ -906,119 +693,14 @@ START_TEST(test_repeat_bundle_message_v2)
     result = axolotl_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
     ck_assert_int_eq(result, 0);
 
-    /* Have Alice process Bob's pre key bundle */
+    /*
+     * Have Alice process Bob's pre key bundle, which should fail due to a
+     * missing signed pre key.
+     */
     result = session_builder_process_pre_key_bundle(alice_session_builder, bob_pre_key);
-    ck_assert_int_eq(result, 0);
-
-    /* Initialize Alice's session cipher */
-    static const char original_message[] = "L'homme est condamné à être libre";
-    size_t original_message_len = sizeof(original_message) - 1;
-    session_cipher *alice_session_cipher = 0;
-    result = session_cipher_create(&alice_session_cipher, alice_store, &bob_address, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Create two outgoing messages */
-    ciphertext_message *outgoing_message_one = 0;
-    result = session_cipher_encrypt(alice_session_cipher, (uint8_t *)original_message, original_message_len, &outgoing_message_one);
-    ck_assert_int_eq(result, 0);
-
-    ciphertext_message *outgoing_message_two = 0;
-    result = session_cipher_encrypt(alice_session_cipher, (uint8_t *)original_message, original_message_len, &outgoing_message_two);
-    ck_assert_int_eq(result, 0);
-
-    ck_assert_int_eq(ciphertext_message_get_type(outgoing_message_one), CIPHERTEXT_PREKEY_TYPE);
-    ck_assert_int_eq(ciphertext_message_get_type(outgoing_message_two), CIPHERTEXT_PREKEY_TYPE);
-
-    /* Copy to an incoming message */
-    pre_key_whisper_message *incoming_message = 0;
-    result = pre_key_whisper_message_copy(&incoming_message, (pre_key_whisper_message *)outgoing_message_one, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Create Bob's session cipher */
-    session_cipher *bob_session_cipher = 0;
-    result = session_cipher_create(&bob_session_cipher, bob_store, &alice_address, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Have Bob decrypt the message, and verify that it matches */
-    axolotl_buffer *plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message, 0, &plaintext);
-    ck_assert_int_eq(result, 0);
-
-    uint8_t *plaintext_data = axolotl_buffer_data(plaintext);
-    size_t plaintext_len = axolotl_buffer_len(plaintext);
-
-    ck_assert_int_eq(original_message_len, plaintext_len);
-    ck_assert_int_eq(memcmp(original_message, plaintext_data, plaintext_len), 0);
-    axolotl_buffer_free(plaintext); plaintext = 0;
-
-    /* Construct an outgoing message from Bob back to Alice */
-    ciphertext_message *bob_outgoing_message = 0;
-    result = session_cipher_encrypt(bob_session_cipher, (uint8_t *)original_message, original_message_len, &bob_outgoing_message);
-    ck_assert_int_eq(result, 0);
-
-    /* Have Alice decrypt the message, and verify that it matches */
-    whisper_message *bob_outgoing_message_copy = 0;
-    result = whisper_message_copy(&bob_outgoing_message_copy, (whisper_message *)bob_outgoing_message, global_context);
-    ck_assert_int_eq(result, 0);
-
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_outgoing_message_copy, 0, &plaintext);
-    ck_assert_int_eq(result, 0);
-
-    plaintext_data = axolotl_buffer_data(plaintext);
-    plaintext_len = axolotl_buffer_len(plaintext);
-
-    ck_assert_int_eq(original_message_len, plaintext_len);
-    ck_assert_int_eq(memcmp(original_message, plaintext_data, plaintext_len), 0);
-    axolotl_buffer_free(plaintext); plaintext = 0;
-
-    fprintf(stderr, "Test setup complete\n");
-
-    /* The Test */
-
-    pre_key_whisper_message *incoming_message_two = 0;
-    result = pre_key_whisper_message_copy(&incoming_message_two, (pre_key_whisper_message *)outgoing_message_two, global_context);
-
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message_two, 0, &plaintext);
-    ck_assert_int_eq(result, 0);
-
-    plaintext_data = axolotl_buffer_data(plaintext);
-    plaintext_len = axolotl_buffer_len(plaintext);
-
-    ck_assert_int_eq(original_message_len, plaintext_len);
-    ck_assert_int_eq(memcmp(original_message, plaintext_data, plaintext_len), 0);
-    axolotl_buffer_free(plaintext); plaintext = 0;
-
-    ciphertext_message *bob_outgoing_message_two = 0;
-    result = session_cipher_encrypt(bob_session_cipher, (uint8_t *)original_message, original_message_len, &bob_outgoing_message_two);
-    ck_assert_int_eq(result, 0);
-
-    whisper_message *bob_outgoing_message_two_copy = 0;
-    result = whisper_message_copy(&bob_outgoing_message_two_copy, (whisper_message *)bob_outgoing_message_two, global_context);
-    ck_assert_int_eq(result, 0);
-
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_outgoing_message_two_copy, 0, &plaintext);
-    ck_assert_int_eq(result, 0);
-
-    plaintext_data = axolotl_buffer_data(plaintext);
-    plaintext_len = axolotl_buffer_len(plaintext);
-
-    ck_assert_int_eq(original_message_len, plaintext_len);
-    ck_assert_int_eq(memcmp(original_message, plaintext_data, plaintext_len), 0);
-    axolotl_buffer_free(plaintext); plaintext = 0;
-
-    fprintf(stderr, "Test process complete\n");
+    ck_assert_int_eq(result, AX_ERR_INVALID_KEY);
 
     /* Cleanup */
-    AXOLOTL_UNREF(bob_outgoing_message_two_copy);
-    AXOLOTL_UNREF(bob_outgoing_message_two);
-    AXOLOTL_UNREF(incoming_message_two);
-    AXOLOTL_UNREF(bob_outgoing_message_copy);
-    AXOLOTL_UNREF(bob_outgoing_message);
-    AXOLOTL_UNREF(incoming_message);
-    AXOLOTL_UNREF(outgoing_message_one);
-    AXOLOTL_UNREF(outgoing_message_two);
-    session_cipher_free(alice_session_cipher);
-    session_cipher_free(bob_session_cipher);
     axolotl_buffer_free(bob_signed_pre_key_public_serialized);
     axolotl_buffer_free(bob_signed_pre_key_signature);
     AXOLOTL_UNREF(bob_pre_key);
@@ -1116,7 +798,7 @@ START_TEST(test_repeat_bundle_message_v3)
     ck_assert_int_eq(result, 0);
 
     /* Initialize Alice's session cipher */
-    static const char original_message[] = "L'homme est condamné à être libre";
+    static const char original_message[] = "L'homme est condamnï¿½ ï¿½ ï¿½tre libre";
     size_t original_message_len = sizeof(original_message) - 1;
     session_cipher *alice_session_cipher = 0;
     result = session_cipher_create(&alice_session_cipher, alice_store, &bob_address, global_context);
@@ -1321,7 +1003,7 @@ START_TEST(test_bad_message_bundle)
     ck_assert_int_eq(result, 0);
 
     /* Encrypt an outgoing message to send to Bob */
-    static const char original_message[] = "L'homme est condamné à être libre";
+    static const char original_message[] = "L'homme est condamnï¿½ ï¿½ ï¿½tre libre";
     size_t original_message_len = sizeof(original_message) - 1;
     session_cipher *alice_session_cipher = 0;
     result = session_cipher_create(&alice_session_cipher, alice_store, &bob_address, global_context);
@@ -1679,7 +1361,7 @@ START_TEST(test_optional_one_time_pre_key)
     ck_assert_int_eq(session_state_get_session_version(state), 3);
     AXOLOTL_UNREF(record);
 
-    static const char original_message[] = "L'homme est condamné à être libre";
+    static const char original_message[] = "L'homme est condamnï¿½ ï¿½ ï¿½tre libre";
     size_t original_message_len = sizeof(original_message) - 1;
 
     /* Create Alice's session cipher */

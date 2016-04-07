@@ -383,11 +383,24 @@ START_TEST(test_ratcheting_session_as_bob)
             0x87, 0x51, 0x49, 0xbc, 0xee, 0xfc, 0xb4, 0x2b,
             0x4a};
 
+    uint8_t bobSignedPreKeyPublic[] = {
+            0x05, 0xac, 0x24, 0x8a, 0x8f, 0x26, 0x3b, 0xe6,
+            0x86, 0x35, 0x76, 0xeb, 0x03, 0x62, 0xe2, 0x8c,
+            0x82, 0x8f, 0x01, 0x07, 0xa3, 0x37, 0x9d, 0x34,
+            0xba, 0xb1, 0x58, 0x6b, 0xf8, 0xc7, 0x70, 0xcd,
+            0x67};
+
+    uint8_t bobSignedPreKeyPrivate[] = {
+            0x58, 0x39, 0x00, 0x13, 0x1f, 0xb7, 0x27, 0x99,
+            0x8b, 0x78, 0x03, 0xfe, 0x6a, 0xc2, 0x2c, 0xc5,
+            0x91, 0xf3, 0x42, 0xe4, 0xe4, 0x2a, 0x8c, 0x8d,
+            0x5d, 0x78, 0x19, 0x42, 0x09, 0xb8, 0xd2, 0x53};
+
     uint8_t senderChain[] = {
-            0xd2, 0x2f, 0xd5, 0x6d, 0x3f, 0xec, 0x81, 0x9c,
-            0xf4, 0xc3, 0xd5, 0x0c, 0x56, 0xed, 0xfb, 0x1c,
-            0x28, 0x0a, 0x1b, 0x31, 0x96, 0x45, 0x37, 0xf1,
-            0xd1, 0x61, 0xe1, 0xc9, 0x31, 0x48, 0xe3, 0x6b};
+            0x97, 0x97, 0xca, 0xca, 0x53, 0xc9, 0x89, 0xbb,
+            0xe2, 0x29, 0xa4, 0x0c, 0xa7, 0x72, 0x70, 0x10,
+            0xeb, 0x26, 0x04, 0xfc, 0x14, 0x94, 0x5d, 0x77,
+            0x95, 0x8a, 0x0a, 0xed, 0xa0, 0x88, 0xb4, 0x4d};
 
     /* Create Bob's public identity key */
     ec_public_key *bob_identity_key_public;
@@ -428,6 +441,23 @@ START_TEST(test_ratcheting_session_as_bob)
     ec_key_pair *bob_base_key_pair = bob_ephemeral_key_pair;
     AXOLOTL_REF(bob_ephemeral_key_pair);
 
+    /* Create Bob's public signed pre key */
+    ec_public_key *bob_signed_pre_key_public;
+    result = curve_decode_point(&bob_signed_pre_key_public, bobSignedPreKeyPublic, sizeof(bobSignedPreKeyPublic), global_context);
+    ck_assert_int_eq(result, 0);
+
+    /* Create Bob's private signed pre key */
+    ec_private_key *bob_signed_pre_key_private;
+    result = curve_decode_private_point(&bob_signed_pre_key_private, bobSignedPreKeyPrivate, sizeof(bobSignedPreKeyPrivate), global_context);
+    ck_assert_int_eq(result, 0);
+
+    /* Create Bob's signed pre key pair */
+    ec_key_pair *bob_signed_pre_key_pair;
+    result = ec_key_pair_create(&bob_signed_pre_key_pair, bob_signed_pre_key_public, bob_signed_pre_key_private);
+    ck_assert_int_eq(result, 0);
+    AXOLOTL_UNREF(bob_signed_pre_key_public);
+    AXOLOTL_UNREF(bob_signed_pre_key_private);
+
     /* Create Alice's base public key */
     ec_public_key *alice_base_key_public;
     result = curve_decode_point(&alice_base_key_public, aliceBasePublic, sizeof(aliceBasePublic), global_context);
@@ -447,13 +477,14 @@ START_TEST(test_ratcheting_session_as_bob)
     bob_axolotl_parameters *bob_parameters;
     result = bob_axolotl_parameters_create(&bob_parameters,
             bob_identity_key_pair,
-            bob_base_key_pair,
+            bob_signed_pre_key_pair,
             0, /* our_one_time_pre_key */
             bob_ephemeral_key_pair,
             alice_identity_key_public,
             alice_base_key_public);
     ck_assert_int_eq(result, 0);
     AXOLOTL_UNREF(bob_base_key_pair);
+    AXOLOTL_UNREF(bob_signed_pre_key_pair);
     AXOLOTL_UNREF(bob_ephemeral_key_pair);
     AXOLOTL_UNREF(alice_base_key_public);
     /*
@@ -467,7 +498,7 @@ START_TEST(test_ratcheting_session_as_bob)
     result = session_state_create(&test_session_state, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = ratcheting_session_bob_initialize(test_session_state, 2, bob_parameters, global_context);
+    result = ratcheting_session_bob_initialize(test_session_state, bob_parameters, global_context);
     ck_assert_int_eq(result, 0);
 
     ck_assert_int_eq(ec_public_key_compare(
@@ -513,6 +544,13 @@ START_TEST(test_ratcheting_session_as_alice)
             0x16, 0x92, 0x32, 0x4c, 0xef, 0xb1, 0xc5, 0xe6,
             0x26};
 
+    uint8_t bobSignedPreKeyPublic[] = {
+            0x05, 0xac, 0x24, 0x8a, 0x8f, 0x26, 0x3b, 0xe6,
+            0x86, 0x35, 0x76, 0xeb, 0x03, 0x62, 0xe2, 0x8c,
+            0x82, 0x8f, 0x01, 0x07, 0xa3, 0x37, 0x9d, 0x34,
+            0xba, 0xb1, 0x58, 0x6b, 0xf8, 0xc7, 0x70, 0xcd,
+            0x67};
+
     uint8_t aliceBasePublic[] = {
             0x05, 0x47, 0x2d, 0x1f, 0xb1, 0xa9, 0x86, 0x2c,
             0x3a, 0xf6, 0xbe, 0xac, 0xa8, 0x92, 0x02, 0x77,
@@ -553,10 +591,10 @@ START_TEST(test_ratcheting_session_as_alice)
             0x80, 0xeb, 0x0a, 0x6f, 0x4f, 0x5f, 0x8f, 0x58};
 
     uint8_t receiverChain[] = {
-            0xd2, 0x2f, 0xd5, 0x6d, 0x3f, 0xec, 0x81, 0x9c,
-            0xf4, 0xc3, 0xd5, 0x0c, 0x56, 0xed, 0xfb, 0x1c,
-            0x28, 0x0a, 0x1b, 0x31, 0x96, 0x45, 0x37, 0xf1,
-            0xd1, 0x61, 0xe1, 0xc9, 0x31, 0x48, 0xe3, 0x6b};
+            0x97, 0x97, 0xca, 0xca, 0x53, 0xc9, 0x89, 0xbb,
+            0xe2, 0x29, 0xa4, 0x0c, 0xa7, 0x72, 0x70, 0x10,
+            0xeb, 0x26, 0x04, 0xfc, 0x14, 0x94, 0x5d, 0x77,
+            0x95, 0x8a, 0x0a, 0xed, 0xa0, 0x88, 0xb4, 0x4d};
 
     /* Create Bob's public identity key */
     ec_public_key *bob_identity_key_public;
@@ -566,6 +604,11 @@ START_TEST(test_ratcheting_session_as_alice)
     /* Create Bob's public ephemeral key */
     ec_public_key *bob_ephemeral_key_public;
     result = curve_decode_point(&bob_ephemeral_key_public, bobPublic, sizeof(bobPublic), global_context);
+    ck_assert_int_eq(result, 0);
+
+    /* Create Bob's public signed pre key */
+    ec_public_key *bob_signed_pre_key;
+    result = curve_decode_point(&bob_signed_pre_key, bobSignedPreKeyPublic, sizeof(bobSignedPreKeyPublic), global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's base public key */
@@ -633,11 +676,11 @@ START_TEST(test_ratcheting_session_as_alice)
     alice_axolotl_parameters *alice_parameters;
     result = alice_axolotl_parameters_create(&alice_parameters,
             alice_identity_key_pair, alice_base_key,
-            bob_identity_key_public, bob_base_key_public, 0,
+            bob_identity_key_public, bob_signed_pre_key, 0,
             bob_ephemeral_key_public);
     ck_assert_int_eq(result, 0);
 
-    result = ratcheting_session_alice_initialize(test_session_state, 2, alice_parameters, global_context);
+    result = ratcheting_session_alice_initialize(test_session_state, alice_parameters, global_context);
     ck_assert_int_eq(result, 0);
 
     ck_assert_int_eq(ec_public_key_compare(
@@ -664,6 +707,7 @@ START_TEST(test_ratcheting_session_as_alice)
     AXOLOTL_UNREF(bob_identity_key_public);
     AXOLOTL_UNREF(bob_ephemeral_key_public);
     AXOLOTL_UNREF(bob_base_key_public);
+    AXOLOTL_UNREF(bob_signed_pre_key);
     AXOLOTL_UNREF(alice_base_key);
     AXOLOTL_UNREF(alice_ephemeral_key);
     AXOLOTL_UNREF(alice_identity_key_pair);

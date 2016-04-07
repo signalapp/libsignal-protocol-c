@@ -10,6 +10,7 @@
 #include "hkdf.h"
 #include "curve.h"
 #include "session_state.h"
+#include "protocol.h"
 #include "vpool.h"
 #include "LocalStorageProtocol.pb-c.h"
 
@@ -849,7 +850,7 @@ void bob_axolotl_parameters_destroy(axolotl_type_base *type)
 }
 
 int ratcheting_session_calculate_derived_keys(ratchet_root_key **root_key, ratchet_chain_key **chain_key,
-        uint32_t version, uint8_t *secret, size_t secret_len, axolotl_context *global_context)
+        uint8_t *secret, size_t secret_len, axolotl_context *global_context)
 {
     int result = 0;
     ssize_t result_size = 0;
@@ -860,7 +861,7 @@ int ratcheting_session_calculate_derived_keys(ratchet_root_key **root_key, ratch
     uint8_t salt[HASH_OUTPUT_SIZE];
     static const char key_info[] = "WhisperText";
 
-    result = hkdf_create(&kdf, (int)version, global_context);
+    result = hkdf_create(&kdf, 3, global_context);
     if(result < 0) {
         goto complete;
     }
@@ -921,7 +922,7 @@ int ratcheting_session_symmetric_is_alice(symmetric_axolotl_parameters *paramete
 }
 
 int ratcheting_session_symmetric_initialize(
-        session_state *state, uint32_t version,
+        session_state *state,
         symmetric_axolotl_parameters *parameters,
         axolotl_context *global_context)
 {
@@ -941,7 +942,7 @@ int ratcheting_session_symmetric_initialize(
                 0,
                 parameters->their_ratchet_key);
         if(result >= 0) {
-            result = ratcheting_session_alice_initialize(state, version, alice_parameters, global_context);
+            result = ratcheting_session_alice_initialize(state, alice_parameters, global_context);
         }
         if(alice_parameters) {
             AXOLOTL_UNREF(alice_parameters);
@@ -957,7 +958,7 @@ int ratcheting_session_symmetric_initialize(
                 parameters->their_identity_key,
                 parameters->their_base_key);
         if(result >= 0) {
-            result = ratcheting_session_bob_initialize(state, version, bob_parameters, global_context);
+            result = ratcheting_session_bob_initialize(state, bob_parameters, global_context);
         }
         if(bob_parameters) {
             AXOLOTL_UNREF(bob_parameters);
@@ -967,7 +968,7 @@ int ratcheting_session_symmetric_initialize(
 }
 
 int ratcheting_session_alice_initialize(
-        session_state *state, uint32_t version,
+        session_state *state,
         alice_axolotl_parameters *parameters,
         axolotl_context *global_context)
 {
@@ -982,6 +983,7 @@ int ratcheting_session_alice_initialize(
     struct vpool vp;
     uint8_t *secret = 0;
     size_t secret_len = 0;
+    uint8_t discontinuity_data[32];
 
     assert(state);
     assert(parameters);
@@ -994,13 +996,10 @@ int ratcheting_session_alice_initialize(
         goto complete;
     }
 
-    if(version >= 3) {
-        uint8_t discontinuity_data[32];
-        memset(discontinuity_data, 0xFF, sizeof(discontinuity_data));
-        if(!vpool_insert(&vp, vpool_get_length(&vp), discontinuity_data, sizeof(discontinuity_data))) {
-            result = AX_ERR_NOMEM;
-            goto complete;
-        }
+    memset(discontinuity_data, 0xFF, sizeof(discontinuity_data));
+    if(!vpool_insert(&vp, vpool_get_length(&vp), discontinuity_data, sizeof(discontinuity_data))) {
+        result = AX_ERR_NOMEM;
+        goto complete;
     }
 
     agreement_len = curve_calculate_agreement(&agreement,
@@ -1045,7 +1044,7 @@ int ratcheting_session_alice_initialize(
         goto complete;
     }
 
-    if(version >= 3 && parameters->their_one_time_pre_key) {
+    if(parameters->their_one_time_pre_key) {
         agreement_len = curve_calculate_agreement(&agreement,
                 parameters->their_one_time_pre_key, ec_key_pair_get_private(parameters->our_base_key));
         if(agreement_len < 0) {
@@ -1069,7 +1068,7 @@ int ratcheting_session_alice_initialize(
     secret = vpool_get_buf(&vp);
     secret_len = vpool_get_length(&vp);
 
-    result = ratcheting_session_calculate_derived_keys(&derived_root, &derived_chain, version, secret, secret_len, global_context);
+    result = ratcheting_session_calculate_derived_keys(&derived_root, &derived_chain, secret, secret_len, global_context);
     if(result < 0) {
         goto complete;
     }
@@ -1084,7 +1083,7 @@ int ratcheting_session_alice_initialize(
 
 complete:
     if(result >= 0) {
-        session_state_set_session_version(state, version);
+        session_state_set_session_version(state, CIPHERTEXT_CURRENT_VERSION);
         session_state_set_remote_identity_key(state, parameters->their_identity_key);
         session_state_set_local_identity_key(state, parameters->our_identity_key->public_key);
         session_state_add_receiver_chain(state, parameters->their_ratchet_key, derived_chain);
@@ -1116,7 +1115,7 @@ complete:
 }
 
 int ratcheting_session_bob_initialize(
-        session_state *state, uint32_t version,
+        session_state *state,
         bob_axolotl_parameters *parameters,
         axolotl_context *global_context)
 {
@@ -1128,7 +1127,7 @@ int ratcheting_session_bob_initialize(
     struct vpool vp;
     uint8_t *secret = 0;
     size_t secret_len = 0;
-
+    uint8_t discontinuity_data[32];
 
     assert(state);
     assert(parameters);
@@ -1136,13 +1135,10 @@ int ratcheting_session_bob_initialize(
 
     vpool_init(&vp, 1024, 0);
 
-    if(version >= 3) {
-        uint8_t discontinuity_data[32];
-        memset(discontinuity_data, 0xFF, sizeof(discontinuity_data));
-        if(!vpool_insert(&vp, vpool_get_length(&vp), discontinuity_data, sizeof(discontinuity_data))) {
-            result = AX_ERR_NOMEM;
-            goto complete;
-        }
+    memset(discontinuity_data, 0xFF, sizeof(discontinuity_data));
+    if(!vpool_insert(&vp, vpool_get_length(&vp), discontinuity_data, sizeof(discontinuity_data))) {
+        result = AX_ERR_NOMEM;
+        goto complete;
     }
 
     agreement_len = curve_calculate_agreement(&agreement,
@@ -1187,7 +1183,7 @@ int ratcheting_session_bob_initialize(
         goto complete;
     }
 
-    if(version >= 3 && parameters->our_one_time_pre_key) {
+    if(parameters->our_one_time_pre_key) {
         agreement_len = curve_calculate_agreement(&agreement,
                 parameters->their_base_key, ec_key_pair_get_private(parameters->our_one_time_pre_key));
         if(agreement_len < 0) {
@@ -1211,11 +1207,11 @@ int ratcheting_session_bob_initialize(
     secret = vpool_get_buf(&vp);
     secret_len = vpool_get_length(&vp);
 
-    result = ratcheting_session_calculate_derived_keys(&derived_root, &derived_chain, version, secret, secret_len, global_context);
+    result = ratcheting_session_calculate_derived_keys(&derived_root, &derived_chain, secret, secret_len, global_context);
 
 complete:
     if(result >= 0) {
-        session_state_set_session_version(state, version);
+        session_state_set_session_version(state, CIPHERTEXT_CURRENT_VERSION);
         session_state_set_remote_identity_key(state, parameters->their_identity_key);
         session_state_set_local_identity_key(state, parameters->our_identity_key->public_key);
         session_state_set_sender_chain(state, parameters->our_ratchet_key, derived_chain);

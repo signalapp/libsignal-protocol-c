@@ -79,9 +79,9 @@ int bob_axolotl_parameters_create(
         ec_public_key *their_base_key);
 void bob_axolotl_parameters_destroy(axolotl_type_base *type);
 
-int ratcheting_session_symmetric_initialize(session_state *state, uint32_t version, symmetric_axolotl_parameters *parameters, axolotl_context *global_context);
-int ratcheting_session_alice_initialize(session_state *state, uint32_t version, alice_axolotl_parameters *parameters, axolotl_context *global_context);
-int ratcheting_session_bob_initialize(session_state *state, uint32_t version, bob_axolotl_parameters *parameters, axolotl_context *global_context);
+int ratcheting_session_symmetric_initialize(session_state *state, symmetric_axolotl_parameters *parameters, axolotl_context *global_context);
+int ratcheting_session_alice_initialize(session_state *state, alice_axolotl_parameters *parameters, axolotl_context *global_context);
+int ratcheting_session_bob_initialize(session_state *state, bob_axolotl_parameters *parameters, axolotl_context *global_context);
 
 #ifdef __cplusplus
 }

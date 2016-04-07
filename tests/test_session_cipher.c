@@ -52,35 +52,8 @@ void test_teardown()
     pthread_mutexattr_destroy(&global_mutex_attr);
 }
 
-void initialize_sessions_v2(session_state *alice_state, session_state *bob_state);
 void initialize_sessions_v3(session_state *alice_state, session_state *bob_state);
 void run_interaction(session_record *alice_session_record, session_record *bob_session_record);
-
-START_TEST(test_basic_session_v2)
-{
-    int result = 0;
-
-    /* Create Alice's session record */
-    session_record *alice_session_record = 0;
-    result = session_record_create(&alice_session_record, 0, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Create Bob's session record */
-    session_record *bob_session_record = 0;
-    result = session_record_create(&bob_session_record, 0, global_context);
-    ck_assert_int_eq(result, 0);
-
-    initialize_sessions_v2(
-            session_record_get_state(alice_session_record),
-            session_record_get_state(bob_session_record));
-
-    run_interaction(alice_session_record, bob_session_record);
-
-    /* Cleanup */
-    AXOLOTL_UNREF(alice_session_record);
-    AXOLOTL_UNREF(bob_session_record);
-}
-END_TEST
 
 START_TEST(test_basic_session_v3)
 {
@@ -107,92 +80,6 @@ START_TEST(test_basic_session_v3)
     AXOLOTL_UNREF(bob_session_record);
 }
 END_TEST
-
-void initialize_sessions_v2(session_state *alice_state, session_state *bob_state)
-{
-    int result = 0;
-
-    /* Generate Alice's identity key */
-    ec_key_pair *alice_identity_key_pair = 0;
-    result = curve_generate_key_pair(global_context, &alice_identity_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    ratchet_identity_key_pair *alice_identity_key = 0;
-    result = ratchet_identity_key_pair_create(&alice_identity_key,
-            ec_key_pair_get_public(alice_identity_key_pair),
-            ec_key_pair_get_private(alice_identity_key_pair));
-    ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(alice_identity_key_pair);
-
-    /* Generate Alice's base key */
-    ec_key_pair *alice_base_key = 0;
-    result = curve_generate_key_pair(global_context, &alice_base_key);
-    ck_assert_int_eq(result, 0);
-
-    /* Generate Alice's ephemeral key */
-    ec_key_pair *alice_ephemeral_key = 0;
-    result = curve_generate_key_pair(global_context, &alice_ephemeral_key);
-    ck_assert_int_eq(result, 0);
-
-    /* Generate Bob's identity key */
-    ec_key_pair *bob_identity_key_pair = 0;
-    result = curve_generate_key_pair(global_context, &bob_identity_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    ratchet_identity_key_pair *bob_identity_key = 0;
-    result = ratchet_identity_key_pair_create(&bob_identity_key,
-            ec_key_pair_get_public(bob_identity_key_pair),
-            ec_key_pair_get_private(bob_identity_key_pair));
-    ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(bob_identity_key_pair);
-
-    /* Generate Bob's base key */
-    ec_key_pair *bob_base_key = 0;
-    result = curve_generate_key_pair(global_context, &bob_base_key);
-    ck_assert_int_eq(result, 0);
-
-    /* Generate Bob's ephemeral key */
-    ec_key_pair *bob_ephemeral_key = bob_base_key;
-    AXOLOTL_REF(bob_base_key);
-
-    /* Create Alice's parameters */
-    alice_axolotl_parameters *alice_parameters = 0;
-    result = alice_axolotl_parameters_create(&alice_parameters,
-            /* our_identity_key       */ alice_identity_key,
-            /* our_base_key           */ alice_base_key,
-            /* their_identity_key     */ ratchet_identity_key_pair_get_public(bob_identity_key),
-            /* their_signed_pre_key   */ ec_key_pair_get_public(bob_ephemeral_key),
-            /* their_one_time_pre_key */ 0,
-            /* their_ratchet_key      */ ec_key_pair_get_public(bob_ephemeral_key));
-    ck_assert_int_eq(result, 0);
-
-    /* Create Bob's parameters */
-    bob_axolotl_parameters *bob_parameters = 0;
-    result = bob_axolotl_parameters_create(&bob_parameters,
-            /* our_identity_key     */ bob_identity_key,
-            /* our_signed_pre_key   */ bob_base_key,
-            /* our_one_time_pre_key */ 0,
-            /* our_ratchet_key      */ bob_ephemeral_key,
-            /* their_identity_key   */ ratchet_identity_key_pair_get_public(alice_identity_key),
-            /* their_base_key       */ ec_key_pair_get_public(alice_base_key));
-    ck_assert_int_eq(result, 0);
-
-    /* Initialize the ratcheting sessions */
-    result = ratcheting_session_alice_initialize(alice_state, 2, alice_parameters, global_context);
-    ck_assert_int_eq(result, 0);
-    result = ratcheting_session_bob_initialize(bob_state, 2, bob_parameters, global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Unref cleanup */
-    AXOLOTL_UNREF(alice_identity_key);
-    AXOLOTL_UNREF(alice_base_key);
-    AXOLOTL_UNREF(alice_ephemeral_key);
-    AXOLOTL_UNREF(bob_identity_key);
-    AXOLOTL_UNREF(bob_base_key);
-    AXOLOTL_UNREF(bob_ephemeral_key);
-    AXOLOTL_UNREF(alice_parameters);
-    AXOLOTL_UNREF(bob_parameters);
-}
 
 void initialize_sessions_v3(session_state *alice_state, session_state *bob_state)
 {
@@ -273,9 +160,9 @@ void initialize_sessions_v3(session_state *alice_state, session_state *bob_state
     ck_assert_int_eq(result, 0);
 
     /* Initialize the ratcheting sessions */
-    result = ratcheting_session_alice_initialize(alice_state, 3, alice_parameters, global_context);
+    result = ratcheting_session_alice_initialize(alice_state, alice_parameters, global_context);
     ck_assert_int_eq(result, 0);
-    result = ratcheting_session_bob_initialize(bob_state, 3, bob_parameters, global_context);
+    result = ratcheting_session_bob_initialize(bob_state, bob_parameters, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Unref cleanup */
@@ -638,7 +525,6 @@ Suite *session_cipher_suite(void)
 
     TCase *tcase = tcase_create("case");
     tcase_add_checked_fixture(tcase, test_setup, test_teardown);
-    tcase_add_test(tcase, test_basic_session_v2);
     tcase_add_test(tcase, test_basic_session_v3);
     tcase_add_test(tcase, test_message_key_limits);
     suite_add_tcase(suite, tcase);

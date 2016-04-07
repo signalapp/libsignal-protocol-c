@@ -246,7 +246,7 @@ int key_exchange_message_deserialize(key_exchange_message **message, const uint8
     version = (data[0] & 0xF0) >> 4;
     supported_version = data[0] & 0x0F;
 
-    if(version <= CIPHERTEXT_UNSUPPORTED_VERSION) {
+    if(version < CIPHERTEXT_CURRENT_VERSION) {
         axolotl_log(global_context, AX_LOG_WARNING, "Unsupported legacy version: %d", version);
         result = AX_ERR_LEGACY_MESSAGE;
         goto complete;
@@ -266,7 +266,7 @@ int key_exchange_message_deserialize(key_exchange_message **message, const uint8
 
     if(!message_structure->has_id || !message_structure->has_basekey
             || !message_structure->has_ratchetkey || !message_structure->has_identitykey
-            || (version >= 3 && !message_structure->has_basekeysignature)) {
+            || !message_structure->has_basekeysignature) {
         axolotl_log(global_context, AX_LOG_WARNING, "Some required fields missing");
         result = AX_ERR_INVALID_MESSAGE;
         goto complete;
@@ -1044,7 +1044,7 @@ int pre_key_whisper_message_deserialize(pre_key_whisper_message **message,
     message_data = data + 1;
     message_len = len - 1;
 
-    if(version <= CIPHERTEXT_UNSUPPORTED_VERSION) {
+    if(version < CIPHERTEXT_CURRENT_VERSION) {
         axolotl_log(global_context, AX_LOG_WARNING, "Unsupported legacy version: %d", version);
         result = AX_ERR_LEGACY_MESSAGE;
         goto complete;
@@ -1062,8 +1062,7 @@ int pre_key_whisper_message_deserialize(pre_key_whisper_message **message,
         goto complete;
     }
 
-    if((version == 2 && !message_structure->has_prekeyid) ||
-            (version == 3 && !message_structure->has_signedprekeyid) ||
+    if(!message_structure->has_signedprekeyid ||
             !message_structure->has_basekey ||
             !message_structure->has_identitykey ||
             !message_structure->has_message) {
