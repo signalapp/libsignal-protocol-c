@@ -7,90 +7,90 @@
 #endif
 
 #include "WhisperTextProtocol.pb-c.h"
-void   textsecure__whisper_message__init
-                     (Textsecure__WhisperMessage         *message)
+void   textsecure__signal_message__init
+                     (Textsecure__SignalMessage         *message)
 {
-  static Textsecure__WhisperMessage init_value = TEXTSECURE__WHISPER_MESSAGE__INIT;
+  static Textsecure__SignalMessage init_value = TEXTSECURE__SIGNAL_MESSAGE__INIT;
   *message = init_value;
 }
-size_t textsecure__whisper_message__get_packed_size
-                     (const Textsecure__WhisperMessage *message)
+size_t textsecure__signal_message__get_packed_size
+                     (const Textsecure__SignalMessage *message)
 {
-  assert(message->base.descriptor == &textsecure__whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__signal_message__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t textsecure__whisper_message__pack
-                     (const Textsecure__WhisperMessage *message,
+size_t textsecure__signal_message__pack
+                     (const Textsecure__SignalMessage *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &textsecure__whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__signal_message__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t textsecure__whisper_message__pack_to_buffer
-                     (const Textsecure__WhisperMessage *message,
+size_t textsecure__signal_message__pack_to_buffer
+                     (const Textsecure__SignalMessage *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &textsecure__whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__signal_message__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Textsecure__WhisperMessage *
-       textsecure__whisper_message__unpack
+Textsecure__SignalMessage *
+       textsecure__signal_message__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Textsecure__WhisperMessage *)
-     protobuf_c_message_unpack (&textsecure__whisper_message__descriptor,
+  return (Textsecure__SignalMessage *)
+     protobuf_c_message_unpack (&textsecure__signal_message__descriptor,
                                 allocator, len, data);
 }
-void   textsecure__whisper_message__free_unpacked
-                     (Textsecure__WhisperMessage *message,
+void   textsecure__signal_message__free_unpacked
+                     (Textsecure__SignalMessage *message,
                       ProtobufCAllocator *allocator)
 {
-  assert(message->base.descriptor == &textsecure__whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__signal_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   textsecure__pre_key_whisper_message__init
-                     (Textsecure__PreKeyWhisperMessage         *message)
+void   textsecure__pre_key_signal_message__init
+                     (Textsecure__PreKeySignalMessage         *message)
 {
-  static Textsecure__PreKeyWhisperMessage init_value = TEXTSECURE__PRE_KEY_WHISPER_MESSAGE__INIT;
+  static Textsecure__PreKeySignalMessage init_value = TEXTSECURE__PRE_KEY_SIGNAL_MESSAGE__INIT;
   *message = init_value;
 }
-size_t textsecure__pre_key_whisper_message__get_packed_size
-                     (const Textsecure__PreKeyWhisperMessage *message)
+size_t textsecure__pre_key_signal_message__get_packed_size
+                     (const Textsecure__PreKeySignalMessage *message)
 {
-  assert(message->base.descriptor == &textsecure__pre_key_whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__pre_key_signal_message__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t textsecure__pre_key_whisper_message__pack
-                     (const Textsecure__PreKeyWhisperMessage *message,
+size_t textsecure__pre_key_signal_message__pack
+                     (const Textsecure__PreKeySignalMessage *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &textsecure__pre_key_whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__pre_key_signal_message__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t textsecure__pre_key_whisper_message__pack_to_buffer
-                     (const Textsecure__PreKeyWhisperMessage *message,
+size_t textsecure__pre_key_signal_message__pack_to_buffer
+                     (const Textsecure__PreKeySignalMessage *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &textsecure__pre_key_whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__pre_key_signal_message__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Textsecure__PreKeyWhisperMessage *
-       textsecure__pre_key_whisper_message__unpack
+Textsecure__PreKeySignalMessage *
+       textsecure__pre_key_signal_message__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Textsecure__PreKeyWhisperMessage *)
-     protobuf_c_message_unpack (&textsecure__pre_key_whisper_message__descriptor,
+  return (Textsecure__PreKeySignalMessage *)
+     protobuf_c_message_unpack (&textsecure__pre_key_signal_message__descriptor,
                                 allocator, len, data);
 }
-void   textsecure__pre_key_whisper_message__free_unpacked
-                     (Textsecure__PreKeyWhisperMessage *message,
+void   textsecure__pre_key_signal_message__free_unpacked
+                     (Textsecure__PreKeySignalMessage *message,
                       ProtobufCAllocator *allocator)
 {
-  assert(message->base.descriptor == &textsecure__pre_key_whisper_message__descriptor);
+  assert(message->base.descriptor == &textsecure__pre_key_signal_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__key_exchange_message__init
@@ -222,15 +222,15 @@ void   textsecure__sender_key_distribution_message__free_unpacked
   assert(message->base.descriptor == &textsecure__sender_key_distribution_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-static const ProtobufCFieldDescriptor textsecure__whisper_message__field_descriptors[4] =
+static const ProtobufCFieldDescriptor textsecure__signal_message__field_descriptors[4] =
 {
   {
     "ratchetKey",
     1,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(Textsecure__WhisperMessage, has_ratchetkey),
-    offsetof(Textsecure__WhisperMessage, ratchetkey),
+    offsetof(Textsecure__SignalMessage, has_ratchetkey),
+    offsetof(Textsecure__SignalMessage, ratchetkey),
     NULL,
     NULL,
     0,             /* flags */
@@ -241,8 +241,8 @@ static const ProtobufCFieldDescriptor textsecure__whisper_message__field_descrip
     2,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    offsetof(Textsecure__WhisperMessage, has_counter),
-    offsetof(Textsecure__WhisperMessage, counter),
+    offsetof(Textsecure__SignalMessage, has_counter),
+    offsetof(Textsecure__SignalMessage, counter),
     NULL,
     NULL,
     0,             /* flags */
@@ -253,8 +253,8 @@ static const ProtobufCFieldDescriptor textsecure__whisper_message__field_descrip
     3,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    offsetof(Textsecure__WhisperMessage, has_previouscounter),
-    offsetof(Textsecure__WhisperMessage, previouscounter),
+    offsetof(Textsecure__SignalMessage, has_previouscounter),
+    offsetof(Textsecure__SignalMessage, previouscounter),
     NULL,
     NULL,
     0,             /* flags */
@@ -265,49 +265,49 @@ static const ProtobufCFieldDescriptor textsecure__whisper_message__field_descrip
     4,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(Textsecure__WhisperMessage, has_ciphertext),
-    offsetof(Textsecure__WhisperMessage, ciphertext),
+    offsetof(Textsecure__SignalMessage, has_ciphertext),
+    offsetof(Textsecure__SignalMessage, ciphertext),
     NULL,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned textsecure__whisper_message__field_indices_by_name[] = {
+static const unsigned textsecure__signal_message__field_indices_by_name[] = {
   3,   /* field[3] = ciphertext */
   1,   /* field[1] = counter */
   2,   /* field[2] = previousCounter */
   0,   /* field[0] = ratchetKey */
 };
-static const ProtobufCIntRange textsecure__whisper_message__number_ranges[1 + 1] =
+static const ProtobufCIntRange textsecure__signal_message__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 4 }
 };
-const ProtobufCMessageDescriptor textsecure__whisper_message__descriptor =
+const ProtobufCMessageDescriptor textsecure__signal_message__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "textsecure.WhisperMessage",
-  "WhisperMessage",
-  "Textsecure__WhisperMessage",
+  "textsecure.SignalMessage",
+  "SignalMessage",
+  "Textsecure__SignalMessage",
   "textsecure",
-  sizeof(Textsecure__WhisperMessage),
+  sizeof(Textsecure__SignalMessage),
   4,
-  textsecure__whisper_message__field_descriptors,
-  textsecure__whisper_message__field_indices_by_name,
-  1,  textsecure__whisper_message__number_ranges,
-  (ProtobufCMessageInit) textsecure__whisper_message__init,
+  textsecure__signal_message__field_descriptors,
+  textsecure__signal_message__field_indices_by_name,
+  1,  textsecure__signal_message__number_ranges,
+  (ProtobufCMessageInit) textsecure__signal_message__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor textsecure__pre_key_whisper_message__field_descriptors[6] =
+static const ProtobufCFieldDescriptor textsecure__pre_key_signal_message__field_descriptors[6] =
 {
   {
     "preKeyId",
     1,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    offsetof(Textsecure__PreKeyWhisperMessage, has_prekeyid),
-    offsetof(Textsecure__PreKeyWhisperMessage, prekeyid),
+    offsetof(Textsecure__PreKeySignalMessage, has_prekeyid),
+    offsetof(Textsecure__PreKeySignalMessage, prekeyid),
     NULL,
     NULL,
     0,             /* flags */
@@ -318,8 +318,8 @@ static const ProtobufCFieldDescriptor textsecure__pre_key_whisper_message__field
     2,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(Textsecure__PreKeyWhisperMessage, has_basekey),
-    offsetof(Textsecure__PreKeyWhisperMessage, basekey),
+    offsetof(Textsecure__PreKeySignalMessage, has_basekey),
+    offsetof(Textsecure__PreKeySignalMessage, basekey),
     NULL,
     NULL,
     0,             /* flags */
@@ -330,8 +330,8 @@ static const ProtobufCFieldDescriptor textsecure__pre_key_whisper_message__field
     3,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(Textsecure__PreKeyWhisperMessage, has_identitykey),
-    offsetof(Textsecure__PreKeyWhisperMessage, identitykey),
+    offsetof(Textsecure__PreKeySignalMessage, has_identitykey),
+    offsetof(Textsecure__PreKeySignalMessage, identitykey),
     NULL,
     NULL,
     0,             /* flags */
@@ -342,8 +342,8 @@ static const ProtobufCFieldDescriptor textsecure__pre_key_whisper_message__field
     4,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(Textsecure__PreKeyWhisperMessage, has_message),
-    offsetof(Textsecure__PreKeyWhisperMessage, message),
+    offsetof(Textsecure__PreKeySignalMessage, has_message),
+    offsetof(Textsecure__PreKeySignalMessage, message),
     NULL,
     NULL,
     0,             /* flags */
@@ -354,8 +354,8 @@ static const ProtobufCFieldDescriptor textsecure__pre_key_whisper_message__field
     5,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    offsetof(Textsecure__PreKeyWhisperMessage, has_registrationid),
-    offsetof(Textsecure__PreKeyWhisperMessage, registrationid),
+    offsetof(Textsecure__PreKeySignalMessage, has_registrationid),
+    offsetof(Textsecure__PreKeySignalMessage, registrationid),
     NULL,
     NULL,
     0,             /* flags */
@@ -366,15 +366,15 @@ static const ProtobufCFieldDescriptor textsecure__pre_key_whisper_message__field
     6,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_UINT32,
-    offsetof(Textsecure__PreKeyWhisperMessage, has_signedprekeyid),
-    offsetof(Textsecure__PreKeyWhisperMessage, signedprekeyid),
+    offsetof(Textsecure__PreKeySignalMessage, has_signedprekeyid),
+    offsetof(Textsecure__PreKeySignalMessage, signedprekeyid),
     NULL,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned textsecure__pre_key_whisper_message__field_indices_by_name[] = {
+static const unsigned textsecure__pre_key_signal_message__field_indices_by_name[] = {
   1,   /* field[1] = baseKey */
   2,   /* field[2] = identityKey */
   3,   /* field[3] = message */
@@ -382,24 +382,24 @@ static const unsigned textsecure__pre_key_whisper_message__field_indices_by_name
   4,   /* field[4] = registrationId */
   5,   /* field[5] = signedPreKeyId */
 };
-static const ProtobufCIntRange textsecure__pre_key_whisper_message__number_ranges[1 + 1] =
+static const ProtobufCIntRange textsecure__pre_key_signal_message__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 6 }
 };
-const ProtobufCMessageDescriptor textsecure__pre_key_whisper_message__descriptor =
+const ProtobufCMessageDescriptor textsecure__pre_key_signal_message__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "textsecure.PreKeyWhisperMessage",
-  "PreKeyWhisperMessage",
-  "Textsecure__PreKeyWhisperMessage",
+  "textsecure.PreKeySignalMessage",
+  "PreKeySignalMessage",
+  "Textsecure__PreKeySignalMessage",
   "textsecure",
-  sizeof(Textsecure__PreKeyWhisperMessage),
+  sizeof(Textsecure__PreKeySignalMessage),
   6,
-  textsecure__pre_key_whisper_message__field_descriptors,
-  textsecure__pre_key_whisper_message__field_indices_by_name,
-  1,  textsecure__pre_key_whisper_message__number_ranges,
-  (ProtobufCMessageInit) textsecure__pre_key_whisper_message__init,
+  textsecure__pre_key_signal_message__field_descriptors,
+  textsecure__pre_key_signal_message__field_indices_by_name,
+  1,  textsecure__pre_key_signal_message__number_ranges,
+  (ProtobufCMessageInit) textsecure__pre_key_signal_message__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor textsecure__key_exchange_message__field_descriptors[5] =

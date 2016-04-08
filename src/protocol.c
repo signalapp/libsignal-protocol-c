@@ -532,7 +532,7 @@ static int signal_message_serialize(axolotl_buffer **buffer, const signal_messag
     int result = 0;
     size_t result_size = 0;
     axolotl_buffer *result_buf = 0;
-    Textsecure__WhisperMessage message_structure = TEXTSECURE__WHISPER_MESSAGE__INIT;
+    Textsecure__SignalMessage message_structure = TEXTSECURE__SIGNAL_MESSAGE__INIT;
     size_t len = 0;
     uint8_t *data = 0;
 
@@ -554,7 +554,7 @@ static int signal_message_serialize(axolotl_buffer **buffer, const signal_messag
     message_structure.ciphertext.len = axolotl_buffer_len(message->ciphertext);
     message_structure.has_ciphertext = 1;
 
-    len = textsecure__whisper_message__get_packed_size(&message_structure);
+    len = textsecure__signal_message__get_packed_size(&message_structure);
 
     result_buf = axolotl_buffer_alloc(len + 1);
     if(!result_buf) {
@@ -565,7 +565,7 @@ static int signal_message_serialize(axolotl_buffer **buffer, const signal_messag
     data = axolotl_buffer_data(result_buf);
     data[0] = version;
 
-    result_size = textsecure__whisper_message__pack(&message_structure, data + 1);
+    result_size = textsecure__signal_message__pack(&message_structure, data + 1);
     if(result_size != len) {
         axolotl_buffer_free(result_buf);
         result = AX_ERR_INVALID_PROTO_BUF;
@@ -587,7 +587,7 @@ int signal_message_deserialize(signal_message **message, const uint8_t *data, si
 {
     int result = 0;
     signal_message *result_message = 0;
-    Textsecure__WhisperMessage *message_structure = 0;
+    Textsecure__SignalMessage *message_structure = 0;
     uint8_t version = 0;
     uint8_t *ciphertext_data = 0;
     uint8_t *serialized_data = 0;
@@ -619,7 +619,7 @@ int signal_message_deserialize(signal_message **message, const uint8_t *data, si
         goto complete;
     }
 
-    message_structure = textsecure__whisper_message__unpack(0, message_len, message_data);
+    message_structure = textsecure__signal_message__unpack(0, message_len, message_data);
     if(!message_structure) {
         result = AX_ERR_INVALID_PROTO_BUF;
         goto complete;
@@ -672,7 +672,7 @@ int signal_message_deserialize(signal_message **message, const uint8_t *data, si
 
 complete:
     if(message_structure) {
-        textsecure__whisper_message__free_unpacked(message_structure, 0);
+        textsecure__signal_message__free_unpacked(message_structure, 0);
     }
     if(result >= 0) {
         *message = result_message;
@@ -952,7 +952,7 @@ static int pre_key_signal_message_serialize(axolotl_buffer **buffer, const pre_k
     int result = 0;
     size_t result_size = 0;
     axolotl_buffer *result_buf = 0;
-    Textsecure__PreKeyWhisperMessage message_structure = TEXTSECURE__PRE_KEY_WHISPER_MESSAGE__INIT;
+    Textsecure__PreKeySignalMessage message_structure = TEXTSECURE__PRE_KEY_SIGNAL_MESSAGE__INIT;
     axolotl_buffer *inner_message_buffer = 0;
     size_t len = 0;
     uint8_t *data = 0;
@@ -987,7 +987,7 @@ static int pre_key_signal_message_serialize(axolotl_buffer **buffer, const pre_k
     message_structure.message.len = axolotl_buffer_len(inner_message_buffer);
     message_structure.has_message = 1;
 
-    len = textsecure__pre_key_whisper_message__get_packed_size(&message_structure);
+    len = textsecure__pre_key_signal_message__get_packed_size(&message_structure);
 
     result_buf = axolotl_buffer_alloc(len + 1);
     if(!result_buf) {
@@ -998,7 +998,7 @@ static int pre_key_signal_message_serialize(axolotl_buffer **buffer, const pre_k
     data = axolotl_buffer_data(result_buf);
     data[0] = version;
 
-    result_size = textsecure__pre_key_whisper_message__pack(&message_structure, data + 1);
+    result_size = textsecure__pre_key_signal_message__pack(&message_structure, data + 1);
     if(result_size != len) {
         axolotl_buffer_free(result_buf);
         result = AX_ERR_INVALID_PROTO_BUF;
@@ -1025,7 +1025,7 @@ int pre_key_signal_message_deserialize(pre_key_signal_message **message,
 {
     int result = 0;
     pre_key_signal_message *result_message = 0;
-    Textsecure__PreKeyWhisperMessage *message_structure = 0;
+    Textsecure__PreKeySignalMessage *message_structure = 0;
     uint8_t version = 0;
     const uint8_t *message_data = 0;
     size_t message_len = 0;
@@ -1056,7 +1056,7 @@ int pre_key_signal_message_deserialize(pre_key_signal_message **message,
         goto complete;
     }
 
-    message_structure = textsecure__pre_key_whisper_message__unpack(0, message_len, message_data);
+    message_structure = textsecure__pre_key_signal_message__unpack(0, message_len, message_data);
     if(!message_structure) {
         result = AX_ERR_INVALID_PROTO_BUF;
         goto complete;
@@ -1139,7 +1139,7 @@ int pre_key_signal_message_deserialize(pre_key_signal_message **message,
 
 complete:
     if(message_structure) {
-        textsecure__pre_key_whisper_message__free_unpacked(message_structure, 0);
+        textsecure__pre_key_signal_message__free_unpacked(message_structure, 0);
     }
     if(result >= 0) {
         *message = result_message;

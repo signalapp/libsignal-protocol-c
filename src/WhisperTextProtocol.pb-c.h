@@ -15,8 +15,8 @@ PROTOBUF_C__BEGIN_DECLS
 #endif
 
 
-typedef struct _Textsecure__WhisperMessage Textsecure__WhisperMessage;
-typedef struct _Textsecure__PreKeyWhisperMessage Textsecure__PreKeyWhisperMessage;
+typedef struct _Textsecure__SignalMessage Textsecure__SignalMessage;
+typedef struct _Textsecure__PreKeySignalMessage Textsecure__PreKeySignalMessage;
 typedef struct _Textsecure__KeyExchangeMessage Textsecure__KeyExchangeMessage;
 typedef struct _Textsecure__SenderKeyMessage Textsecure__SenderKeyMessage;
 typedef struct _Textsecure__SenderKeyDistributionMessage Textsecure__SenderKeyDistributionMessage;
@@ -27,7 +27,7 @@ typedef struct _Textsecure__SenderKeyDistributionMessage Textsecure__SenderKeyDi
 
 /* --- messages --- */
 
-struct  _Textsecure__WhisperMessage
+struct  _Textsecure__SignalMessage
 {
   ProtobufCMessage base;
   protobuf_c_boolean has_ratchetkey;
@@ -39,12 +39,12 @@ struct  _Textsecure__WhisperMessage
   protobuf_c_boolean has_ciphertext;
   ProtobufCBinaryData ciphertext;
 };
-#define TEXTSECURE__WHISPER_MESSAGE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&textsecure__whisper_message__descriptor) \
+#define TEXTSECURE__SIGNAL_MESSAGE__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&textsecure__signal_message__descriptor) \
     , 0,{0,NULL}, 0,0, 0,0, 0,{0,NULL} }
 
 
-struct  _Textsecure__PreKeyWhisperMessage
+struct  _Textsecure__PreKeySignalMessage
 {
   ProtobufCMessage base;
   protobuf_c_boolean has_registrationid;
@@ -63,8 +63,8 @@ struct  _Textsecure__PreKeyWhisperMessage
   protobuf_c_boolean has_message;
   ProtobufCBinaryData message;
 };
-#define TEXTSECURE__PRE_KEY_WHISPER_MESSAGE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&textsecure__pre_key_whisper_message__descriptor) \
+#define TEXTSECURE__PRE_KEY_SIGNAL_MESSAGE__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&textsecure__pre_key_signal_message__descriptor) \
     , 0,0, 0,0, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL} }
 
 
@@ -119,43 +119,43 @@ struct  _Textsecure__SenderKeyDistributionMessage
     , 0,0, 0,0, 0,{0,NULL}, 0,{0,NULL} }
 
 
-/* Textsecure__WhisperMessage methods */
-void   textsecure__whisper_message__init
-                     (Textsecure__WhisperMessage         *message);
-size_t textsecure__whisper_message__get_packed_size
-                     (const Textsecure__WhisperMessage   *message);
-size_t textsecure__whisper_message__pack
-                     (const Textsecure__WhisperMessage   *message,
+/* Textsecure__SignalMessage methods */
+void   textsecure__signal_message__init
+                     (Textsecure__SignalMessage         *message);
+size_t textsecure__signal_message__get_packed_size
+                     (const Textsecure__SignalMessage   *message);
+size_t textsecure__signal_message__pack
+                     (const Textsecure__SignalMessage   *message,
                       uint8_t             *out);
-size_t textsecure__whisper_message__pack_to_buffer
-                     (const Textsecure__WhisperMessage   *message,
+size_t textsecure__signal_message__pack_to_buffer
+                     (const Textsecure__SignalMessage   *message,
                       ProtobufCBuffer     *buffer);
-Textsecure__WhisperMessage *
-       textsecure__whisper_message__unpack
+Textsecure__SignalMessage *
+       textsecure__signal_message__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   textsecure__whisper_message__free_unpacked
-                     (Textsecure__WhisperMessage *message,
+void   textsecure__signal_message__free_unpacked
+                     (Textsecure__SignalMessage *message,
                       ProtobufCAllocator *allocator);
-/* Textsecure__PreKeyWhisperMessage methods */
-void   textsecure__pre_key_whisper_message__init
-                     (Textsecure__PreKeyWhisperMessage         *message);
-size_t textsecure__pre_key_whisper_message__get_packed_size
-                     (const Textsecure__PreKeyWhisperMessage   *message);
-size_t textsecure__pre_key_whisper_message__pack
-                     (const Textsecure__PreKeyWhisperMessage   *message,
+/* Textsecure__PreKeySignalMessage methods */
+void   textsecure__pre_key_signal_message__init
+                     (Textsecure__PreKeySignalMessage         *message);
+size_t textsecure__pre_key_signal_message__get_packed_size
+                     (const Textsecure__PreKeySignalMessage   *message);
+size_t textsecure__pre_key_signal_message__pack
+                     (const Textsecure__PreKeySignalMessage   *message,
                       uint8_t             *out);
-size_t textsecure__pre_key_whisper_message__pack_to_buffer
-                     (const Textsecure__PreKeyWhisperMessage   *message,
+size_t textsecure__pre_key_signal_message__pack_to_buffer
+                     (const Textsecure__PreKeySignalMessage   *message,
                       ProtobufCBuffer     *buffer);
-Textsecure__PreKeyWhisperMessage *
-       textsecure__pre_key_whisper_message__unpack
+Textsecure__PreKeySignalMessage *
+       textsecure__pre_key_signal_message__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   textsecure__pre_key_whisper_message__free_unpacked
-                     (Textsecure__PreKeyWhisperMessage *message,
+void   textsecure__pre_key_signal_message__free_unpacked
+                     (Textsecure__PreKeySignalMessage *message,
                       ProtobufCAllocator *allocator);
 /* Textsecure__KeyExchangeMessage methods */
 void   textsecure__key_exchange_message__init
@@ -216,11 +216,11 @@ void   textsecure__sender_key_distribution_message__free_unpacked
                       ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
-typedef void (*Textsecure__WhisperMessage_Closure)
-                 (const Textsecure__WhisperMessage *message,
+typedef void (*Textsecure__SignalMessage_Closure)
+                 (const Textsecure__SignalMessage *message,
                   void *closure_data);
-typedef void (*Textsecure__PreKeyWhisperMessage_Closure)
-                 (const Textsecure__PreKeyWhisperMessage *message,
+typedef void (*Textsecure__PreKeySignalMessage_Closure)
+                 (const Textsecure__PreKeySignalMessage *message,
                   void *closure_data);
 typedef void (*Textsecure__KeyExchangeMessage_Closure)
                  (const Textsecure__KeyExchangeMessage *message,
@@ -237,8 +237,8 @@ typedef void (*Textsecure__SenderKeyDistributionMessage_Closure)
 
 /* --- descriptors --- */
 
-extern const ProtobufCMessageDescriptor textsecure__whisper_message__descriptor;
-extern const ProtobufCMessageDescriptor textsecure__pre_key_whisper_message__descriptor;
+extern const ProtobufCMessageDescriptor textsecure__signal_message__descriptor;
+extern const ProtobufCMessageDescriptor textsecure__pre_key_signal_message__descriptor;
 extern const ProtobufCMessageDescriptor textsecure__key_exchange_message__descriptor;
 extern const ProtobufCMessageDescriptor textsecure__sender_key_message__descriptor;
 extern const ProtobufCMessageDescriptor textsecure__sender_key_distribution_message__descriptor;
