@@ -221,8 +221,8 @@ START_TEST(test_basic_pre_key_v3)
 
     /* Convert to an incoming message for Bob */
     axolotl_buffer *outgoing_serialized = ciphertext_message_get_serialized(outgoing_message);
-    pre_key_whisper_message *incoming_message = 0;
-    result = pre_key_whisper_message_deserialize(&incoming_message,
+    pre_key_signal_message *incoming_message = 0;
+    result = pre_key_signal_message_deserialize(&incoming_message,
             axolotl_buffer_data(outgoing_serialized),
             axolotl_buffer_len(outgoing_serialized), global_context);
     ck_assert_int_eq(result, 0);
@@ -264,7 +264,7 @@ START_TEST(test_basic_pre_key_v3)
     session_cipher_set_decryption_callback(bob_session_cipher, test_basic_pre_key_v3_decrypt_callback);
 
     axolotl_buffer *plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message, &callback_context, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, incoming_message, &callback_context, &plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Clean up callback data */
@@ -292,15 +292,15 @@ START_TEST(test_basic_pre_key_v3)
     result = session_cipher_encrypt(bob_session_cipher, (uint8_t *)original_message, original_message_len, &bob_outgoing_message);
     ck_assert_int_eq(result, 0);
 
-    ck_assert_int_eq(ciphertext_message_get_type(bob_outgoing_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(bob_outgoing_message), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Verify that Alice can decrypt it */
-    whisper_message *bob_outgoing_message_copy = 0;
-    result = whisper_message_copy(&bob_outgoing_message_copy, (whisper_message *)bob_outgoing_message, global_context);
+    signal_message *bob_outgoing_message_copy = 0;
+    result = signal_message_copy(&bob_outgoing_message_copy, (signal_message *)bob_outgoing_message, global_context);
     ck_assert_int_eq(result, 0);
 
     axolotl_buffer *alice_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_outgoing_message_copy, 0, &alice_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, bob_outgoing_message_copy, 0, &alice_plaintext);
     ck_assert_int_eq(result, 0);
 
     uint8_t *alice_plaintext_data = axolotl_buffer_data(alice_plaintext);
@@ -406,31 +406,31 @@ START_TEST(test_basic_pre_key_v3)
     ck_assert_int_eq(ciphertext_message_get_type(outgoing_message), CIPHERTEXT_PREKEY_TYPE);
 
     /* Have Bob try to decrypt the message */
-    pre_key_whisper_message *outgoing_message_copy = 0;
-    result = pre_key_whisper_message_copy(&outgoing_message_copy, (pre_key_whisper_message *)outgoing_message, global_context);
+    pre_key_signal_message *outgoing_message_copy = 0;
+    result = pre_key_signal_message_copy(&outgoing_message_copy, (pre_key_signal_message *)outgoing_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* The decrypt should fail with a specific error */
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, outgoing_message_copy, 0, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, outgoing_message_copy, 0, &plaintext);
     ck_assert_int_eq(result, AX_ERR_UNTRUSTED_IDENTITY);
     AXOLOTL_UNREF(outgoing_message_copy); outgoing_message_copy = 0;
     axolotl_buffer_free(plaintext); plaintext = 0;
 
-    result = pre_key_whisper_message_copy(&outgoing_message_copy, (pre_key_whisper_message *)outgoing_message, global_context);
+    result = pre_key_signal_message_copy(&outgoing_message_copy, (pre_key_signal_message *)outgoing_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Save the identity key to Bob's store */
     result = axolotl_identity_save_identity(bob_store,
             alice_address.name, alice_address.name_len,
-            pre_key_whisper_message_get_identity_key(outgoing_message_copy));
+            pre_key_signal_message_get_identity_key(outgoing_message_copy));
     ck_assert_int_eq(result, 0);
     AXOLOTL_UNREF(outgoing_message_copy); outgoing_message_copy = 0;
 
     /* Try the decrypt again, this time it should succeed */
-    result = pre_key_whisper_message_copy(&outgoing_message_copy, (pre_key_whisper_message *)outgoing_message, global_context);
+    result = pre_key_signal_message_copy(&outgoing_message_copy, (pre_key_signal_message *)outgoing_message, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, outgoing_message_copy, 0, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, outgoing_message_copy, 0, &plaintext);
     ck_assert_int_eq(result, AX_SUCCESS);
     AXOLOTL_UNREF(outgoing_message_copy); outgoing_message_copy = 0;
 
@@ -817,8 +817,8 @@ START_TEST(test_repeat_bundle_message_v3)
     ck_assert_int_eq(ciphertext_message_get_type(outgoing_message_two), CIPHERTEXT_PREKEY_TYPE);
 
     /* Copy to an incoming message */
-    pre_key_whisper_message *incoming_message = 0;
-    result = pre_key_whisper_message_copy(&incoming_message, (pre_key_whisper_message *)outgoing_message_one, global_context);
+    pre_key_signal_message *incoming_message = 0;
+    result = pre_key_signal_message_copy(&incoming_message, (pre_key_signal_message *)outgoing_message_one, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's session cipher */
@@ -828,7 +828,7 @@ START_TEST(test_repeat_bundle_message_v3)
 
     /* Have Bob decrypt the message, and verify that it matches */
     axolotl_buffer *plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message, 0, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, incoming_message, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
     uint8_t *plaintext_data = axolotl_buffer_data(plaintext);
@@ -844,11 +844,11 @@ START_TEST(test_repeat_bundle_message_v3)
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the message, and verify that it matches */
-    whisper_message *bob_outgoing_message_copy = 0;
-    result = whisper_message_copy(&bob_outgoing_message_copy, (whisper_message *)bob_outgoing_message, global_context);
+    signal_message *bob_outgoing_message_copy = 0;
+    result = signal_message_copy(&bob_outgoing_message_copy, (signal_message *)bob_outgoing_message, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_outgoing_message_copy, 0, &plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, bob_outgoing_message_copy, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
     plaintext_data = axolotl_buffer_data(plaintext);
@@ -862,10 +862,10 @@ START_TEST(test_repeat_bundle_message_v3)
 
     /* The Test */
 
-    pre_key_whisper_message *incoming_message_two = 0;
-    result = pre_key_whisper_message_copy(&incoming_message_two, (pre_key_whisper_message *)outgoing_message_two, global_context);
+    pre_key_signal_message *incoming_message_two = 0;
+    result = pre_key_signal_message_copy(&incoming_message_two, (pre_key_signal_message *)outgoing_message_two, global_context);
 
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message_two, 0, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, incoming_message_two, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
     plaintext_data = axolotl_buffer_data(plaintext);
@@ -879,11 +879,11 @@ START_TEST(test_repeat_bundle_message_v3)
     result = session_cipher_encrypt(bob_session_cipher, (uint8_t *)original_message, original_message_len, &bob_outgoing_message_two);
     ck_assert_int_eq(result, 0);
 
-    whisper_message *bob_outgoing_message_two_copy = 0;
-    result = whisper_message_copy(&bob_outgoing_message_two_copy, (whisper_message *)bob_outgoing_message_two, global_context);
+    signal_message *bob_outgoing_message_two_copy = 0;
+    result = signal_message_copy(&bob_outgoing_message_two_copy, (signal_message *)bob_outgoing_message_two, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_outgoing_message_two_copy, 0, &plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, bob_outgoing_message_two_copy, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
     plaintext_data = axolotl_buffer_data(plaintext);
@@ -1025,8 +1025,8 @@ START_TEST(test_bad_message_bundle)
 
     bad_message_data[bad_message_len - 10] ^= 0x01;
 
-    pre_key_whisper_message *incoming_message_bad = 0;
-    result = pre_key_whisper_message_deserialize(&incoming_message_bad, bad_message_data, bad_message_len, global_context);
+    pre_key_signal_message *incoming_message_bad = 0;
+    result = pre_key_signal_message_deserialize(&incoming_message_bad, bad_message_data, bad_message_len, global_context);
     ck_assert_int_eq(result, 0);
 
     session_cipher *bob_session_cipher = 0;
@@ -1035,7 +1035,7 @@ START_TEST(test_bad_message_bundle)
 
     /* Check that the decrypt fails with an invalid message error */
     axolotl_buffer *plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message_bad, 0, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, incoming_message_bad, 0, &plaintext);
     ck_assert_int_eq(result, AX_ERR_INVALID_MESSAGE);
     axolotl_buffer_free(plaintext); plaintext = 0;
 
@@ -1044,11 +1044,11 @@ START_TEST(test_bad_message_bundle)
     ck_assert_int_eq(result, 1);
 
     /* Check that the decrypt succeeds with the good message */
-    pre_key_whisper_message *incoming_message_good = 0;
-    result = pre_key_whisper_message_deserialize(&incoming_message_good, good_message_data, good_message_len, global_context);
+    pre_key_signal_message *incoming_message_good = 0;
+    result = pre_key_signal_message_deserialize(&incoming_message_good, good_message_data, good_message_len, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message_good, 0, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, incoming_message_good, 0, &plaintext);
     ck_assert_int_eq(result, AX_SUCCESS);
 
     uint8_t *plaintext_data = axolotl_buffer_data(plaintext);
@@ -1377,12 +1377,12 @@ START_TEST(test_optional_one_time_pre_key)
     ck_assert_int_eq(ciphertext_message_get_type(outgoing_message), CIPHERTEXT_PREKEY_TYPE);
 
     /* Convert to an incoming message */
-    pre_key_whisper_message *incoming_message = 0;
-    result = pre_key_whisper_message_copy(&incoming_message, (pre_key_whisper_message *)outgoing_message, global_context);
+    pre_key_signal_message *incoming_message = 0;
+    result = pre_key_signal_message_copy(&incoming_message, (pre_key_signal_message *)outgoing_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Make sure the pre key ID is not present */
-    ck_assert_int_eq(pre_key_whisper_message_has_pre_key_id(incoming_message), 0);
+    ck_assert_int_eq(pre_key_signal_message_has_pre_key_id(incoming_message), 0);
 
     /* Add Bob's pre keys to Bob's data store */
     session_pre_key *bob_pre_key_record = 0;
@@ -1411,7 +1411,7 @@ START_TEST(test_optional_one_time_pre_key)
     ck_assert_int_eq(result, 0);
 
     axolotl_buffer *plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, incoming_message, 0, &plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, incoming_message, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
     ck_assert_int_eq(axolotl_session_contains_session(bob_store, &alice_address), 1);
@@ -1502,14 +1502,14 @@ void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *
     result = session_cipher_encrypt(alice_session_cipher, (uint8_t *)original_message, original_message_len, &alice_message);
     ck_assert_int_eq(result, 0);
 
-    ck_assert_int_eq(ciphertext_message_get_type(alice_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(alice_message), CIPHERTEXT_SIGNAL_TYPE);
 
-    whisper_message *alice_message_copy = 0;
-    result = whisper_message_copy(&alice_message_copy, (whisper_message *)alice_message, global_context);
+    signal_message *alice_message_copy = 0;
+    result = signal_message_copy(&alice_message_copy, (signal_message *)alice_message, global_context);
     ck_assert_int_eq(result, 0);
 
     axolotl_buffer *plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(bob_session_cipher, alice_message_copy, 0, &plaintext);
+    result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_message_copy, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
     uint8_t *plaintext_data = axolotl_buffer_data(plaintext);
@@ -1527,13 +1527,13 @@ void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *
     result = session_cipher_encrypt(bob_session_cipher, (uint8_t *)original_message, original_message_len, &bob_message);
     ck_assert_int_eq(result, 0);
 
-    ck_assert_int_eq(ciphertext_message_get_type(bob_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(bob_message), CIPHERTEXT_SIGNAL_TYPE);
 
-    whisper_message *bob_message_copy = 0;
-    result = whisper_message_copy(&bob_message_copy, (whisper_message *)bob_message, global_context);
+    signal_message *bob_message_copy = 0;
+    result = signal_message_copy(&bob_message_copy, (signal_message *)bob_message, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_message_copy, 0, &plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, bob_message_copy, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
     plaintext_data = axolotl_buffer_data(plaintext);
@@ -1564,12 +1564,12 @@ void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *
                 &alice_looping_message);
         ck_assert_int_eq(result, 0);
 
-        whisper_message *alice_looping_message_message_copy = 0;
-        result = whisper_message_copy(&alice_looping_message_message_copy, (whisper_message *)alice_looping_message, global_context);
+        signal_message *alice_looping_message_message_copy = 0;
+        result = signal_message_copy(&alice_looping_message_message_copy, (signal_message *)alice_looping_message, global_context);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *looping_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(bob_session_cipher, alice_looping_message_message_copy, 0, &looping_plaintext);
+        result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_looping_message_message_copy, 0, &looping_plaintext);
         ck_assert_int_eq(result, 0);
 
         ck_assert_int_eq(axolotl_buffer_compare(looping_message, looping_plaintext), 0);
@@ -1592,12 +1592,12 @@ void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *
                 &bob_looping_message);
         ck_assert_int_eq(result, 0);
 
-        whisper_message *bob_looping_message_message_copy = 0;
-        result = whisper_message_copy(&bob_looping_message_message_copy, (whisper_message *)bob_looping_message, global_context);
+        signal_message *bob_looping_message_message_copy = 0;
+        result = signal_message_copy(&bob_looping_message_message_copy, (signal_message *)bob_looping_message, global_context);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *looping_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_looping_message_message_copy, 0, &looping_plaintext);
+        result = session_cipher_decrypt_signal_message(alice_session_cipher, bob_looping_message_message_copy, 0, &looping_plaintext);
         ck_assert_int_eq(result, 0);
 
         ck_assert_int_eq(axolotl_buffer_compare(looping_message, looping_plaintext), 0);
@@ -1647,12 +1647,12 @@ void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *
                 &alice_looping_message);
         ck_assert_int_eq(result, 0);
 
-        whisper_message *alice_looping_message_message_copy = 0;
-        result = whisper_message_copy(&alice_looping_message_message_copy, (whisper_message *)alice_looping_message, global_context);
+        signal_message *alice_looping_message_message_copy = 0;
+        result = signal_message_copy(&alice_looping_message_message_copy, (signal_message *)alice_looping_message, global_context);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *looping_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(bob_session_cipher, alice_looping_message_message_copy, 0, &looping_plaintext);
+        result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_looping_message_message_copy, 0, &looping_plaintext);
         ck_assert_int_eq(result, 0);
 
         ck_assert_int_eq(axolotl_buffer_compare(looping_message, looping_plaintext), 0);
@@ -1675,12 +1675,12 @@ void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *
                 &bob_looping_message);
         ck_assert_int_eq(result, 0);
 
-        whisper_message *bob_looping_message_message_copy = 0;
-        result = whisper_message_copy(&bob_looping_message_message_copy, (whisper_message *)bob_looping_message, global_context);
+        signal_message *bob_looping_message_message_copy = 0;
+        result = signal_message_copy(&bob_looping_message_message_copy, (signal_message *)bob_looping_message, global_context);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *looping_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(alice_session_cipher, bob_looping_message_message_copy, 0, &looping_plaintext);
+        result = session_cipher_decrypt_signal_message(alice_session_cipher, bob_looping_message_message_copy, 0, &looping_plaintext);
         ck_assert_int_eq(result, 0);
 
         ck_assert_int_eq(axolotl_buffer_compare(looping_message, looping_plaintext), 0);
@@ -1694,15 +1694,15 @@ void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *
 
     /* Shuffled Alice -> Bob */
     for(i = 0; i < 10; i++) {
-        whisper_message *ooo_message_deserialized = 0;
-        result = whisper_message_deserialize(&ooo_message_deserialized,
+        signal_message *ooo_message_deserialized = 0;
+        result = signal_message_deserialize(&ooo_message_deserialized,
                 axolotl_buffer_data(alice_ooo_ciphertext[i]),
                 axolotl_buffer_len(alice_ooo_ciphertext[i]),
                 global_context);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *ooo_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(bob_session_cipher, ooo_message_deserialized, 0, &ooo_plaintext);
+        result = session_cipher_decrypt_signal_message(bob_session_cipher, ooo_message_deserialized, 0, &ooo_plaintext);
         ck_assert_int_eq(result, 0);
 
         ck_assert_int_eq(axolotl_buffer_compare(alice_ooo_plaintext[i], ooo_plaintext), 0);

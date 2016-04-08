@@ -147,23 +147,23 @@ START_TEST(test_basic_simultaneous_initiate)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
     /* Copy the messages before decrypting */
-    pre_key_whisper_message *message_for_alice_copy = 0;
-    result = pre_key_whisper_message_copy(&message_for_alice_copy,
-            (pre_key_whisper_message *)message_for_alice, global_context);
+    pre_key_signal_message *message_for_alice_copy = 0;
+    result = pre_key_signal_message_copy(&message_for_alice_copy,
+            (pre_key_signal_message *)message_for_alice, global_context);
     ck_assert_int_eq(result, 0);
 
-    pre_key_whisper_message *message_for_bob_copy = 0;
-    result = pre_key_whisper_message_copy(&message_for_bob_copy,
-            (pre_key_whisper_message *)message_for_bob, global_context);
+    pre_key_signal_message *message_for_bob_copy = 0;
+    result = pre_key_signal_message_copy(&message_for_bob_copy,
+            (pre_key_signal_message *)message_for_bob, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the messages */
     axolotl_buffer *alice_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
     ck_assert_int_eq(result, 0);
 
     axolotl_buffer *bob_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the messages decrypted correctly */
@@ -192,17 +192,17 @@ START_TEST(test_basic_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Verify response message type */
-    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the message before decrypting */
-    whisper_message *alice_response_copy = 0;
-    result = whisper_message_copy(&alice_response_copy,
-            (whisper_message *)alice_response, global_context);
+    signal_message *alice_response_copy = 0;
+    result = signal_message_copy(&alice_response_copy,
+            (signal_message *)alice_response, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
     axolotl_buffer *response_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
+    result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
@@ -224,17 +224,17 @@ START_TEST(test_basic_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Verify final message type */
-    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the final message before decrypting */
-    whisper_message *final_message_copy = 0;
-    result = whisper_message_copy(&final_message_copy,
-            (whisper_message *)final_message, global_context);
+    signal_message *final_message_copy = 0;
+    result = signal_message_copy(&final_message_copy,
+            (signal_message *)final_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
     axolotl_buffer *final_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
@@ -336,14 +336,14 @@ START_TEST(test_lost_simultaneous_initiate)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
     /* Copy the message for Bob before decrypting */
-    pre_key_whisper_message *message_for_bob_copy = 0;
-    result = pre_key_whisper_message_copy(&message_for_bob_copy,
-            (pre_key_whisper_message *)message_for_bob, global_context);
+    pre_key_signal_message *message_for_bob_copy = 0;
+    result = pre_key_signal_message_copy(&message_for_bob_copy,
+            (pre_key_signal_message *)message_for_bob, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the message */
     axolotl_buffer *bob_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
@@ -368,14 +368,14 @@ START_TEST(test_lost_simultaneous_initiate)
     ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_PREKEY_TYPE);
 
     /* Copy the message before decrypting */
-    pre_key_whisper_message *alice_response_copy = 0;
-    result = pre_key_whisper_message_copy(&alice_response_copy,
-            (pre_key_whisper_message *)alice_response, global_context);
+    pre_key_signal_message *alice_response_copy = 0;
+    result = pre_key_signal_message_copy(&alice_response_copy,
+            (pre_key_signal_message *)alice_response, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
     axolotl_buffer *response_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
@@ -397,17 +397,17 @@ START_TEST(test_lost_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Verify final message type */
-    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the final message before decrypting */
-    whisper_message *final_message_copy = 0;
-    result = whisper_message_copy(&final_message_copy,
-            (whisper_message *)final_message, global_context);
+    signal_message *final_message_copy = 0;
+    result = signal_message_copy(&final_message_copy,
+            (signal_message *)final_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
     axolotl_buffer *final_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
@@ -507,23 +507,23 @@ START_TEST(test_simultaneous_initiate_lost_message)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
     /* Copy the messages before decrypting */
-    pre_key_whisper_message *message_for_alice_copy = 0;
-    result = pre_key_whisper_message_copy(&message_for_alice_copy,
-            (pre_key_whisper_message *)message_for_alice, global_context);
+    pre_key_signal_message *message_for_alice_copy = 0;
+    result = pre_key_signal_message_copy(&message_for_alice_copy,
+            (pre_key_signal_message *)message_for_alice, global_context);
     ck_assert_int_eq(result, 0);
 
-    pre_key_whisper_message *message_for_bob_copy = 0;
-    result = pre_key_whisper_message_copy(&message_for_bob_copy,
-            (pre_key_whisper_message *)message_for_bob, global_context);
+    pre_key_signal_message *message_for_bob_copy = 0;
+    result = pre_key_signal_message_copy(&message_for_bob_copy,
+            (pre_key_signal_message *)message_for_bob, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the messages */
     axolotl_buffer *alice_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
     ck_assert_int_eq(result, 0);
 
     axolotl_buffer *bob_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the messages decrypted correctly */
@@ -552,12 +552,12 @@ START_TEST(test_simultaneous_initiate_lost_message)
     ck_assert_int_eq(result, 0);
 
     /* Verify response message type */
-    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the message before decrypting */
-    whisper_message *alice_response_copy = 0;
-    result = whisper_message_copy(&alice_response_copy,
-            (whisper_message *)alice_response, global_context);
+    signal_message *alice_response_copy = 0;
+    result = signal_message_copy(&alice_response_copy,
+            (signal_message *)alice_response, global_context);
     ck_assert_int_eq(result, 0);
 
     /*
@@ -578,17 +578,17 @@ START_TEST(test_simultaneous_initiate_lost_message)
     ck_assert_int_eq(result, 0);
 
     /* Verify final message type */
-    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the final message before decrypting */
-    whisper_message *final_message_copy = 0;
-    result = whisper_message_copy(&final_message_copy,
-            (whisper_message *)final_message, global_context);
+    signal_message *final_message_copy = 0;
+    result = signal_message_copy(&final_message_copy,
+            (signal_message *)final_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
     axolotl_buffer *final_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
@@ -689,23 +689,23 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
     /* Copy the messages before decrypting */
-    pre_key_whisper_message *message_for_alice_copy = 0;
-    result = pre_key_whisper_message_copy(&message_for_alice_copy,
-            (pre_key_whisper_message *)message_for_alice, global_context);
+    pre_key_signal_message *message_for_alice_copy = 0;
+    result = pre_key_signal_message_copy(&message_for_alice_copy,
+            (pre_key_signal_message *)message_for_alice, global_context);
     ck_assert_int_eq(result, 0);
 
-    pre_key_whisper_message *message_for_bob_copy = 0;
-    result = pre_key_whisper_message_copy(&message_for_bob_copy,
-            (pre_key_whisper_message *)message_for_bob, global_context);
+    pre_key_signal_message *message_for_bob_copy = 0;
+    result = pre_key_signal_message_copy(&message_for_bob_copy,
+            (pre_key_signal_message *)message_for_bob, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the messages */
     axolotl_buffer *alice_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
     ck_assert_int_eq(result, 0);
 
     axolotl_buffer *bob_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the messages decrypted correctly */
@@ -746,30 +746,30 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Verify message types */
-        ck_assert_int_eq(ciphertext_message_get_type(message_for_bob_repeat), CIPHERTEXT_WHISPER_TYPE);
-        ck_assert_int_eq(ciphertext_message_get_type(message_for_alice_repeat), CIPHERTEXT_WHISPER_TYPE);
+        ck_assert_int_eq(ciphertext_message_get_type(message_for_bob_repeat), CIPHERTEXT_SIGNAL_TYPE);
+        ck_assert_int_eq(ciphertext_message_get_type(message_for_alice_repeat), CIPHERTEXT_SIGNAL_TYPE);
 
         /* Verify that the session IDs are not equal */
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Copy the messages before decrypting */
-        whisper_message *message_for_alice_repeat_copy = 0;
-        result = whisper_message_copy(&message_for_alice_repeat_copy,
-                (whisper_message *)message_for_alice_repeat, global_context);
+        signal_message *message_for_alice_repeat_copy = 0;
+        result = signal_message_copy(&message_for_alice_repeat_copy,
+                (signal_message *)message_for_alice_repeat, global_context);
         ck_assert_int_eq(result, 0);
 
-        whisper_message *message_for_bob_repeat_copy = 0;
-        result = whisper_message_copy(&message_for_bob_repeat_copy,
-                (whisper_message *)message_for_bob_repeat, global_context);
+        signal_message *message_for_bob_repeat_copy = 0;
+        result = signal_message_copy(&message_for_bob_repeat_copy,
+                (signal_message *)message_for_bob_repeat, global_context);
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
         axolotl_buffer *alice_repeat_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
+        result = session_cipher_decrypt_signal_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *bob_repeat_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
+        result = session_cipher_decrypt_signal_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
@@ -805,17 +805,17 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Verify response message type */
-    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the message before decrypting */
-    whisper_message *alice_response_copy = 0;
-    result = whisper_message_copy(&alice_response_copy,
-            (whisper_message *)alice_response, global_context);
+    signal_message *alice_response_copy = 0;
+    result = signal_message_copy(&alice_response_copy,
+            (signal_message *)alice_response, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
     axolotl_buffer *response_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
+    result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
@@ -837,17 +837,17 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Verify final message type */
-    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the final message before decrypting */
-    whisper_message *final_message_copy = 0;
-    result = whisper_message_copy(&final_message_copy,
-            (whisper_message *)final_message, global_context);
+    signal_message *final_message_copy = 0;
+    result = signal_message_copy(&final_message_copy,
+            (signal_message *)final_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
     axolotl_buffer *final_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
@@ -951,23 +951,23 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Copy the messages before decrypting */
-        pre_key_whisper_message *message_for_alice_copy = 0;
-        result = pre_key_whisper_message_copy(&message_for_alice_copy,
-                (pre_key_whisper_message *)message_for_alice, global_context);
+        pre_key_signal_message *message_for_alice_copy = 0;
+        result = pre_key_signal_message_copy(&message_for_alice_copy,
+                (pre_key_signal_message *)message_for_alice, global_context);
         ck_assert_int_eq(result, 0);
 
-        pre_key_whisper_message *message_for_bob_copy = 0;
-        result = pre_key_whisper_message_copy(&message_for_bob_copy,
-                (pre_key_whisper_message *)message_for_bob, global_context);
+        pre_key_signal_message *message_for_bob_copy = 0;
+        result = pre_key_signal_message_copy(&message_for_bob_copy,
+                (pre_key_signal_message *)message_for_bob, global_context);
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
         axolotl_buffer *alice_plaintext = 0;
-        result = session_cipher_decrypt_pre_key_whisper_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
+        result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *bob_plaintext = 0;
-        result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
+        result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
@@ -1018,30 +1018,30 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Verify message types */
-        ck_assert_int_eq(ciphertext_message_get_type(message_for_bob_repeat), CIPHERTEXT_WHISPER_TYPE);
-        ck_assert_int_eq(ciphertext_message_get_type(message_for_alice_repeat), CIPHERTEXT_WHISPER_TYPE);
+        ck_assert_int_eq(ciphertext_message_get_type(message_for_bob_repeat), CIPHERTEXT_SIGNAL_TYPE);
+        ck_assert_int_eq(ciphertext_message_get_type(message_for_alice_repeat), CIPHERTEXT_SIGNAL_TYPE);
 
         /* Verify that the session IDs are not equal */
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Copy the messages before decrypting */
-        whisper_message *message_for_alice_repeat_copy = 0;
-        result = whisper_message_copy(&message_for_alice_repeat_copy,
-                (whisper_message *)message_for_alice_repeat, global_context);
+        signal_message *message_for_alice_repeat_copy = 0;
+        result = signal_message_copy(&message_for_alice_repeat_copy,
+                (signal_message *)message_for_alice_repeat, global_context);
         ck_assert_int_eq(result, 0);
 
-        whisper_message *message_for_bob_repeat_copy = 0;
-        result = whisper_message_copy(&message_for_bob_repeat_copy,
-                (whisper_message *)message_for_bob_repeat, global_context);
+        signal_message *message_for_bob_repeat_copy = 0;
+        result = signal_message_copy(&message_for_bob_repeat_copy,
+                (signal_message *)message_for_bob_repeat, global_context);
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
         axolotl_buffer *alice_repeat_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
+        result = session_cipher_decrypt_signal_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *bob_repeat_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
+        result = session_cipher_decrypt_signal_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
@@ -1077,17 +1077,17 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Verify response message type */
-    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the message before decrypting */
-    whisper_message *alice_response_copy = 0;
-    result = whisper_message_copy(&alice_response_copy,
-            (whisper_message *)alice_response, global_context);
+    signal_message *alice_response_copy = 0;
+    result = signal_message_copy(&alice_response_copy,
+            (signal_message *)alice_response, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
     axolotl_buffer *response_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
+    result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
@@ -1109,17 +1109,17 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Verify final message type */
-    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the final message before decrypting */
-    whisper_message *final_message_copy = 0;
-    result = whisper_message_copy(&final_message_copy,
-            (whisper_message *)final_message, global_context);
+    signal_message *final_message_copy = 0;
+    result = signal_message_copy(&final_message_copy,
+            (signal_message *)final_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
     axolotl_buffer *final_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
@@ -1232,23 +1232,23 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Copy the messages before decrypting */
-        pre_key_whisper_message *message_for_alice_copy = 0;
-        result = pre_key_whisper_message_copy(&message_for_alice_copy,
-                (pre_key_whisper_message *)message_for_alice, global_context);
+        pre_key_signal_message *message_for_alice_copy = 0;
+        result = pre_key_signal_message_copy(&message_for_alice_copy,
+                (pre_key_signal_message *)message_for_alice, global_context);
         ck_assert_int_eq(result, 0);
 
-        pre_key_whisper_message *message_for_bob_copy = 0;
-        result = pre_key_whisper_message_copy(&message_for_bob_copy,
-                (pre_key_whisper_message *)message_for_bob, global_context);
+        pre_key_signal_message *message_for_bob_copy = 0;
+        result = pre_key_signal_message_copy(&message_for_bob_copy,
+                (pre_key_signal_message *)message_for_bob, global_context);
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
         axolotl_buffer *alice_plaintext = 0;
-        result = session_cipher_decrypt_pre_key_whisper_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
+        result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *bob_plaintext = 0;
-        result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
+        result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
@@ -1299,30 +1299,30 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Verify message types */
-        ck_assert_int_eq(ciphertext_message_get_type(message_for_bob_repeat), CIPHERTEXT_WHISPER_TYPE);
-        ck_assert_int_eq(ciphertext_message_get_type(message_for_alice_repeat), CIPHERTEXT_WHISPER_TYPE);
+        ck_assert_int_eq(ciphertext_message_get_type(message_for_bob_repeat), CIPHERTEXT_SIGNAL_TYPE);
+        ck_assert_int_eq(ciphertext_message_get_type(message_for_alice_repeat), CIPHERTEXT_SIGNAL_TYPE);
 
         /* Verify that the session IDs are not equal */
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Copy the messages before decrypting */
-        whisper_message *message_for_alice_repeat_copy = 0;
-        result = whisper_message_copy(&message_for_alice_repeat_copy,
-                (whisper_message *)message_for_alice_repeat, global_context);
+        signal_message *message_for_alice_repeat_copy = 0;
+        result = signal_message_copy(&message_for_alice_repeat_copy,
+                (signal_message *)message_for_alice_repeat, global_context);
         ck_assert_int_eq(result, 0);
 
-        whisper_message *message_for_bob_repeat_copy = 0;
-        result = whisper_message_copy(&message_for_bob_repeat_copy,
-                (whisper_message *)message_for_bob_repeat, global_context);
+        signal_message *message_for_bob_repeat_copy = 0;
+        result = signal_message_copy(&message_for_bob_repeat_copy,
+                (signal_message *)message_for_bob_repeat, global_context);
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
         axolotl_buffer *alice_repeat_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
+        result = session_cipher_decrypt_signal_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         axolotl_buffer *bob_repeat_plaintext = 0;
-        result = session_cipher_decrypt_whisper_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
+        result = session_cipher_decrypt_signal_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
@@ -1358,17 +1358,17 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Verify response message type */
-    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(alice_response), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the message before decrypting */
-    whisper_message *alice_response_copy = 0;
-    result = whisper_message_copy(&alice_response_copy,
-            (whisper_message *)alice_response, global_context);
+    signal_message *alice_response_copy = 0;
+    result = signal_message_copy(&alice_response_copy,
+            (signal_message *)alice_response, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
     axolotl_buffer *response_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
+    result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
@@ -1390,17 +1390,17 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Verify final message type */
-    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_WHISPER_TYPE);
+    ck_assert_int_eq(ciphertext_message_get_type(final_message), CIPHERTEXT_SIGNAL_TYPE);
 
     /* Copy the final message before decrypting */
-    whisper_message *final_message_copy = 0;
-    result = whisper_message_copy(&final_message_copy,
-            (whisper_message *)final_message, global_context);
+    signal_message *final_message_copy = 0;
+    result = signal_message_copy(&final_message_copy,
+            (signal_message *)final_message, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
     axolotl_buffer *final_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
@@ -1413,14 +1413,14 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 1);
 
     /* Copy the lost message before decrypting */
-    pre_key_whisper_message *lost_message_for_bob_copy = 0;
-    result = pre_key_whisper_message_copy(&lost_message_for_bob_copy,
-            (pre_key_whisper_message *)lost_message_for_bob, global_context);
+    pre_key_signal_message *lost_message_for_bob_copy = 0;
+    result = pre_key_signal_message_copy(&lost_message_for_bob_copy,
+            (pre_key_signal_message *)lost_message_for_bob, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the lost message */
     axolotl_buffer *lost_message_for_bob_plaintext = 0;
-    result = session_cipher_decrypt_pre_key_whisper_message(bob_session_cipher,
+    result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher,
             lost_message_for_bob_copy, 0, &lost_message_for_bob_plaintext);
     ck_assert_int_eq(result, 0);
 
@@ -1443,14 +1443,14 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Copy the unexpected message before decrypting */
-    whisper_message *blast_from_the_past_copy = 0;
-    result = whisper_message_copy(&blast_from_the_past_copy,
-            (whisper_message *)blast_from_the_past, global_context);
+    signal_message *blast_from_the_past_copy = 0;
+    result = signal_message_copy(&blast_from_the_past_copy,
+            (signal_message *)blast_from_the_past, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the unexpected message */
     axolotl_buffer *blast_from_the_past_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_session_cipher,
+    result = session_cipher_decrypt_signal_message(alice_session_cipher,
             blast_from_the_past_copy, 0, &blast_from_the_past_plaintext);
     ck_assert_int_eq(result, 0);
 

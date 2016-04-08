@@ -57,8 +57,8 @@ void *session_cipher_get_user_data(session_cipher *cipher);
  * Set the callback function that is called during the decrypt process.
  *
  * The callback function is called from within
- * session_cipher_decrypt_pre_key_whisper_message() and
- * session_cipher_decrypt_whisper_message() after decryption is complete
+ * session_cipher_decrypt_pre_key_signal_message() and
+ * session_cipher_decrypt_signal_message() after decryption is complete
  * but before the updated session state has been committed to the session
  * store. If the callback function returns a negative value, then the
  * decrypt function will immediately fail with an error.
@@ -90,7 +90,7 @@ int session_cipher_encrypt(session_cipher *cipher,
 /**
  * Decrypt a message.
  *
- * @param ciphertext The pre_key_whisper_message to decrypt.
+ * @param ciphertext The pre_key_signal_message to decrypt.
  * @param decrypt_context Optional context pointer associated with the
  *   ciphertext, which is passed to the decryption callback function
  * @param plaintext Set to a newly allocated buffer containing the plaintext.
@@ -105,14 +105,14 @@ int session_cipher_encrypt(session_cipher *cipher,
  * @retval AX_ERR_INVALID_KEY when the message is formatted incorrectly.
  * @retval AX_ERR_UNTRUSTED_IDENTITY when the identity key of the sender is untrusted.
  */
-int session_cipher_decrypt_pre_key_whisper_message(session_cipher *cipher,
-        pre_key_whisper_message *ciphertext, void *decrypt_context,
+int session_cipher_decrypt_pre_key_signal_message(session_cipher *cipher,
+        pre_key_signal_message *ciphertext, void *decrypt_context,
         axolotl_buffer **plaintext);
 
 /**
  * Decrypt a message.
  *
- * @param ciphertext The whisper_message to decrypt.
+ * @param ciphertext The signal_message to decrypt.
  * @param decrypt_context Optional context pointer associated with the
  *   ciphertext, which is passed to the decryption callback function
  * @param plaintext Set to a newly allocated buffer containing the plaintext.
@@ -124,8 +124,8 @@ int session_cipher_decrypt_pre_key_whisper_message(session_cipher *cipher,
  *                               is no longer supported.
  * @retval AX_ERR_NO_SESSION if there is no established session for this contact.
  */
-int session_cipher_decrypt_whisper_message(session_cipher *cipher,
-        whisper_message *ciphertext, void *decrypt_context,
+int session_cipher_decrypt_signal_message(session_cipher *cipher,
+        signal_message *ciphertext, void *decrypt_context,
         axolotl_buffer **plaintext);
 
 /**

@@ -15,7 +15,7 @@ extern "C" {
  *
  * Sessions are built from one of three different possible vectors:
  * - A session_pre_key_bundle retrieved from a server
- * - A pre_key_whisper_message received from a client
+ * - A pre_key_signal_message received from a client
  * - A key_exchange_message sent to or received from a client
  *
  * Sessions are constructed per AXOLOTL address
@@ -43,12 +43,12 @@ int session_builder_create(session_builder **builder,
         axolotl_context *global_context);
 
 /**
- * Build a new session from a received pre_key_whisper_message.
+ * Build a new session from a received pre_key_signal_message.
  *
- * After a session is constructed in this way, the embedded whisper_message
+ * After a session is constructed in this way, the embedded signal_message
  * can be decrypted.
  *
- * @param message The received pre_key_whisper_message.
+ * @param message The received pre_key_signal_message.
  * @param unsigned_pre_key_id set to the unsigned pre key ID, if available.
  *     Return value indicates whether or not this value is available.
  * @retval 0 Success, no unsigned pre key value available
@@ -58,8 +58,8 @@ int session_builder_create(session_builder **builder,
  * @retval AX_ERR_INVALID_KEY when the message is formatted incorrectly.
  * @retval AX_ERR_UNTRUSTED_IDENTITY when the identity key of the sender is untrusted.
  */
-int session_builder_process_pre_key_whisper_message(session_builder *builder,
-        session_record *record, pre_key_whisper_message *message, uint32_t *unsigned_pre_key_id);
+int session_builder_process_pre_key_signal_message(session_builder *builder,
+        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id);
 
 /**
  * Build a new session from a session_pre_key_bundle retrieved from a server.

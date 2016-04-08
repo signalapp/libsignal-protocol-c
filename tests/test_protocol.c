@@ -94,26 +94,26 @@ START_TEST(test_serialize_key_exchange_message)
 }
 END_TEST
 
-void compare_whisper_messages(whisper_message *message1, whisper_message *message2)
+void compare_signal_messages(signal_message *message1, signal_message *message2)
 {
-    ec_public_key *sender_ratchet_key1 = whisper_message_get_sender_ratchet_key(message1);
-    ec_public_key *sender_ratchet_key2 = whisper_message_get_sender_ratchet_key(message2);
+    ec_public_key *sender_ratchet_key1 = signal_message_get_sender_ratchet_key(message1);
+    ec_public_key *sender_ratchet_key2 = signal_message_get_sender_ratchet_key(message2);
     ck_assert_int_eq(ec_public_key_compare(sender_ratchet_key1, sender_ratchet_key2), 0);
 
-    int version1 = whisper_message_get_message_version(message1);
-    int version2 = whisper_message_get_message_version(message2);
+    int version1 = signal_message_get_message_version(message1);
+    int version2 = signal_message_get_message_version(message2);
     ck_assert_int_eq(version1, version2);
 
-    int counter1 = whisper_message_get_counter(message1);
-    int counter2 = whisper_message_get_counter(message2);
+    int counter1 = signal_message_get_counter(message1);
+    int counter2 = signal_message_get_counter(message2);
     ck_assert_int_eq(counter1, counter2);
 
-    axolotl_buffer *body1 = whisper_message_get_body(message1);
-    axolotl_buffer *body2 = whisper_message_get_body(message2);
+    axolotl_buffer *body1 = signal_message_get_body(message1);
+    axolotl_buffer *body2 = signal_message_get_body(message2);
     ck_assert_int_eq(axolotl_buffer_compare(body1, body2), 0);
 }
 
-START_TEST(test_serialize_whisper_message)
+START_TEST(test_serialize_signal_message)
 {
     int result = 0;
 
@@ -124,10 +124,10 @@ START_TEST(test_serialize_whisper_message)
     uint8_t mac_key[RATCHET_MAC_KEY_LENGTH];
     memset(mac_key, 1, sizeof(mac_key));
 
-    whisper_message *message = 0;
-    whisper_message *result_message = 0;
+    signal_message *message = 0;
+    signal_message *result_message = 0;
 
-    result = whisper_message_create(&message, 3,
+    result = signal_message_create(&message, 3,
             mac_key, sizeof(mac_key),
             sender_ratchet_key,
             2, /* counter */
@@ -140,16 +140,16 @@ START_TEST(test_serialize_whisper_message)
     axolotl_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)message);
     ck_assert_ptr_ne(serialized, 0);
 
-    result = whisper_message_deserialize(&result_message,
+    result = signal_message_deserialize(&result_message,
             axolotl_buffer_data(serialized),
             axolotl_buffer_len(serialized),
             global_context);
     ck_assert_int_eq(result, 0);
 
-    compare_whisper_messages(message, result_message);
+    compare_signal_messages(message, result_message);
 
     /* Exercise the MAC verification code */
-    result = whisper_message_verify_mac(result_message, 3,
+    result = signal_message_verify_mac(result_message, 3,
             sender_identity_key, receiver_identity_key,
             mac_key, sizeof(mac_key), global_context);
     ck_assert_int_eq(result, 1);
@@ -163,7 +163,7 @@ START_TEST(test_serialize_whisper_message)
 }
 END_TEST
 
-START_TEST(test_serialize_pre_key_whisper_message)
+START_TEST(test_serialize_pre_key_signal_message)
 {
     int result = 0;
 
@@ -176,11 +176,11 @@ START_TEST(test_serialize_pre_key_whisper_message)
     uint8_t mac_key[RATCHET_MAC_KEY_LENGTH];
     memset(mac_key, 1, sizeof(mac_key));
 
-    whisper_message *message = 0;
-    pre_key_whisper_message *pre_key_message = 0;
-    pre_key_whisper_message *result_pre_key_message = 0;
+    signal_message *message = 0;
+    pre_key_signal_message *pre_key_message = 0;
+    pre_key_signal_message *result_pre_key_message = 0;
 
-    result = whisper_message_create(&message, 3,
+    result = signal_message_create(&message, 3,
             mac_key, sizeof(mac_key),
             sender_ratchet_key,
             2, /* counter */
@@ -191,7 +191,7 @@ START_TEST(test_serialize_pre_key_whisper_message)
     ck_assert_int_eq(result, 0);
 
     uint32_t pre_key_id = 56;
-    result = pre_key_whisper_message_create(&pre_key_message,
+    result = pre_key_signal_message_create(&pre_key_message,
             3,  /* message version */
             42, /* registration ID */
             &pre_key_id, /* pre key ID */
@@ -204,45 +204,45 @@ START_TEST(test_serialize_pre_key_whisper_message)
     axolotl_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)pre_key_message);
     ck_assert_ptr_ne(serialized, 0);
 
-    result = pre_key_whisper_message_deserialize(&result_pre_key_message,
+    result = pre_key_signal_message_deserialize(&result_pre_key_message,
             axolotl_buffer_data(serialized),
             axolotl_buffer_len(serialized),
             global_context);
     ck_assert_int_eq(result, 0);
 
-    int version1 = pre_key_whisper_message_get_message_version(pre_key_message);
-    int version2 = pre_key_whisper_message_get_message_version(result_pre_key_message);
+    int version1 = pre_key_signal_message_get_message_version(pre_key_message);
+    int version2 = pre_key_signal_message_get_message_version(result_pre_key_message);
     ck_assert_int_eq(version1, version2);
 
-    ec_public_key *identity_key1 = pre_key_whisper_message_get_identity_key(pre_key_message);
-    ec_public_key *identity_key2 = pre_key_whisper_message_get_identity_key(result_pre_key_message);
+    ec_public_key *identity_key1 = pre_key_signal_message_get_identity_key(pre_key_message);
+    ec_public_key *identity_key2 = pre_key_signal_message_get_identity_key(result_pre_key_message);
     ck_assert_int_eq(ec_public_key_compare(identity_key1, identity_key2), 0);
 
-    int registration_id1 = pre_key_whisper_message_get_registration_id(pre_key_message);
-    int registration_id2 = pre_key_whisper_message_get_registration_id(result_pre_key_message);
+    int registration_id1 = pre_key_signal_message_get_registration_id(pre_key_message);
+    int registration_id2 = pre_key_signal_message_get_registration_id(result_pre_key_message);
     ck_assert_int_eq(registration_id1, registration_id2);
 
-    int has_pre_key_id1 = pre_key_whisper_message_has_pre_key_id(pre_key_message);
-    int has_pre_key_id2 = pre_key_whisper_message_has_pre_key_id(result_pre_key_message);
+    int has_pre_key_id1 = pre_key_signal_message_has_pre_key_id(pre_key_message);
+    int has_pre_key_id2 = pre_key_signal_message_has_pre_key_id(result_pre_key_message);
     ck_assert_int_eq(has_pre_key_id1, has_pre_key_id2);
 
     if(has_pre_key_id1) {
-        int pre_key_id1 = pre_key_whisper_message_get_pre_key_id(pre_key_message);
-        int pre_key_id2 = pre_key_whisper_message_get_pre_key_id(result_pre_key_message);
+        int pre_key_id1 = pre_key_signal_message_get_pre_key_id(pre_key_message);
+        int pre_key_id2 = pre_key_signal_message_get_pre_key_id(result_pre_key_message);
         ck_assert_int_eq(pre_key_id1, pre_key_id2);
     }
 
-    int signed_pre_key_id1 = pre_key_whisper_message_get_signed_pre_key_id(pre_key_message);
-    int signed_pre_key_id2 = pre_key_whisper_message_get_signed_pre_key_id(result_pre_key_message);
+    int signed_pre_key_id1 = pre_key_signal_message_get_signed_pre_key_id(pre_key_message);
+    int signed_pre_key_id2 = pre_key_signal_message_get_signed_pre_key_id(result_pre_key_message);
     ck_assert_int_eq(signed_pre_key_id1, signed_pre_key_id2);
 
-    ec_public_key *base_key1 = pre_key_whisper_message_get_base_key(pre_key_message);
-    ec_public_key *base_key2 = pre_key_whisper_message_get_base_key(result_pre_key_message);
+    ec_public_key *base_key1 = pre_key_signal_message_get_base_key(pre_key_message);
+    ec_public_key *base_key2 = pre_key_signal_message_get_base_key(result_pre_key_message);
     ck_assert_int_eq(ec_public_key_compare(base_key1, base_key2), 0);
 
-    whisper_message *message1 = pre_key_whisper_message_get_whisper_message(pre_key_message);
-    whisper_message *message2 = pre_key_whisper_message_get_whisper_message(result_pre_key_message);
-    compare_whisper_messages(message1, message2);
+    signal_message *message1 = pre_key_signal_message_get_signal_message(pre_key_message);
+    signal_message *message2 = pre_key_signal_message_get_signal_message(result_pre_key_message);
+    compare_signal_messages(message1, message2);
 
     /* Cleanup */
     AXOLOTL_UNREF(message);
@@ -364,8 +364,8 @@ Suite *protocol_suite(void)
     TCase *tcase = tcase_create("case");
     tcase_add_checked_fixture(tcase, test_setup, test_teardown);
     tcase_add_test(tcase, test_serialize_key_exchange_message);
-    tcase_add_test(tcase, test_serialize_whisper_message);
-    tcase_add_test(tcase, test_serialize_pre_key_whisper_message);
+    tcase_add_test(tcase, test_serialize_signal_message);
+    tcase_add_test(tcase, test_serialize_pre_key_signal_message);
     tcase_add_test(tcase, test_serialize_sender_key_message);
     tcase_add_test(tcase, test_serialize_sender_key_distribution_message);
     suite_add_tcase(suite, tcase);

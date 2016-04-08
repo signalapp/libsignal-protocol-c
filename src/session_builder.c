@@ -19,8 +19,8 @@ struct session_builder
     axolotl_context *global_context;
 };
 
-static int session_builder_process_pre_key_whisper_message_v3(session_builder *builder,
-        session_record *record, pre_key_whisper_message *message, uint32_t *unsigned_pre_key_id);
+static int session_builder_process_pre_key_signal_message_v3(session_builder *builder,
+        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id);
 static int session_builder_process_initiate(session_builder *builder,
         key_exchange_message *message, key_exchange_message **response_message);
 static int session_builder_process_response(session_builder *builder,
@@ -49,13 +49,13 @@ int session_builder_create(session_builder **builder,
     return 0;
 }
 
-int session_builder_process_pre_key_whisper_message(session_builder *builder,
-        session_record *record, pre_key_whisper_message *message, uint32_t *unsigned_pre_key_id)
+int session_builder_process_pre_key_signal_message(session_builder *builder,
+        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id)
 {
     int result = 0;
     int has_unsigned_pre_key_id_result = 0;
     uint32_t unsigned_pre_key_id_result = 0;
-    ec_public_key *their_identity_key = pre_key_whisper_message_get_identity_key(message);
+    ec_public_key *their_identity_key = pre_key_signal_message_get_identity_key(message);
 
     result = axolotl_identity_is_trusted_identity(builder->store,
             builder->remote_address->name, builder->remote_address->name_len,
@@ -68,7 +68,7 @@ int session_builder_process_pre_key_whisper_message(session_builder *builder,
         goto complete;
     }
 
-    result = session_builder_process_pre_key_whisper_message_v3(builder, record, message, &unsigned_pre_key_id_result);
+    result = session_builder_process_pre_key_signal_message_v3(builder, record, message, &unsigned_pre_key_id_result);
     if(result < 0) {
         goto complete;
     }
@@ -90,8 +90,8 @@ complete:
     return result;
 }
 
-static int session_builder_process_pre_key_whisper_message_v3(session_builder *builder,
-        session_record *record, pre_key_whisper_message *message, uint32_t *unsigned_pre_key_id)
+static int session_builder_process_pre_key_signal_message_v3(session_builder *builder,
+        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id)
 {
     int result = 0;
     uint32_t unsigned_pre_key_id_result = 0;
@@ -104,8 +104,8 @@ static int session_builder_process_pre_key_whisper_message_v3(session_builder *b
     uint32_t local_registration_id = 0;
 
     int has_session_state = session_record_has_session_state(record,
-            pre_key_whisper_message_get_message_version(message),
-            pre_key_whisper_message_get_base_key(message));
+            pre_key_signal_message_get_message_version(message),
+            pre_key_signal_message_get_base_key(message));
     if(has_session_state) {
         axolotl_log(builder->global_context, AX_LOG_INFO, "We've already setup a session for this V3 message, letting bundled message fall through...");
         result = 0;
@@ -114,7 +114,7 @@ static int session_builder_process_pre_key_whisper_message_v3(session_builder *b
 
     result = axolotl_signed_pre_key_load_key(builder->store,
             &our_signed_pre_key,
-            pre_key_whisper_message_get_signed_pre_key_id(message));
+            pre_key_signal_message_get_signed_pre_key_id(message));
     if(result < 0) {
         goto complete;
     }
@@ -124,10 +124,10 @@ static int session_builder_process_pre_key_whisper_message_v3(session_builder *b
         goto complete;
     }
 
-    if(pre_key_whisper_message_has_pre_key_id(message)) {
+    if(pre_key_signal_message_has_pre_key_id(message)) {
         result = axolotl_pre_key_load_key(builder->store,
                 &session_our_one_time_pre_key,
-                pre_key_whisper_message_get_pre_key_id(message));
+                pre_key_signal_message_get_pre_key_id(message));
         if(result < 0) {
             goto complete;
         }
@@ -140,8 +140,8 @@ static int session_builder_process_pre_key_whisper_message_v3(session_builder *b
             session_signed_pre_key_get_key_pair(our_signed_pre_key),
             our_one_time_pre_key,
             session_signed_pre_key_get_key_pair(our_signed_pre_key),
-            pre_key_whisper_message_get_identity_key(message),
-            pre_key_whisper_message_get_base_key(message));
+            pre_key_signal_message_get_identity_key(message),
+            pre_key_signal_message_get_base_key(message));
     if(result < 0) {
         goto complete;
     }
@@ -166,13 +166,13 @@ static int session_builder_process_pre_key_whisper_message_v3(session_builder *b
 
     session_state_set_local_registration_id(state, local_registration_id);
     session_state_set_remote_registration_id(state,
-            pre_key_whisper_message_get_registration_id(message));
+            pre_key_signal_message_get_registration_id(message));
     session_state_set_alice_base_key(state,
-            pre_key_whisper_message_get_base_key(message));;
+            pre_key_signal_message_get_base_key(message));;
 
-    if(pre_key_whisper_message_has_pre_key_id(message) &&
-            pre_key_whisper_message_get_pre_key_id(message) != PRE_KEY_MEDIUM_MAX_VALUE) {
-        unsigned_pre_key_id_result = pre_key_whisper_message_get_pre_key_id(message);
+    if(pre_key_signal_message_has_pre_key_id(message) &&
+            pre_key_signal_message_get_pre_key_id(message) != PRE_KEY_MEDIUM_MAX_VALUE) {
+        unsigned_pre_key_id_result = pre_key_signal_message_get_pre_key_id(message);
         result = 1;
     }
     else {

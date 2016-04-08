@@ -16,7 +16,7 @@ extern "C" {
 #define CIPHERTEXT_UNSUPPORTED_VERSION         1
 #define CIPHERTEXT_CURRENT_VERSION             3
 
-#define CIPHERTEXT_WHISPER_TYPE                2
+#define CIPHERTEXT_SIGNAL_TYPE                 2
 #define CIPHERTEXT_PREKEY_TYPE                 3
 #define CIPHERTEXT_SENDERKEY_TYPE              4
 #define CIPHERTEXT_SENDERKEY_DISTRIBUTION_TYPE 5
@@ -51,64 +51,64 @@ void key_exchange_message_destroy(axolotl_type_base *type);
 int ciphertext_message_get_type(const ciphertext_message *message);
 axolotl_buffer *ciphertext_message_get_serialized(const ciphertext_message *message);
 
-int whisper_message_create(whisper_message **message, uint8_t message_version,
+int signal_message_create(signal_message **message, uint8_t message_version,
         const uint8_t *mac_key, size_t mac_key_len,
         ec_public_key *sender_ratchet_key, uint32_t counter, uint32_t previous_counter,
         const uint8_t *ciphertext, size_t ciphertext_len,
         ec_public_key *sender_identity_key, ec_public_key *receiver_identity_key,
         axolotl_context *global_context);
 
-int whisper_message_deserialize(whisper_message **message, const uint8_t *data, size_t len,
+int signal_message_deserialize(signal_message **message, const uint8_t *data, size_t len,
         axolotl_context *global_context);
 
-int whisper_message_copy(whisper_message **message, whisper_message *other_message, axolotl_context *global_context);
+int signal_message_copy(signal_message **message, signal_message *other_message, axolotl_context *global_context);
 
-ec_public_key *whisper_message_get_sender_ratchet_key(const whisper_message *message);
+ec_public_key *signal_message_get_sender_ratchet_key(const signal_message *message);
 
-uint8_t whisper_message_get_message_version(const whisper_message *message);
+uint8_t signal_message_get_message_version(const signal_message *message);
 
-uint32_t whisper_message_get_counter(const whisper_message *message);
+uint32_t signal_message_get_counter(const signal_message *message);
 
-axolotl_buffer *whisper_message_get_body(const whisper_message *message);
+axolotl_buffer *signal_message_get_body(const signal_message *message);
 
 /**
- * Verify the MAC on the Whisper message.
+ * Verify the MAC on the Signal message.
  *
  * @return 1 if verified, 0 if invalid, negative on error
  */
-int whisper_message_verify_mac(whisper_message *message,
+int signal_message_verify_mac(signal_message *message,
         uint8_t message_version,
         ec_public_key *sender_identity_key,
         ec_public_key *receiver_identity_key,
         const uint8_t *mac_key, size_t mac_key_len,
         axolotl_context *global_context);
 
-int whisper_message_is_legacy(const uint8_t *data, size_t len);
+int signal_message_is_legacy(const uint8_t *data, size_t len);
 
-void whisper_message_destroy(axolotl_type_base *type);
+void signal_message_destroy(axolotl_type_base *type);
 
-int pre_key_whisper_message_create(pre_key_whisper_message **pre_key_message,
+int pre_key_signal_message_create(pre_key_signal_message **pre_key_message,
         uint8_t message_version, uint32_t registration_id, const uint32_t *pre_key_id,
         uint32_t signed_pre_key_id, ec_public_key *base_key, ec_public_key *identity_key,
-        whisper_message *message,
+        signal_message *message,
         axolotl_context *global_context);
 
-int pre_key_whisper_message_deserialize(pre_key_whisper_message **message,
+int pre_key_signal_message_deserialize(pre_key_signal_message **message,
         const uint8_t *data, size_t len,
         axolotl_context *global_context);
 
-int pre_key_whisper_message_copy(pre_key_whisper_message **message, pre_key_whisper_message *other_message, axolotl_context *global_context);
+int pre_key_signal_message_copy(pre_key_signal_message **message, pre_key_signal_message *other_message, axolotl_context *global_context);
 
-uint8_t pre_key_whisper_message_get_message_version(const pre_key_whisper_message *message);
-ec_public_key *pre_key_whisper_message_get_identity_key(const pre_key_whisper_message *message);
-uint32_t pre_key_whisper_message_get_registration_id(const pre_key_whisper_message *message);
-int pre_key_whisper_message_has_pre_key_id(const pre_key_whisper_message *message);
-uint32_t pre_key_whisper_message_get_pre_key_id(const pre_key_whisper_message *message);
-uint32_t pre_key_whisper_message_get_signed_pre_key_id(const pre_key_whisper_message *message);
-ec_public_key *pre_key_whisper_message_get_base_key(const pre_key_whisper_message *message);
-whisper_message *pre_key_whisper_message_get_whisper_message(const pre_key_whisper_message *message);
+uint8_t pre_key_signal_message_get_message_version(const pre_key_signal_message *message);
+ec_public_key *pre_key_signal_message_get_identity_key(const pre_key_signal_message *message);
+uint32_t pre_key_signal_message_get_registration_id(const pre_key_signal_message *message);
+int pre_key_signal_message_has_pre_key_id(const pre_key_signal_message *message);
+uint32_t pre_key_signal_message_get_pre_key_id(const pre_key_signal_message *message);
+uint32_t pre_key_signal_message_get_signed_pre_key_id(const pre_key_signal_message *message);
+ec_public_key *pre_key_signal_message_get_base_key(const pre_key_signal_message *message);
+signal_message *pre_key_signal_message_get_signal_message(const pre_key_signal_message *message);
 
-void pre_key_whisper_message_destroy(axolotl_type_base *type);
+void pre_key_signal_message_destroy(axolotl_type_base *type);
 
 int sender_key_message_create(sender_key_message **message,
         uint32_t key_id, uint32_t iteration,

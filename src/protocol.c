@@ -7,7 +7,7 @@
 #include "curve.h"
 #include "WhisperTextProtocol.pb-c.h"
 
-#define WHISPER_MESSAGE_MAC_LENGTH 8
+#define SIGNAL_MESSAGE_MAC_LENGTH 8
 #define SIGNATURE_LENGTH 64
 
 struct key_exchange_message
@@ -36,7 +36,7 @@ struct ciphertext_message
     axolotl_buffer *serialized;
 };
 
-struct whisper_message
+struct signal_message
 {
     ciphertext_message base_message;
     uint8_t message_version;
@@ -46,7 +46,7 @@ struct whisper_message
     axolotl_buffer *ciphertext;
 };
 
-struct pre_key_whisper_message
+struct pre_key_signal_message
 {
     ciphertext_message base_message;
     uint8_t version;
@@ -56,7 +56,7 @@ struct pre_key_whisper_message
     uint32_t signed_pre_key_id;
     ec_public_key *base_key;
     ec_public_key *identity_key;
-    whisper_message *message;
+    signal_message *message;
 };
 
 struct sender_key_message
@@ -79,8 +79,8 @@ struct sender_key_distribution_message
 
 static int key_exchange_message_serialize(axolotl_buffer **buffer, const key_exchange_message *message);
 
-static int whisper_message_serialize(axolotl_buffer **buffer, const whisper_message *message);
-static int whisper_message_get_mac(axolotl_buffer **buffer,
+static int signal_message_serialize(axolotl_buffer **buffer, const signal_message *message);
+static int signal_message_get_mac(axolotl_buffer **buffer,
         uint8_t message_version,
         ec_public_key *sender_identity_key,
         ec_public_key *receiver_identity_key,
@@ -88,7 +88,7 @@ static int whisper_message_get_mac(axolotl_buffer **buffer,
         const uint8_t *serialized, size_t serialized_len,
         axolotl_context *global_context);
 
-static int pre_key_whisper_message_serialize(axolotl_buffer **buffer, const pre_key_whisper_message *message);
+static int pre_key_signal_message_serialize(axolotl_buffer **buffer, const pre_key_signal_message *message);
 
 static int sender_key_message_serialize(axolotl_buffer **buffer, const sender_key_message *message, ec_private_key *signature_key, axolotl_context *global_context);
 static int sender_key_distribution_message_serialize(axolotl_buffer **buffer, const sender_key_distribution_message *message);
@@ -444,7 +444,7 @@ axolotl_buffer *ciphertext_message_get_serialized(const ciphertext_message *mess
 
 /*------------------------------------------------------------------------*/
 
-int whisper_message_create(whisper_message **message, uint8_t message_version,
+int signal_message_create(signal_message **message, uint8_t message_version,
         const uint8_t *mac_key, size_t mac_key_len,
         ec_public_key *sender_ratchet_key, uint32_t counter, uint32_t previous_counter,
         const uint8_t *ciphertext, size_t ciphertext_len,
@@ -454,18 +454,18 @@ int whisper_message_create(whisper_message **message, uint8_t message_version,
     int result = 0;
     axolotl_buffer *message_buf = 0;
     axolotl_buffer *mac_buf = 0;
-    whisper_message *result_message = 0;
+    signal_message *result_message = 0;
 
     assert(global_context);
 
-    result_message = malloc(sizeof(whisper_message));
+    result_message = malloc(sizeof(signal_message));
     if(!result_message) {
         return AX_ERR_NOMEM;
     }
-    memset(result_message, 0, sizeof(whisper_message));
-    AXOLOTL_INIT(result_message, whisper_message_destroy);
+    memset(result_message, 0, sizeof(signal_message));
+    AXOLOTL_INIT(result_message, signal_message_destroy);
 
-    result_message->base_message.message_type = CIPHERTEXT_WHISPER_TYPE;
+    result_message->base_message.message_type = CIPHERTEXT_SIGNAL_TYPE;
     result_message->base_message.global_context = global_context;
 
     AXOLOTL_REF(sender_ratchet_key);
@@ -482,12 +482,12 @@ int whisper_message_create(whisper_message **message, uint8_t message_version,
 
     result_message->message_version = message_version;
 
-    result = whisper_message_serialize(&message_buf, result_message);
+    result = signal_message_serialize(&message_buf, result_message);
     if(result < 0) {
         goto complete;
     }
 
-    result = whisper_message_get_mac(&mac_buf,
+    result = signal_message_get_mac(&mac_buf,
             message_version, sender_identity_key, receiver_identity_key,
             mac_key, mac_key_len,
             axolotl_buffer_data(message_buf),
@@ -527,7 +527,7 @@ complete:
     return result;
 }
 
-static int whisper_message_serialize(axolotl_buffer **buffer, const whisper_message *message)
+static int signal_message_serialize(axolotl_buffer **buffer, const signal_message *message)
 {
     int result = 0;
     size_t result_size = 0;
@@ -583,10 +583,10 @@ complete:
     return result;
 }
 
-int whisper_message_deserialize(whisper_message **message, const uint8_t *data, size_t len, axolotl_context *global_context)
+int signal_message_deserialize(signal_message **message, const uint8_t *data, size_t len, axolotl_context *global_context)
 {
     int result = 0;
-    whisper_message *result_message = 0;
+    signal_message *result_message = 0;
     Textsecure__WhisperMessage *message_structure = 0;
     uint8_t version = 0;
     uint8_t *ciphertext_data = 0;
@@ -596,7 +596,7 @@ int whisper_message_deserialize(whisper_message **message, const uint8_t *data, 
 
     assert(global_context);
 
-    if(!data || len <= 1 + WHISPER_MESSAGE_MAC_LENGTH) {
+    if(!data || len <= 1 + SIGNAL_MESSAGE_MAC_LENGTH) {
         result = AX_ERR_INVAL;
         goto complete;
     }
@@ -605,7 +605,7 @@ int whisper_message_deserialize(whisper_message **message, const uint8_t *data, 
 
     /* Set some pointers and lengths for the sections of the raw data */
     message_data = data + 1;
-    message_len = len - 1 - WHISPER_MESSAGE_MAC_LENGTH;
+    message_len = len - 1 - SIGNAL_MESSAGE_MAC_LENGTH;
 
     if(version <= CIPHERTEXT_UNSUPPORTED_VERSION) {
         axolotl_log(global_context, AX_LOG_WARNING, "Unsupported legacy version: %d", version);
@@ -633,15 +633,15 @@ int whisper_message_deserialize(whisper_message **message, const uint8_t *data, 
         goto complete;
     }
 
-    result_message = malloc(sizeof(whisper_message));
+    result_message = malloc(sizeof(signal_message));
     if(!result_message) {
         result = AX_ERR_NOMEM;
         goto complete;
     }
-    memset(result_message, 0, sizeof(whisper_message));
-    AXOLOTL_INIT(result_message, whisper_message_destroy);
+    memset(result_message, 0, sizeof(signal_message));
+    AXOLOTL_INIT(result_message, signal_message_destroy);
 
-    result_message->base_message.message_type = CIPHERTEXT_WHISPER_TYPE;
+    result_message->base_message.message_type = CIPHERTEXT_SIGNAL_TYPE;
     result_message->base_message.global_context = global_context;
 
     result = curve_decode_point(&result_message->sender_ratchet_key,
@@ -685,15 +685,15 @@ complete:
     return result;
 }
 
-int whisper_message_copy(whisper_message **message, whisper_message *other_message, axolotl_context *global_context)
+int signal_message_copy(signal_message **message, signal_message *other_message, axolotl_context *global_context)
 {
     int result = 0;
-    whisper_message *result_message = 0;
+    signal_message *result_message = 0;
 
     assert(other_message);
     assert(global_context);
 
-    result = whisper_message_deserialize(
+    result = signal_message_deserialize(
             &result_message,
             axolotl_buffer_data(other_message->base_message.serialized),
             axolotl_buffer_len(other_message->base_message.serialized),
@@ -705,31 +705,31 @@ int whisper_message_copy(whisper_message **message, whisper_message *other_messa
     return result;
 }
 
-ec_public_key *whisper_message_get_sender_ratchet_key(const whisper_message *message)
+ec_public_key *signal_message_get_sender_ratchet_key(const signal_message *message)
 {
     assert(message);
     return message->sender_ratchet_key;
 }
 
-uint8_t whisper_message_get_message_version(const whisper_message *message)
+uint8_t signal_message_get_message_version(const signal_message *message)
 {
     assert(message);
     return message->message_version;
 }
 
-uint32_t whisper_message_get_counter(const whisper_message *message)
+uint32_t signal_message_get_counter(const signal_message *message)
 {
     assert(message);
     return message->counter;
 }
 
-axolotl_buffer *whisper_message_get_body(const whisper_message *message)
+axolotl_buffer *signal_message_get_body(const signal_message *message)
 {
     assert(message);
     return message->ciphertext;
 }
 
-int whisper_message_verify_mac(whisper_message *message,
+int signal_message_verify_mac(signal_message *message,
         uint8_t message_version,
         ec_public_key *sender_identity_key,
         ec_public_key *receiver_identity_key,
@@ -743,7 +743,7 @@ int whisper_message_verify_mac(whisper_message *message,
     uint8_t *serialized_message_data = 0;
     size_t serialized_message_len = 0;
     uint8_t *their_mac_data = 0;
-    const size_t their_mac_len = WHISPER_MESSAGE_MAC_LENGTH;
+    const size_t their_mac_len = SIGNAL_MESSAGE_MAC_LENGTH;
     uint8_t *our_mac_data = 0;
     size_t our_mac_len = 0;
 
@@ -754,10 +754,10 @@ int whisper_message_verify_mac(whisper_message *message,
     serialized_data = axolotl_buffer_data(message->base_message.serialized);
     serialized_len = axolotl_buffer_len(message->base_message.serialized);
     serialized_message_data = serialized_data;
-    serialized_message_len = serialized_len - WHISPER_MESSAGE_MAC_LENGTH;
+    serialized_message_len = serialized_len - SIGNAL_MESSAGE_MAC_LENGTH;
     their_mac_data = serialized_data + serialized_message_len;
 
-    result = whisper_message_get_mac(&our_mac_buffer,
+    result = signal_message_get_mac(&our_mac_buffer,
             message->message_version,
             sender_identity_key, receiver_identity_key,
             mac_key, mac_key_len,
@@ -790,7 +790,7 @@ complete:
     return result;
 }
 
-static int whisper_message_get_mac(axolotl_buffer **buffer,
+static int signal_message_get_mac(axolotl_buffer **buffer,
         uint8_t message_version,
         ec_public_key *sender_identity_key,
         ec_public_key *receiver_identity_key,
@@ -848,19 +848,19 @@ static int whisper_message_get_mac(axolotl_buffer **buffer,
 
     result = axolotl_hmac_sha256_final(global_context,
             hmac_context, &full_mac_buffer);
-    if(result < 0 || axolotl_buffer_len(full_mac_buffer) < WHISPER_MESSAGE_MAC_LENGTH) {
+    if(result < 0 || axolotl_buffer_len(full_mac_buffer) < SIGNAL_MESSAGE_MAC_LENGTH) {
         if(result >= 0) { result = AX_ERR_UNKNOWN; }
         goto complete;
     }
 
-    result_buf = axolotl_buffer_alloc(WHISPER_MESSAGE_MAC_LENGTH);
+    result_buf = axolotl_buffer_alloc(SIGNAL_MESSAGE_MAC_LENGTH);
     if(!result_buf) {
         result = AX_ERR_NOMEM;
         goto complete;
     }
 
     result_data = axolotl_buffer_data(result_buf);
-    memcpy(result_data, axolotl_buffer_data(full_mac_buffer), WHISPER_MESSAGE_MAC_LENGTH);
+    memcpy(result_data, axolotl_buffer_data(full_mac_buffer), SIGNAL_MESSAGE_MAC_LENGTH);
 
 complete:
     axolotl_hmac_sha256_cleanup(global_context, hmac_context);
@@ -873,14 +873,14 @@ complete:
     return result;
 }
 
-int whisper_message_is_legacy(const uint8_t *data, size_t len)
+int signal_message_is_legacy(const uint8_t *data, size_t len)
 {
     return data && len >= 1 && ((data[0] & 0xF0) >> 4) <= CIPHERTEXT_UNSUPPORTED_VERSION;
 }
 
-void whisper_message_destroy(axolotl_type_base *type)
+void signal_message_destroy(axolotl_type_base *type)
 {
-    whisper_message *message = (whisper_message *)type;
+    signal_message *message = (signal_message *)type;
 
     if(message->base_message.serialized) {
         axolotl_buffer_free(message->base_message.serialized);
@@ -894,24 +894,24 @@ void whisper_message_destroy(axolotl_type_base *type)
 
 /*------------------------------------------------------------------------*/
 
-int pre_key_whisper_message_create(pre_key_whisper_message **pre_key_message,
+int pre_key_signal_message_create(pre_key_signal_message **pre_key_message,
         uint8_t message_version, uint32_t registration_id, const uint32_t *pre_key_id,
         uint32_t signed_pre_key_id, ec_public_key *base_key, ec_public_key *identity_key,
-        whisper_message *message,
+        signal_message *message,
         axolotl_context *global_context)
 {
     int result = 0;
-    pre_key_whisper_message *result_message = 0;
+    pre_key_signal_message *result_message = 0;
 
     assert(global_context);
 
-    result_message = malloc(sizeof(pre_key_whisper_message));
+    result_message = malloc(sizeof(pre_key_signal_message));
 
     if(!result_message) {
         return AX_ERR_NOMEM;
     }
-    memset(result_message, 0, sizeof(pre_key_whisper_message));
-    AXOLOTL_INIT(result_message, pre_key_whisper_message_destroy);
+    memset(result_message, 0, sizeof(pre_key_signal_message));
+    AXOLOTL_INIT(result_message, pre_key_signal_message_destroy);
 
     result_message->base_message.message_type = CIPHERTEXT_PREKEY_TYPE;
     result_message->base_message.global_context = global_context;
@@ -933,7 +933,7 @@ int pre_key_whisper_message_create(pre_key_whisper_message **pre_key_message,
     AXOLOTL_REF(message);
     result_message->message = message;
 
-    result = pre_key_whisper_message_serialize(&result_message->base_message.serialized, result_message);
+    result = pre_key_signal_message_serialize(&result_message->base_message.serialized, result_message);
 
     if(result >= 0) {
         result = 0;
@@ -947,7 +947,7 @@ int pre_key_whisper_message_create(pre_key_whisper_message **pre_key_message,
     return result;
 }
 
-static int pre_key_whisper_message_serialize(axolotl_buffer **buffer, const pre_key_whisper_message *message)
+static int pre_key_signal_message_serialize(axolotl_buffer **buffer, const pre_key_signal_message *message)
 {
     int result = 0;
     size_t result_size = 0;
@@ -1019,12 +1019,12 @@ complete:
     return result;
 }
 
-int pre_key_whisper_message_deserialize(pre_key_whisper_message **message,
+int pre_key_signal_message_deserialize(pre_key_signal_message **message,
         const uint8_t *data, size_t len,
         axolotl_context *global_context)
 {
     int result = 0;
-    pre_key_whisper_message *result_message = 0;
+    pre_key_signal_message *result_message = 0;
     Textsecure__PreKeyWhisperMessage *message_structure = 0;
     uint8_t version = 0;
     const uint8_t *message_data = 0;
@@ -1071,13 +1071,13 @@ int pre_key_whisper_message_deserialize(pre_key_whisper_message **message,
         goto complete;
     }
 
-    result_message = malloc(sizeof(pre_key_whisper_message));
+    result_message = malloc(sizeof(pre_key_signal_message));
     if(!result_message) {
         result = AX_ERR_NOMEM;
         goto complete;
     }
-    memset(result_message, 0, sizeof(pre_key_whisper_message));
-    AXOLOTL_INIT(result_message, pre_key_whisper_message_destroy);
+    memset(result_message, 0, sizeof(pre_key_signal_message));
+    AXOLOTL_INIT(result_message, pre_key_signal_message_destroy);
 
     result_message->base_message.message_type = CIPHERTEXT_PREKEY_TYPE;
     result_message->base_message.global_context = global_context;
@@ -1114,7 +1114,7 @@ int pre_key_whisper_message_deserialize(pre_key_whisper_message **message,
     }
 
     if(message_structure->has_message) {
-        result = whisper_message_deserialize(&result_message->message,
+        result = signal_message_deserialize(&result_message->message,
                 message_structure->message.data,
                 message_structure->message.len,
                 global_context);
@@ -1152,15 +1152,15 @@ complete:
     return result;
 }
 
-int pre_key_whisper_message_copy(pre_key_whisper_message **message, pre_key_whisper_message *other_message, axolotl_context *global_context)
+int pre_key_signal_message_copy(pre_key_signal_message **message, pre_key_signal_message *other_message, axolotl_context *global_context)
 {
     int result = 0;
-    pre_key_whisper_message *result_message = 0;
+    pre_key_signal_message *result_message = 0;
 
     assert(other_message);
     assert(global_context);
 
-    result = pre_key_whisper_message_deserialize(
+    result = pre_key_signal_message_deserialize(
             &result_message,
             axolotl_buffer_data(other_message->base_message.serialized),
             axolotl_buffer_len(other_message->base_message.serialized),
@@ -1172,58 +1172,58 @@ int pre_key_whisper_message_copy(pre_key_whisper_message **message, pre_key_whis
     return result;
 }
 
-uint8_t pre_key_whisper_message_get_message_version(const pre_key_whisper_message *message)
+uint8_t pre_key_signal_message_get_message_version(const pre_key_signal_message *message)
 {
     assert(message);
     return message->version;
 }
 
-ec_public_key *pre_key_whisper_message_get_identity_key(const pre_key_whisper_message *message)
+ec_public_key *pre_key_signal_message_get_identity_key(const pre_key_signal_message *message)
 {
     assert(message);
     return message->identity_key;
 }
 
-uint32_t pre_key_whisper_message_get_registration_id(const pre_key_whisper_message *message)
+uint32_t pre_key_signal_message_get_registration_id(const pre_key_signal_message *message)
 {
     assert(message);
     return message->registration_id;
 }
 
-int pre_key_whisper_message_has_pre_key_id(const pre_key_whisper_message *message)
+int pre_key_signal_message_has_pre_key_id(const pre_key_signal_message *message)
 {
     assert(message);
     return message->has_pre_key_id;
 }
 
-uint32_t pre_key_whisper_message_get_pre_key_id(const pre_key_whisper_message *message)
+uint32_t pre_key_signal_message_get_pre_key_id(const pre_key_signal_message *message)
 {
     assert(message);
     assert(message->has_pre_key_id);
     return message->pre_key_id;
 }
 
-uint32_t pre_key_whisper_message_get_signed_pre_key_id(const pre_key_whisper_message *message)
+uint32_t pre_key_signal_message_get_signed_pre_key_id(const pre_key_signal_message *message)
 {
     assert(message);
     return message->signed_pre_key_id;
 }
 
-ec_public_key *pre_key_whisper_message_get_base_key(const pre_key_whisper_message *message)
+ec_public_key *pre_key_signal_message_get_base_key(const pre_key_signal_message *message)
 {
     assert(message);
     return message->base_key;
 }
 
-whisper_message *pre_key_whisper_message_get_whisper_message(const pre_key_whisper_message *message)
+signal_message *pre_key_signal_message_get_signal_message(const pre_key_signal_message *message)
 {
     assert(message);
     return message->message;
 }
 
-void pre_key_whisper_message_destroy(axolotl_type_base *type)
+void pre_key_signal_message_destroy(axolotl_type_base *type)
 {
-    pre_key_whisper_message *message = (pre_key_whisper_message *)type;
+    pre_key_signal_message *message = (pre_key_signal_message *)type;
 
     if(message->base_message.serialized) {
         axolotl_buffer_free(message->base_message.serialized);

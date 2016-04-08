@@ -228,9 +228,9 @@ void decrypt_and_compare_messages(session_cipher *cipher, axolotl_buffer *cipher
 {
     int result = 0;
 
-    /* Create a whisper_message from the ciphertext */
-    whisper_message *index_message_deserialized = 0;
-    result = whisper_message_deserialize(&index_message_deserialized,
+    /* Create a signal_message from the ciphertext */
+    signal_message *index_message_deserialized = 0;
+    result = signal_message_deserialize(&index_message_deserialized,
             axolotl_buffer_data(ciphertext),
             axolotl_buffer_len(ciphertext),
             global_context);
@@ -238,7 +238,7 @@ void decrypt_and_compare_messages(session_cipher *cipher, axolotl_buffer *cipher
 
     /* Decrypt the message */
     axolotl_buffer *index_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(cipher, index_message_deserialized, 0, &index_plaintext);
+    result = session_cipher_decrypt_signal_message(cipher, index_message_deserialized, 0, &index_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Compare the messages */
@@ -294,8 +294,8 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     axolotl_buffer *alice_message_serialized = ciphertext_message_get_serialized(alice_message);
     ck_assert_ptr_ne(alice_message_serialized, 0);
 
-    whisper_message *alice_message_deserialized = 0;
-    result = whisper_message_deserialize(&alice_message_deserialized,
+    signal_message *alice_message_deserialized = 0;
+    result = signal_message_deserialize(&alice_message_deserialized,
             axolotl_buffer_data(alice_message_serialized),
             axolotl_buffer_len(alice_message_serialized),
             global_context);
@@ -303,7 +303,7 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
 
     /* Have Bob decrypt the test message */
     axolotl_buffer *bob_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(bob_cipher, alice_message_deserialized, 0, &bob_plaintext);
+    result = session_cipher_decrypt_signal_message(bob_cipher, alice_message_deserialized, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     uint8_t *bob_plaintext_data = axolotl_buffer_data(bob_plaintext);
@@ -325,8 +325,8 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     axolotl_buffer *reply_message_serialized = ciphertext_message_get_serialized(reply_message);
     ck_assert_ptr_ne(reply_message_serialized, 0);
 
-    whisper_message *reply_message_deserialized = 0;
-    result = whisper_message_deserialize(&reply_message_deserialized,
+    signal_message *reply_message_deserialized = 0;
+    result = signal_message_deserialize(&reply_message_deserialized,
             axolotl_buffer_data(reply_message_serialized),
             axolotl_buffer_len(reply_message_serialized),
             global_context);
@@ -335,7 +335,7 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     /* Have Alice decrypt the reply message */
 
     axolotl_buffer *reply_plaintext = 0;
-    result = session_cipher_decrypt_whisper_message(alice_cipher, reply_message_deserialized, 0, &reply_plaintext);
+    result = session_cipher_decrypt_signal_message(alice_cipher, reply_message_deserialized, 0, &reply_plaintext);
     ck_assert_int_eq(result, 0);
 
     uint8_t *reply_plaintext_data = axolotl_buffer_data(reply_plaintext);
@@ -460,7 +460,7 @@ START_TEST(test_message_key_limits)
     result = session_cipher_create(&bob_cipher, bob_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
-    whisper_message *inflight[2010];
+    signal_message *inflight[2010];
     memset(inflight, 0, sizeof(inflight));
 
     /* Encrypt enough messages to go past our limit */
@@ -471,35 +471,35 @@ START_TEST(test_message_key_limits)
         ciphertext_message *alice_message = 0;
         result = session_cipher_encrypt(alice_cipher, (uint8_t *)alice_plaintext, alice_plaintext_len, &alice_message);
         ck_assert_int_eq(result, 0);
-        ck_assert_int_eq(ciphertext_message_get_type(alice_message), CIPHERTEXT_WHISPER_TYPE);
-        inflight[i] = (whisper_message *)alice_message;
+        ck_assert_int_eq(ciphertext_message_get_type(alice_message), CIPHERTEXT_SIGNAL_TYPE);
+        inflight[i] = (signal_message *)alice_message;
     }
 
-    whisper_message *message_copy = 0;
+    signal_message *message_copy = 0;
     axolotl_buffer *buffer = 0;
 
     /* Try decrypting in-flight message 1000 */
-    result = whisper_message_copy(&message_copy, inflight[1000], global_context);
+    result = signal_message_copy(&message_copy, inflight[1000], global_context);
     ck_assert_int_eq(result, 0);
-    result = session_cipher_decrypt_whisper_message(bob_cipher, message_copy, 0, &buffer);
+    result = session_cipher_decrypt_signal_message(bob_cipher, message_copy, 0, &buffer);
     ck_assert_int_eq(result, 0);
     ck_assert_ptr_ne(buffer, 0);
     axolotl_buffer_free(buffer); buffer = 0;
     AXOLOTL_UNREF(message_copy);
 
     /* Try decrypting in-flight message 2009 */
-    result = whisper_message_copy(&message_copy, inflight[2009], global_context);
+    result = signal_message_copy(&message_copy, inflight[2009], global_context);
     ck_assert_int_eq(result, 0);
-    result = session_cipher_decrypt_whisper_message(bob_cipher, message_copy, 0, &buffer);
+    result = session_cipher_decrypt_signal_message(bob_cipher, message_copy, 0, &buffer);
     ck_assert_int_eq(result, 0);
     ck_assert_ptr_ne(buffer, 0);
     axolotl_buffer_free(buffer); buffer = 0;
     AXOLOTL_UNREF(message_copy);
 
     /* Try decrypting in-flight message 0, which should fail */
-    result = whisper_message_copy(&message_copy, inflight[0], global_context);
+    result = signal_message_copy(&message_copy, inflight[0], global_context);
     ck_assert_int_eq(result, 0);
-    result = session_cipher_decrypt_whisper_message(bob_cipher, message_copy, 0, &buffer);
+    result = session_cipher_decrypt_signal_message(bob_cipher, message_copy, 0, &buffer);
     ck_assert_int_eq(result, AX_ERR_DUPLICATE_MESSAGE);
     axolotl_buffer_free(buffer); buffer = 0;
     AXOLOTL_UNREF(message_copy);

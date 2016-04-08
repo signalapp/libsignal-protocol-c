@@ -73,8 +73,8 @@ typedef struct axolotl_key_helper_pre_key_list_node axolotl_key_helper_pre_key_l
  */
 typedef struct key_exchange_message key_exchange_message;
 typedef struct ciphertext_message ciphertext_message;
-typedef struct whisper_message whisper_message;
-typedef struct pre_key_whisper_message pre_key_whisper_message;
+typedef struct signal_message signal_message;
+typedef struct pre_key_signal_message pre_key_signal_message;
 typedef struct sender_key_message sender_key_message;
 typedef struct sender_key_distribution_message sender_key_distribution_message;
 
