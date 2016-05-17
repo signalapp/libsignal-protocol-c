@@ -106,9 +106,15 @@ axolotl_buffer *axolotl_buffer_copy(const axolotl_buffer *buffer)
 
 axolotl_buffer *axolotl_buffer_append(axolotl_buffer *buffer, const uint8_t *data, size_t len)
 {
+    axolotl_buffer *tmp_buffer;
     size_t previous_size = buffer->len;
     size_t previous_alloc = sizeof(struct axolotl_buffer) + (sizeof(uint8_t) * previous_size);
-    axolotl_buffer *tmp_buffer = realloc(buffer, previous_alloc + (sizeof(uint8_t) * len));
+
+    if(len > (SIZE_MAX - previous_alloc)) {
+        return 0;
+    }
+
+    tmp_buffer = realloc(buffer, previous_alloc + (sizeof(uint8_t) * len));
     if(!tmp_buffer) {
         return 0;
     }
