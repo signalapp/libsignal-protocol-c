@@ -432,12 +432,12 @@ void setup_test_crypto_provider(signal_context *context)
 
 /*------------------------------------------------------------------------*/
 
-void setup_test_store_context(axolotl_store_context **context, signal_context *global_context)
+void setup_test_store_context(signal_protocol_store_context **context, signal_context *global_context)
 {
     int result = 0;
 
-    axolotl_store_context *store_context = 0;
-    result = axolotl_store_context_create(&store_context, global_context);
+    signal_protocol_store_context *store_context = 0;
+    result = signal_protocol_store_context_create(&store_context, global_context);
     ck_assert_int_eq(result, 0);
 
     setup_test_session_store(store_context);
@@ -466,7 +466,7 @@ typedef struct {
     test_session_store_session *sessions;
 } test_session_store_data;
 
-int test_session_store_load_session(signal_buffer **record, const axolotl_address *address, void *user_data)
+int test_session_store_load_session(signal_buffer **record, const signal_protocol_address *address, void *user_data)
 {
     test_session_store_data *data = user_data;
 
@@ -511,7 +511,7 @@ int test_session_store_get_sub_device_sessions(signal_int_list **sessions, const
     return 0;
 }
 
-int test_session_store_store_session(const axolotl_address *address, uint8_t *record, size_t record_len, void *user_data)
+int test_session_store_store_session(const signal_protocol_address *address, uint8_t *record, size_t record_len, void *user_data)
 {
     test_session_store_data *data = user_data;
 
@@ -549,7 +549,7 @@ int test_session_store_store_session(const axolotl_address *address, uint8_t *re
     return 0;
 }
 
-int test_session_store_contains_session(const axolotl_address *address, void *user_data)
+int test_session_store_contains_session(const signal_protocol_address *address, void *user_data)
 {
     test_session_store_data *data = user_data;
     test_session_store_session *s;
@@ -564,7 +564,7 @@ int test_session_store_contains_session(const axolotl_address *address, void *us
     return (s == 0) ? 0 : 1;
 }
 
-int test_session_store_delete_session(const axolotl_address *address, void *user_data)
+int test_session_store_delete_session(const signal_protocol_address *address, void *user_data)
 {
     int result = 0;
     test_session_store_data *data = user_data;
@@ -621,12 +621,12 @@ void test_session_store_destroy(void *user_data)
     free(data);
 }
 
-void setup_test_session_store(axolotl_store_context *context)
+void setup_test_session_store(signal_protocol_store_context *context)
 {
     test_session_store_data *data = malloc(sizeof(test_session_store_data));
     memset(data, 0, sizeof(test_session_store_data));
 
-    axolotl_session_store store = {
+    signal_protocol_session_store store = {
         .load_session_func = test_session_store_load_session,
         .get_sub_device_sessions_func = test_session_store_get_sub_device_sessions,
         .store_session_func = test_session_store_store_session,
@@ -637,7 +637,7 @@ void setup_test_session_store(axolotl_store_context *context)
         .user_data = data
     };
 
-    axolotl_store_context_set_session_store(context, &store);
+    signal_protocol_store_context_set_session_store(context, &store);
 }
 
 /*------------------------------------------------------------------------*/
@@ -738,12 +738,12 @@ void test_pre_key_store_destroy(void *user_data)
     free(data);
 }
 
-void setup_test_pre_key_store(axolotl_store_context *context)
+void setup_test_pre_key_store(signal_protocol_store_context *context)
 {
     test_pre_key_store_data *data = malloc(sizeof(test_pre_key_store_data));
     memset(data, 0, sizeof(test_pre_key_store_data));
 
-    axolotl_pre_key_store store = {
+    signal_protocol_pre_key_store store = {
         .load_pre_key = test_pre_key_store_load_pre_key,
         .store_pre_key = test_pre_key_store_store_pre_key,
         .contains_pre_key = test_pre_key_store_contains_pre_key,
@@ -752,7 +752,7 @@ void setup_test_pre_key_store(axolotl_store_context *context)
         .user_data = data
     };
 
-    axolotl_store_context_set_pre_key_store(context, &store);
+    signal_protocol_store_context_set_pre_key_store(context, &store);
 }
 
 /*------------------------------------------------------------------------*/
@@ -852,12 +852,12 @@ void test_signed_pre_key_store_destroy(void *user_data)
     free(data);
 }
 
-void setup_test_signed_pre_key_store(axolotl_store_context *context)
+void setup_test_signed_pre_key_store(signal_protocol_store_context *context)
 {
     test_signed_pre_key_store_data *data = malloc(sizeof(test_signed_pre_key_store_data));
     memset(data, 0, sizeof(test_signed_pre_key_store_data));
 
-    axolotl_signed_pre_key_store store = {
+    signal_protocol_signed_pre_key_store store = {
             .load_signed_pre_key = test_signed_pre_key_store_load_signed_pre_key,
             .store_signed_pre_key = test_signed_pre_key_store_store_signed_pre_key,
             .contains_signed_pre_key = test_signed_pre_key_store_contains_signed_pre_key,
@@ -866,7 +866,7 @@ void setup_test_signed_pre_key_store(axolotl_store_context *context)
             .user_data = data
     };
 
-    axolotl_store_context_set_signed_pre_key_store(context, &store);
+    signal_protocol_store_context_set_signed_pre_key_store(context, &store);
 }
 
 /*------------------------------------------------------------------------*/
@@ -975,7 +975,7 @@ void test_identity_key_store_destroy(void *user_data)
     free(data);
 }
 
-void setup_test_identity_key_store(axolotl_store_context *context, signal_context *global_context)
+void setup_test_identity_key_store(signal_protocol_store_context *context, signal_context *global_context)
 {
     test_identity_store_data *data = malloc(sizeof(test_identity_store_data));
     memset(data, 0, sizeof(test_identity_store_data));
@@ -992,7 +992,7 @@ void setup_test_identity_key_store(axolotl_store_context *context, signal_contex
 
     data->local_registration_id = (rand() % 16380) + 1;
 
-    axolotl_identity_key_store store = {
+    signal_protocol_identity_key_store store = {
             .get_identity_key_pair = test_identity_key_store_get_identity_key_pair,
             .get_local_registration_id = test_identity_key_store_get_local_registration_id,
             .save_identity = test_identity_key_store_save_identity,
@@ -1001,7 +1001,7 @@ void setup_test_identity_key_store(axolotl_store_context *context, signal_contex
             .user_data = data
     };
 
-    axolotl_store_context_set_identity_key_store(context, &store);
+    signal_protocol_store_context_set_identity_key_store(context, &store);
 }
 
 /*------------------------------------------------------------------------*/
@@ -1022,7 +1022,7 @@ typedef struct {
     test_sender_key_store_record *records;
 } test_sender_key_store_data;
 
-int test_sender_key_store_store_sender_key(const axolotl_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, void *user_data)
+int test_sender_key_store_store_sender_key(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, void *user_data)
 {
     test_sender_key_store_data *data = user_data;
 
@@ -1062,7 +1062,7 @@ int test_sender_key_store_store_sender_key(const axolotl_sender_key_name *sender
     return 0;
 }
 
-int test_sender_key_store_load_sender_key(signal_buffer **record, const axolotl_sender_key_name *sender_key_name, void *user_data)
+int test_sender_key_store_load_sender_key(signal_buffer **record, const signal_protocol_sender_key_name *sender_key_name, void *user_data)
 {
     test_sender_key_store_data *data = user_data;
 
@@ -1100,17 +1100,17 @@ void test_sender_key_store_destroy(void *user_data)
     free(data);
 }
 
-void setup_test_sender_key_store(axolotl_store_context *context, signal_context *global_context)
+void setup_test_sender_key_store(signal_protocol_store_context *context, signal_context *global_context)
 {
     test_sender_key_store_data *data = malloc(sizeof(test_sender_key_store_data));
     memset(data, 0, sizeof(test_sender_key_store_data));
 
-    axolotl_sender_key_store store = {
+    signal_protocol_sender_key_store store = {
         .store_sender_key = test_sender_key_store_store_sender_key,
         .load_sender_key = test_sender_key_store_load_sender_key,
         .destroy_func = test_sender_key_store_destroy,
         .user_data = data
     };
 
-    axolotl_store_context_set_sender_key_store(context, &store);
+    signal_protocol_store_context_set_sender_key_store(context, &store);
 }

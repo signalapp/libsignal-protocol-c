@@ -29,27 +29,27 @@ typedef struct signal_int_list signal_int_list;
 typedef struct signal_context signal_context;
 
 /*
- * Context for the AXOLOTL data store implementation
+ * Context for the Signal Protocol data store implementation
  */
-typedef struct axolotl_store_context axolotl_store_context;
+typedef struct signal_protocol_store_context signal_protocol_store_context;
 
 /*
- * Address of an AXOLOTL message recipient
+ * Address of an Signal Protocol message recipient
  */
-typedef struct axolotl_address {
+typedef struct signal_protocol_address {
     const char *name;
     size_t name_len;
     int32_t device_id;
-} axolotl_address;
+} signal_protocol_address;
 
 /*
  * A representation of a (group + sender + device) tuple
  */
-typedef struct axolotl_sender_key_name {
+typedef struct signal_protocol_sender_key_name {
     const char *group_id;
     size_t group_id_len;
-    axolotl_address sender;
-} axolotl_sender_key_name;
+    signal_protocol_address sender;
+} signal_protocol_sender_key_name;
 
 /*
  * Curve key types
@@ -66,7 +66,7 @@ typedef struct hkdf_context hkdf_context;
 /*
  * Key helper types
  */
-typedef struct axolotl_key_helper_pre_key_list_node axolotl_key_helper_pre_key_list_node;
+typedef struct signal_protocol_key_helper_pre_key_list_node signal_protocol_key_helper_pre_key_list_node;
 
 /*
  * Protocol types

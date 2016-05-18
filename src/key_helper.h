@@ -15,7 +15,7 @@ extern "C" {
 * @param key_pair the generated identity key pair
 * @return 0 on success, or negative on failure
 */
-int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, signal_context *global_context);
+int signal_protocol_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, signal_context *global_context);
 
 /**
  * Generate a registration ID.  Clients should only do this once,
@@ -29,7 +29,7 @@ int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **ke
  *                      higher encoding overhead.
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, signal_context *global_context);
+int signal_protocol_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, signal_context *global_context);
 
 /**
  * Generate a random number bounded by the provided maximum
@@ -38,7 +38,7 @@ int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int e
  * @param max the maximum value of the random number
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_get_random_sequence(int *value, int max, signal_context *global_context);
+int signal_protocol_key_helper_get_random_sequence(int *value, int max, signal_context *global_context);
 
 /**
  * Generate a list of PreKeys.  Clients should do this at install time, and
@@ -49,14 +49,14 @@ int axolotl_key_helper_get_random_sequence(int *value, int max, signal_context *
  * as possible.
  *
  * When finished with this list, the caller should free it by calling
- * axolotl_key_helper_key_list_free().
+ * signal_protocol_key_helper_key_list_free().
  *
  * @param head pointer to the head of the key list
  * @param start the starting pre key ID, inclusive.
  * @param count the number of pre keys to generate.
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **head,
+int signal_protocol_key_helper_generate_pre_keys(signal_protocol_key_helper_pre_key_list_node **head,
         unsigned int start, unsigned int count,
         signal_context *global_context);
 
@@ -66,7 +66,7 @@ int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **
  * @param current list node
  * @return pre key element
  */
-session_pre_key *axolotl_key_helper_key_list_element(const axolotl_key_helper_pre_key_list_node *node);
+session_pre_key *signal_protocol_key_helper_key_list_element(const signal_protocol_key_helper_pre_key_list_node *node);
 
 /**
  * Get the next element in the ket list.
@@ -74,14 +74,14 @@ session_pre_key *axolotl_key_helper_key_list_element(const axolotl_key_helper_pr
  * @param current list node
  * @return next list node, or 0 if at the end of the list
  */
-axolotl_key_helper_pre_key_list_node *axolotl_key_helper_key_list_next(const axolotl_key_helper_pre_key_list_node *node);
+signal_protocol_key_helper_pre_key_list_node *signal_protocol_key_helper_key_list_next(const signal_protocol_key_helper_pre_key_list_node *node);
 
 /**
  * Free the key list.
  *
  * @param head pointer to the head of the list to free
  */
-void axolotl_key_helper_key_list_free(axolotl_key_helper_pre_key_list_node *head);
+void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key_list_node *head);
 
 /**
  * Generate the last resort pre key.  Clients should do this only once, at
@@ -90,7 +90,7 @@ void axolotl_key_helper_key_list_free(axolotl_key_helper_pre_key_list_node *head
  * @param pre_key set to the generated pre key
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context);
+int signal_protocol_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context);
 
 /**
  * Generate a signed pre key
@@ -102,7 +102,7 @@ int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, s
  *
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
+int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
         const ratchet_identity_key_pair *identity_key_pair,
         uint32_t signed_pre_key_id,
         uint64_t timestamp,
@@ -114,7 +114,7 @@ int axolotl_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_p
 * @param key_pair the generated key pair
 * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signal_context *global_context);
+int signal_protocol_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signal_context *global_context);
 
 /*
  * Generate a sender key
@@ -122,7 +122,7 @@ int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signa
  * @param key_buffer buffer to be allocated and populated with the result
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_sender_key(signal_buffer **key_buffer, signal_context *global_context);
+int signal_protocol_key_helper_generate_sender_key(signal_buffer **key_buffer, signal_context *global_context);
 
 /*
  * Generate a sender key ID
@@ -130,7 +130,7 @@ int axolotl_key_helper_generate_sender_key(signal_buffer **key_buffer, signal_co
  * @param key_id assigned to the generated ID
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_sender_key_id(uint32_t *key_id, signal_context *global_context);
+int signal_protocol_key_helper_generate_sender_key_id(uint32_t *key_id, signal_context *global_context);
 
 #ifdef __cplusplus
 }

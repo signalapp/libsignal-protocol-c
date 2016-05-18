@@ -138,8 +138,8 @@ void initialize_sessions_v3(session_state *alice_state, session_state *bob_state
     ck_assert_int_eq(result, 0);
 
     /* Create Alice's parameters */
-    alice_axolotl_parameters *alice_parameters = 0;
-    result = alice_axolotl_parameters_create(&alice_parameters,
+    alice_signal_protocol_parameters *alice_parameters = 0;
+    result = alice_signal_protocol_parameters_create(&alice_parameters,
             /* our_identity_key       */ alice_identity_key,
             /* our_base_key           */ alice_base_key,
             /* their_identity_key     */ ratchet_identity_key_pair_get_public(bob_identity_key),
@@ -149,8 +149,8 @@ void initialize_sessions_v3(session_state *alice_state, session_state *bob_state
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's parameters */
-    bob_axolotl_parameters *bob_parameters = 0;
-    result = bob_axolotl_parameters_create(&bob_parameters,
+    bob_signal_protocol_parameters *bob_parameters = 0;
+    result = bob_signal_protocol_parameters_create(&bob_parameters,
             /* our_identity_key     */ bob_identity_key,
             /* our_signed_pre_key   */ bob_base_key,
             /* our_one_time_pre_key */ 0,
@@ -253,25 +253,25 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
 {
     int result = 0;
 
-    axolotl_address alice_address = {
+    signal_protocol_address alice_address = {
             "+14159999999", 12, 1
     };
 
-    axolotl_address bob_address = {
+    signal_protocol_address bob_address = {
             "+14158888888", 12, 1
     };
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Store the two sessions in their data stores */
-    result = axolotl_session_store_session(alice_store, &alice_address, alice_session_record);
+    result = signal_protocol_session_store_session(alice_store, &alice_address, alice_session_record);
     ck_assert_int_eq(result, 0);
-    result = axolotl_session_store_session(bob_store, &bob_address, bob_session_record);
+    result = signal_protocol_session_store_session(bob_store, &bob_address, bob_session_record);
     ck_assert_int_eq(result, 0);
 
     /* Create two session cipher instances */
@@ -404,8 +404,8 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     signal_buffer_free(bob_plaintext);
     session_cipher_free(alice_cipher);
     session_cipher_free(bob_cipher);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 
 START_TEST(test_message_key_limits)
@@ -413,11 +413,11 @@ START_TEST(test_message_key_limits)
     int i;
     int result = 0;
 
-    axolotl_address alice_address = {
+    signal_protocol_address alice_address = {
             "+14159999999", 12, 1
     };
 
-    axolotl_address bob_address = {
+    signal_protocol_address bob_address = {
             "+14158888888", 12, 1
     };
 
@@ -437,17 +437,17 @@ START_TEST(test_message_key_limits)
             session_record_get_state(bob_session_record));
 
     /* Create Alice's data store */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
     /* Create Bob's data store */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Store the sessions */
-    result = axolotl_session_store_session(alice_store, &alice_address, alice_session_record);
+    result = signal_protocol_session_store_session(alice_store, &alice_address, alice_session_record);
     ck_assert_int_eq(result, 0);
-    result = axolotl_session_store_session(bob_store, &bob_address, bob_session_record);
+    result = signal_protocol_session_store_session(bob_store, &bob_address, bob_session_record);
     ck_assert_int_eq(result, 0);
 
     /* Create Alice's session cipher */
@@ -514,8 +514,8 @@ START_TEST(test_message_key_limits)
     SIGNAL_UNREF(bob_session_record);
     session_cipher_free(alice_cipher);
     session_cipher_free(bob_cipher);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 

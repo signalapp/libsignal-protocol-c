@@ -11,12 +11,12 @@
 
 struct group_session_builder
 {
-    axolotl_store_context *store;
+    signal_protocol_store_context *store;
     signal_context *global_context;
 };
 
 int group_session_builder_create(group_session_builder **builder,
-        axolotl_store_context *store, signal_context *global_context)
+        signal_protocol_store_context *store, signal_context *global_context)
 {
     group_session_builder *result = 0;
 
@@ -37,7 +37,7 @@ int group_session_builder_create(group_session_builder **builder,
 }
 
 int group_session_builder_process_session(group_session_builder *builder,
-        const axolotl_sender_key_name *sender_key_name,
+        const signal_protocol_sender_key_name *sender_key_name,
         sender_key_distribution_message *distribution_message)
 {
     int result = 0;
@@ -47,7 +47,7 @@ int group_session_builder_process_session(group_session_builder *builder,
     assert(builder->store);
     signal_lock(builder->global_context);
 
-    result = axolotl_sender_key_load_key(builder->store, &record, sender_key_name);
+    result = signal_protocol_sender_key_load_key(builder->store, &record, sender_key_name);
     if(result < 0) {
         goto complete;
     }
@@ -61,7 +61,7 @@ int group_session_builder_process_session(group_session_builder *builder,
         goto complete;
     }
 
-    result = axolotl_sender_key_store_key(builder->store, sender_key_name, record);
+    result = signal_protocol_sender_key_store_key(builder->store, sender_key_name, record);
 
 complete:
     SIGNAL_UNREF(record);
@@ -71,7 +71,7 @@ complete:
 
 int group_session_builder_create_session(group_session_builder *builder,
         sender_key_distribution_message **distribution_message,
-        const axolotl_sender_key_name *sender_key_name)
+        const signal_protocol_sender_key_name *sender_key_name)
 {
     int result = 0;
     sender_key_record *record = 0;
@@ -86,23 +86,23 @@ int group_session_builder_create_session(group_session_builder *builder,
     assert(builder->store);
     signal_lock(builder->global_context);
 
-    result = axolotl_sender_key_load_key(builder->store, &record, sender_key_name);
+    result = signal_protocol_sender_key_load_key(builder->store, &record, sender_key_name);
     if(result < 0) {
         goto complete;
     }
 
     if(sender_key_record_is_empty(record)) {
-        result = axolotl_key_helper_generate_sender_key_id(&sender_key_id, builder->global_context);
+        result = signal_protocol_key_helper_generate_sender_key_id(&sender_key_id, builder->global_context);
         if(result < 0) {
             goto complete;
         }
 
-        result = axolotl_key_helper_generate_sender_key(&sender_key, builder->global_context);
+        result = signal_protocol_key_helper_generate_sender_key(&sender_key, builder->global_context);
         if(result < 0) {
             goto complete;
         }
 
-        result = axolotl_key_helper_generate_sender_signing_key(&sender_signing_key, builder->global_context);
+        result = signal_protocol_key_helper_generate_sender_signing_key(&sender_signing_key, builder->global_context);
         if(result < 0) {
             goto complete;
         }
@@ -112,7 +112,7 @@ int group_session_builder_create_session(group_session_builder *builder,
             goto complete;
         }
 
-        result = axolotl_sender_key_store_key(builder->store, sender_key_name, record);
+        result = signal_protocol_sender_key_store_key(builder->store, sender_key_name, record);
         if(result < 0) {
             goto complete;
         }

@@ -39,49 +39,49 @@ ec_public_key *ratchet_identity_key_pair_get_public(const ratchet_identity_key_p
 ec_private_key *ratchet_identity_key_pair_get_private(const ratchet_identity_key_pair *key_pair);
 void ratchet_identity_key_pair_destroy(signal_type_base *type);
 
-typedef struct symmetric_axolotl_parameters symmetric_axolotl_parameters;
-typedef struct alice_axolotl_parameters alice_axolotl_parameters;
-typedef struct bob_axolotl_parameters bob_axolotl_parameters;
+typedef struct symmetric_signal_protocol_parameters symmetric_signal_protocol_parameters;
+typedef struct alice_signal_protocol_parameters alice_signal_protocol_parameters;
+typedef struct bob_signal_protocol_parameters bob_signal_protocol_parameters;
 
-int symmetric_axolotl_parameters_create(
-        symmetric_axolotl_parameters **parameters,
+int symmetric_signal_protocol_parameters_create(
+        symmetric_signal_protocol_parameters **parameters,
         ratchet_identity_key_pair *our_identity_key,
         ec_key_pair *our_base_key,
         ec_key_pair *our_ratchet_key,
         ec_public_key *their_base_key,
         ec_public_key *their_ratchet_key,
         ec_public_key *their_identity_key);
-ratchet_identity_key_pair *symmetric_axolotl_parameters_get_our_identity_key(const symmetric_axolotl_parameters *parameters);
-ec_key_pair *symmetric_axolotl_parameters_get_our_base_key(const symmetric_axolotl_parameters *parameters);
-ec_key_pair *symmetric_axolotl_parameters_get_our_ratchet_key(const symmetric_axolotl_parameters *parameters);
-ec_public_key *symmetric_axolotl_parameters_get_their_base_key(const symmetric_axolotl_parameters *parameters);
-ec_public_key *symmetric_axolotl_parameters_get_their_ratchet_key(const symmetric_axolotl_parameters *parameters);
-ec_public_key *symmetric_axolotl_parameters_get_their_identity_key(const symmetric_axolotl_parameters *parameters);
-void symmetric_axolotl_parameters_destroy(signal_type_base *type);
+ratchet_identity_key_pair *symmetric_signal_protocol_parameters_get_our_identity_key(const symmetric_signal_protocol_parameters *parameters);
+ec_key_pair *symmetric_signal_protocol_parameters_get_our_base_key(const symmetric_signal_protocol_parameters *parameters);
+ec_key_pair *symmetric_signal_protocol_parameters_get_our_ratchet_key(const symmetric_signal_protocol_parameters *parameters);
+ec_public_key *symmetric_signal_protocol_parameters_get_their_base_key(const symmetric_signal_protocol_parameters *parameters);
+ec_public_key *symmetric_signal_protocol_parameters_get_their_ratchet_key(const symmetric_signal_protocol_parameters *parameters);
+ec_public_key *symmetric_signal_protocol_parameters_get_their_identity_key(const symmetric_signal_protocol_parameters *parameters);
+void symmetric_signal_protocol_parameters_destroy(signal_type_base *type);
 
-int alice_axolotl_parameters_create(
-        alice_axolotl_parameters **parameters,
+int alice_signal_protocol_parameters_create(
+        alice_signal_protocol_parameters **parameters,
         ratchet_identity_key_pair *our_identity_key,
         ec_key_pair *our_base_key,
         ec_public_key *their_identity_key,
         ec_public_key *their_signed_pre_key,
         ec_public_key *their_one_time_pre_key,
         ec_public_key *their_ratchet_key);
-void alice_axolotl_parameters_destroy(signal_type_base *type);
+void alice_signal_protocol_parameters_destroy(signal_type_base *type);
 
-int bob_axolotl_parameters_create(
-        bob_axolotl_parameters **parameters,
+int bob_signal_protocol_parameters_create(
+        bob_signal_protocol_parameters **parameters,
         ratchet_identity_key_pair *our_identity_key,
         ec_key_pair *our_signed_pre_key,
         ec_key_pair *our_one_time_pre_key,
         ec_key_pair *our_ratchet_key,
         ec_public_key *their_identity_key,
         ec_public_key *their_base_key);
-void bob_axolotl_parameters_destroy(signal_type_base *type);
+void bob_signal_protocol_parameters_destroy(signal_type_base *type);
 
-int ratcheting_session_symmetric_initialize(session_state *state, symmetric_axolotl_parameters *parameters, signal_context *global_context);
-int ratcheting_session_alice_initialize(session_state *state, alice_axolotl_parameters *parameters, signal_context *global_context);
-int ratcheting_session_bob_initialize(session_state *state, bob_axolotl_parameters *parameters, signal_context *global_context);
+int ratcheting_session_symmetric_initialize(session_state *state, symmetric_signal_protocol_parameters *parameters, signal_context *global_context);
+int ratcheting_session_alice_initialize(session_state *state, alice_signal_protocol_parameters *parameters, signal_context *global_context);
+int ratcheting_session_bob_initialize(session_state *state, bob_signal_protocol_parameters *parameters, signal_context *global_context);
 
 #ifdef __cplusplus
 }

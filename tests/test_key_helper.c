@@ -69,7 +69,7 @@ START_TEST(test_generate_identity_key_pair)
     ratchet_identity_key_pair *key_pair = 0;
     signal_buffer *buffer = 0;
 
-    result = axolotl_key_helper_generate_identity_key_pair(&key_pair, global_context);
+    result = signal_protocol_key_helper_generate_identity_key_pair(&key_pair, global_context);
     ck_assert_int_eq(result, 0);
 
     result = ratchet_identity_key_pair_serialize(&buffer, key_pair);
@@ -135,8 +135,8 @@ START_TEST(test_generate_pre_keys)
     };
 
     int result = 0;
-    axolotl_key_helper_pre_key_list_node *head = 0;
-    axolotl_key_helper_pre_key_list_node *cur_node = 0;
+    signal_protocol_key_helper_pre_key_list_node *head = 0;
+    signal_protocol_key_helper_pre_key_list_node *cur_node = 0;
     session_pre_key *pre_key1 = 0;
     session_pre_key *pre_key2 = 0;
     session_pre_key *pre_key3 = 0;
@@ -147,7 +147,7 @@ START_TEST(test_generate_pre_keys)
     signal_buffer *pre_key_buf4 = 0;
 
     /* Generate a list of 4 pre-keys */
-    result = axolotl_key_helper_generate_pre_keys(&head,
+    result = signal_protocol_key_helper_generate_pre_keys(&head,
             1, 4, global_context);
     ck_assert_int_eq(result, 0);
 
@@ -155,20 +155,20 @@ START_TEST(test_generate_pre_keys)
     cur_node = head;
 
     /* Explicitly iterate the list to get the 4 generated keys */
-    pre_key1 = axolotl_key_helper_key_list_element(cur_node);
-    cur_node = axolotl_key_helper_key_list_next(cur_node);
+    pre_key1 = signal_protocol_key_helper_key_list_element(cur_node);
+    cur_node = signal_protocol_key_helper_key_list_next(cur_node);
     ck_assert_ptr_ne(cur_node, 0);
 
-    pre_key2 = axolotl_key_helper_key_list_element(cur_node);
-    cur_node = axolotl_key_helper_key_list_next(cur_node);
+    pre_key2 = signal_protocol_key_helper_key_list_element(cur_node);
+    cur_node = signal_protocol_key_helper_key_list_next(cur_node);
     ck_assert_ptr_ne(cur_node, 0);
 
-    pre_key3 = axolotl_key_helper_key_list_element(cur_node);
-    cur_node = axolotl_key_helper_key_list_next(cur_node);
+    pre_key3 = signal_protocol_key_helper_key_list_element(cur_node);
+    cur_node = signal_protocol_key_helper_key_list_next(cur_node);
     ck_assert_ptr_ne(cur_node, 0);
 
-    pre_key4 = axolotl_key_helper_key_list_element(cur_node);
-    cur_node = axolotl_key_helper_key_list_next(cur_node);
+    pre_key4 = signal_protocol_key_helper_key_list_element(cur_node);
+    cur_node = signal_protocol_key_helper_key_list_next(cur_node);
     ck_assert_ptr_eq(cur_node, 0);
 
     /* Get the serialized data for the 4 generated keys */
@@ -192,7 +192,7 @@ START_TEST(test_generate_pre_keys)
     ck_assert_int_eq(memcmp(preKey4, signal_buffer_data(pre_key_buf4), sizeof(preKey4)), 0);
 
     /* Cleanup */
-    axolotl_key_helper_key_list_free(head);
+    signal_protocol_key_helper_key_list_free(head);
     signal_buffer_free(pre_key_buf1);
     signal_buffer_free(pre_key_buf2);
     signal_buffer_free(pre_key_buf3);
@@ -219,7 +219,7 @@ START_TEST(test_generate_last_resort_pre_key)
     session_pre_key *pre_key = 0;
     signal_buffer *buffer = 0;
 
-    result = axolotl_key_helper_generate_last_resort_pre_key(&pre_key, global_context);
+    result = signal_protocol_key_helper_generate_last_resort_pre_key(&pre_key, global_context);
     ck_assert_int_eq(result, 0);
 
     result = session_pre_key_serialize(&buffer, pre_key);
@@ -268,10 +268,10 @@ START_TEST(test_generate_signed_pre_key)
     session_signed_pre_key *signed_pre_key = 0;
     signal_buffer *buffer = 0;
 
-    result = axolotl_key_helper_generate_identity_key_pair(&identity_key_pair, global_context);
+    result = signal_protocol_key_helper_generate_identity_key_pair(&identity_key_pair, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_key_helper_generate_signed_pre_key(&signed_pre_key,
+    result = signal_protocol_key_helper_generate_signed_pre_key(&signed_pre_key,
             identity_key_pair, 1234, timestamp, global_context);
     ck_assert_int_eq(result, 0);
 

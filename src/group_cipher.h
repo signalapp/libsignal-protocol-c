@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 /*
- * The main entry point for Axolotl group encrypt/decrypt operations.
+ * The main entry point for Signal Protocol group encrypt/decrypt operations.
  *
  * Once a session has been established with group_session_builder and a
  * sender_key_distribution_message has been distributed to each member of
@@ -27,13 +27,13 @@ extern "C" {
  * When finished, free the returned instance by calling group_cipher_free().
  *
  * @param cipher set to a freshly allocated group cipher instance
- * @param store the axolotl_store_context to store all state information in
+ * @param store the signal_protocol_store_context to store all state information in
  * @param sender_key_id the sender that messages will be encrypted to or decrypted from
  * @param global_context the global library context
  * @return 0 on success, or negative on failure
  */
 int group_cipher_create(group_cipher **cipher,
-        axolotl_store_context *store, const axolotl_sender_key_name *sender_key_id,
+        signal_protocol_store_context *store, const signal_protocol_sender_key_name *sender_key_id,
         signal_context *global_context);
 
 /**

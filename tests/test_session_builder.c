@@ -14,11 +14,11 @@
 #include "protocol.h"
 #include "test_common.h"
 
-static axolotl_address alice_address = {
+static signal_protocol_address alice_address = {
         "+14151111111", 12, 1
 };
 
-static axolotl_address bob_address = {
+static signal_protocol_address bob_address = {
         "+14152222222", 12, 1
 };
 
@@ -26,7 +26,7 @@ signal_context *global_context;
 pthread_mutex_t global_mutex;
 pthread_mutexattr_t global_mutex_attr;
 
-void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *bob_store);
+void run_interaction(signal_protocol_store_context *alice_store, signal_protocol_store_context *bob_store);
 int test_basic_pre_key_v3_decrypt_callback(session_cipher *cipher, signal_buffer *plaintext, void *decrypt_context);
 
 void test_lock(void *user_data)
@@ -70,18 +70,18 @@ START_TEST(test_basic_pre_key_v2)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and pre key bundle */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     uint32_t bob_local_registration_id = 0;
-    result = axolotl_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
+    result = signal_protocol_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
     ck_assert_int_eq(result, 0);
 
     ec_key_pair *bob_pre_key_pair = 0;
@@ -89,7 +89,7 @@ START_TEST(test_basic_pre_key_v2)
     ck_assert_int_eq(result, 0);
 
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     session_pre_key_bundle *bob_pre_key = 0;
@@ -113,16 +113,16 @@ START_TEST(test_basic_pre_key_v2)
     SIGNAL_UNREF(bob_pre_key);
     SIGNAL_UNREF(bob_pre_key_pair);
     SIGNAL_UNREF(bob_identity_key_pair);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(bob_store);
     session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
 typedef struct {
     const char *original_message;
     size_t original_message_len;
-    axolotl_store_context *bob_store;
+    signal_protocol_store_context *bob_store;
 } test_basic_pre_key_v3_callback_data;
 
 START_TEST(test_basic_pre_key_v3)
@@ -130,18 +130,18 @@ START_TEST(test_basic_pre_key_v3)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and pre key bundle */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     uint32_t bob_local_registration_id = 0;
-    result = axolotl_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
+    result = signal_protocol_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
     ck_assert_int_eq(result, 0);
 
     ec_key_pair *bob_pre_key_pair = 0;
@@ -153,7 +153,7 @@ START_TEST(test_basic_pre_key_v3)
     ck_assert_int_eq(result, 0);
 
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
@@ -189,12 +189,12 @@ START_TEST(test_basic_pre_key_v3)
     ck_assert_int_eq(result, 0);
 
     /* Check that we can load the session state and verify its version */
-    result = axolotl_session_contains_session(alice_store, &bob_address);
+    result = signal_protocol_session_contains_session(alice_store, &bob_address);
     ck_assert_int_eq(result, 1);
 
     session_record *loaded_record = 0;
     session_state *loaded_record_state = 0;
-    result = axolotl_session_load_session(alice_store, &loaded_record, &bob_address);
+    result = signal_protocol_session_load_session(alice_store, &loaded_record, &bob_address);
     ck_assert_int_eq(result, 0);
 
     loaded_record_state = session_record_get_state(loaded_record);
@@ -234,7 +234,7 @@ START_TEST(test_basic_pre_key_v3)
             bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
+    result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *bob_signed_pre_key_record = 0;
@@ -245,7 +245,7 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_len(bob_signed_pre_key_signature));
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
+    result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's session cipher and decrypt the message from Alice */
@@ -272,10 +272,10 @@ START_TEST(test_basic_pre_key_v3)
     session_cipher_set_decryption_callback(bob_session_cipher, 0);
 
     /* Verify Bob's session state and the decrypted message */
-    ck_assert_int_eq(axolotl_session_contains_session(bob_store, &alice_address), 1);
+    ck_assert_int_eq(signal_protocol_session_contains_session(bob_store, &alice_address), 1);
 
     session_record *alice_recipient_session_record = 0;
-    axolotl_session_load_session(bob_store, &alice_recipient_session_record, &alice_address);
+    signal_protocol_session_load_session(bob_store, &alice_recipient_session_record, &alice_address);
 
     session_state *alice_recipient_session_state = session_record_get_state(alice_recipient_session_record);
     ck_assert_int_eq(session_state_get_session_version(alice_recipient_session_state), 3);
@@ -326,7 +326,7 @@ START_TEST(test_basic_pre_key_v3)
     run_interaction(alice_store, bob_store);
 
     /* Cleanup state from previous tests that we need to replace */
-    axolotl_store_context_destroy(alice_store); alice_store = 0;
+    signal_protocol_store_context_destroy(alice_store); alice_store = 0;
     SIGNAL_UNREF(bob_pre_key_pair); bob_pre_key_pair = 0;
     SIGNAL_UNREF(bob_signed_pre_key_pair); bob_signed_pre_key_pair = 0;
     SIGNAL_UNREF(bob_identity_key_pair); bob_identity_key_pair = 0;
@@ -348,7 +348,7 @@ START_TEST(test_basic_pre_key_v3)
     result = curve_generate_key_pair(global_context, &bob_signed_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     result = ec_public_key_serialize(&bob_signed_pre_key_public_serialized,
@@ -382,7 +382,7 @@ START_TEST(test_basic_pre_key_v3)
             bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
+    result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     result = session_signed_pre_key_create(&bob_signed_pre_key_record,
@@ -392,7 +392,7 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_len(bob_signed_pre_key_signature));
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
+    result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice process Bob's pre key bundle */
@@ -420,7 +420,7 @@ START_TEST(test_basic_pre_key_v3)
     ck_assert_int_eq(result, 0);
 
     /* Save the identity key to Bob's store */
-    result = axolotl_identity_save_identity(bob_store,
+    result = signal_protocol_identity_save_identity(bob_store,
             alice_address.name, alice_address.name_len,
             pre_key_signal_message_get_identity_key(outgoing_message_copy));
     ck_assert_int_eq(result, 0);
@@ -446,7 +446,7 @@ START_TEST(test_basic_pre_key_v3)
     ec_public_key *test_public_key = create_test_ec_public_key(global_context);
 
     ratchet_identity_key_pair *alice_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(alice_store, &alice_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(alice_store, &alice_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     result = session_pre_key_bundle_create(&bob_pre_key,
@@ -481,10 +481,10 @@ START_TEST(test_basic_pre_key_v3)
     SIGNAL_UNREF(bob_signed_pre_key_pair);
     SIGNAL_UNREF(bob_identity_key_pair);
     session_cipher_free(bob_session_cipher);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(bob_store);
     session_builder_free(alice_session_builder);
     session_cipher_free(alice_session_cipher);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
@@ -504,7 +504,7 @@ int test_basic_pre_key_v3_decrypt_callback(session_cipher *cipher, signal_buffer
     ck_assert_int_eq(memcmp(callback_data->original_message, plaintext_data, plaintext_len), 0);
 
     /* Verify that Bob's session state has not yet been updated */
-    ck_assert_int_eq(axolotl_session_contains_session(callback_data->bob_store, &alice_address), 0);
+    ck_assert_int_eq(signal_protocol_session_contains_session(callback_data->bob_store, &alice_address), 0);
 
     return 0;
 }
@@ -514,18 +514,18 @@ START_TEST(test_bad_signed_pre_key_signature)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     uint32_t bob_local_registration_id = 0;
-    result = axolotl_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
+    result = signal_protocol_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's regular and signed pre key pairs */
@@ -539,7 +539,7 @@ START_TEST(test_bad_signed_pre_key_signature)
 
     /* Create Bob's signed pre key signature */
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
@@ -613,8 +613,8 @@ START_TEST(test_bad_signed_pre_key_signature)
     signal_buffer_free(bob_signed_pre_key_signature);
     signal_buffer_free(bob_signed_pre_key_public_serialized);
     session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 
@@ -623,18 +623,18 @@ START_TEST(test_repeat_bundle_message_v2)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and pre key bundle */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     uint32_t bob_local_registration_id = 0;
-    result = axolotl_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
+    result = signal_protocol_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
     ck_assert_int_eq(result, 0);
 
     ec_key_pair *bob_pre_key_pair = 0;
@@ -646,7 +646,7 @@ START_TEST(test_repeat_bundle_message_v2)
     ck_assert_int_eq(result, 0);
 
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
@@ -679,7 +679,7 @@ START_TEST(test_repeat_bundle_message_v2)
             bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
+    result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *bob_signed_pre_key_record = 0;
@@ -690,7 +690,7 @@ START_TEST(test_repeat_bundle_message_v2)
             signal_buffer_len(bob_signed_pre_key_signature));
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
+    result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     /*
@@ -710,8 +710,8 @@ START_TEST(test_repeat_bundle_message_v2)
     SIGNAL_UNREF(bob_signed_pre_key_pair);
     SIGNAL_UNREF(bob_identity_key_pair);
     session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 
@@ -720,18 +720,18 @@ START_TEST(test_repeat_bundle_message_v3)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and pre key bundle */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     uint32_t bob_local_registration_id = 0;
-    result = axolotl_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
+    result = signal_protocol_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
     ck_assert_int_eq(result, 0);
 
     ec_key_pair *bob_pre_key_pair = 0;
@@ -743,7 +743,7 @@ START_TEST(test_repeat_bundle_message_v3)
     ck_assert_int_eq(result, 0);
 
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
@@ -779,7 +779,7 @@ START_TEST(test_repeat_bundle_message_v3)
             bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
+    result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *bob_signed_pre_key_record = 0;
@@ -790,7 +790,7 @@ START_TEST(test_repeat_bundle_message_v3)
             signal_buffer_len(bob_signed_pre_key_signature));
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
+    result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice process Bob's pre key bundle */
@@ -915,8 +915,8 @@ START_TEST(test_repeat_bundle_message_v3)
     SIGNAL_UNREF(bob_signed_pre_key_pair);
     SIGNAL_UNREF(bob_identity_key_pair);
     session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 
@@ -925,18 +925,18 @@ START_TEST(test_bad_message_bundle)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and pre key bundle */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     uint32_t bob_local_registration_id = 0;
-    result = axolotl_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
+    result = signal_protocol_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
     ck_assert_int_eq(result, 0);
 
     ec_key_pair *bob_pre_key_pair = 0;
@@ -948,7 +948,7 @@ START_TEST(test_bad_message_bundle)
     ck_assert_int_eq(result, 0);
 
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
@@ -984,7 +984,7 @@ START_TEST(test_bad_message_bundle)
             bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
+    result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *bob_signed_pre_key_record = 0;
@@ -995,7 +995,7 @@ START_TEST(test_bad_message_bundle)
             signal_buffer_len(bob_signed_pre_key_signature));
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
+    result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     /* Have Alice process Bob's pre key bundle */
@@ -1040,7 +1040,7 @@ START_TEST(test_bad_message_bundle)
     signal_buffer_free(plaintext); plaintext = 0;
 
     /* Make sure the pre key is there */
-    result = axolotl_pre_key_contains_key(bob_store, 31337);
+    result = signal_protocol_pre_key_contains_key(bob_store, 31337);
     ck_assert_int_eq(result, 1);
 
     /* Check that the decrypt succeeds with the good message */
@@ -1059,7 +1059,7 @@ START_TEST(test_bad_message_bundle)
     signal_buffer_free(plaintext); plaintext = 0;
 
     /* Make sure the pre key is no longer there */
-    result = axolotl_pre_key_contains_key(bob_store, 31337);
+    result = signal_protocol_pre_key_contains_key(bob_store, 31337);
     ck_assert_int_eq(result, 0);
 
     /* Cleanup */
@@ -1078,8 +1078,8 @@ START_TEST(test_bad_message_bundle)
     signal_buffer_free(bob_signed_pre_key_public_serialized);
     signal_buffer_free(bob_signed_pre_key_signature);
     session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 
@@ -1088,14 +1088,14 @@ START_TEST(test_basic_key_exchange)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and session builder */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
     session_builder *bob_session_builder = 0;
     result = session_builder_create(&bob_session_builder, bob_store, &alice_address, global_context);
@@ -1142,14 +1142,14 @@ START_TEST(test_basic_key_exchange)
     ck_assert_ptr_eq(response, 0);
 
     /* Check that Alice and Bob have sessions stored for each other */
-    ck_assert_int_eq(axolotl_session_contains_session(alice_store, &bob_address), 1);
-    ck_assert_int_eq(axolotl_session_contains_session(bob_store, &alice_address), 1);
+    ck_assert_int_eq(signal_protocol_session_contains_session(alice_store, &bob_address), 1);
+    ck_assert_int_eq(signal_protocol_session_contains_session(bob_store, &alice_address), 1);
 
     run_interaction(alice_store, bob_store);
 
     /* Clean up Alice's data store and session builder */
     session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(alice_store);
     alice_session_builder = 0;
     alice_store = 0;
     SIGNAL_UNREF(alice_key_exchange_message);
@@ -1172,7 +1172,7 @@ START_TEST(test_basic_key_exchange)
     SIGNAL_UNREF(bob_key_exchange_message);
 
     /* Save Alice's new identity key in Bob's store */
-    result = axolotl_identity_save_identity(bob_store,
+    result = signal_protocol_identity_save_identity(bob_store,
             alice_address.name, alice_address.name_len,
             key_exchange_message_get_identity_key(alice_key_exchange_message));
     ck_assert_int_eq(result, 0);
@@ -1202,8 +1202,8 @@ START_TEST(test_basic_key_exchange)
     SIGNAL_UNREF(alice_key_exchange_message);
     session_builder_free(alice_session_builder);
     session_builder_free(bob_session_builder);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 
@@ -1212,14 +1212,14 @@ START_TEST(test_simultaneous_key_exchange)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and session builder */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
     session_builder *bob_session_builder = 0;
     result = session_builder_create(&bob_session_builder, bob_store, &alice_address, global_context);
@@ -1282,8 +1282,8 @@ START_TEST(test_simultaneous_key_exchange)
     SIGNAL_UNREF(bob_key_exchange);
     session_builder_free(alice_session_builder);
     session_builder_free(bob_session_builder);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 
@@ -1292,18 +1292,18 @@ START_TEST(test_optional_one_time_pre_key)
     int result = 0;
 
     /* Create Alice's data store and session builder */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
     session_builder *alice_session_builder = 0;
     result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's data store and pre key bundle */
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     uint32_t bob_local_registration_id = 0;
-    result = axolotl_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
+    result = signal_protocol_identity_get_local_registration_id(bob_store, &bob_local_registration_id);
     ck_assert_int_eq(result, 0);
 
     ec_key_pair *bob_pre_key_pair = 0;
@@ -1315,7 +1315,7 @@ START_TEST(test_optional_one_time_pre_key)
     ck_assert_int_eq(result, 0);
 
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
-    result = axolotl_identity_get_key_pair(bob_store, &bob_identity_key_pair);
+    result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
@@ -1348,11 +1348,11 @@ START_TEST(test_optional_one_time_pre_key)
     ck_assert_int_eq(result, 0);
 
     /* Find and verify the session version in Alice's store */
-    result = axolotl_session_contains_session(alice_store, &bob_address);
+    result = signal_protocol_session_contains_session(alice_store, &bob_address);
     ck_assert_int_eq(result, 1);
 
     session_record *record = 0;
-    result = axolotl_session_load_session(alice_store, &record, &bob_address);
+    result = signal_protocol_session_load_session(alice_store, &record, &bob_address);
     ck_assert_int_eq(result, 0);
 
     session_state *state = 0;
@@ -1391,7 +1391,7 @@ START_TEST(test_optional_one_time_pre_key)
             bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_pre_key_store_key(bob_store, bob_pre_key_record);
+    result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *bob_signed_pre_key_record = 0;
@@ -1402,7 +1402,7 @@ START_TEST(test_optional_one_time_pre_key)
             signal_buffer_len(bob_signed_pre_key_signature));
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
+    result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
     ck_assert_int_eq(result, 0);
 
     /* Create Bob's session cipher */
@@ -1414,9 +1414,9 @@ START_TEST(test_optional_one_time_pre_key)
     result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, incoming_message, 0, &plaintext);
     ck_assert_int_eq(result, 0);
 
-    ck_assert_int_eq(axolotl_session_contains_session(bob_store, &alice_address), 1);
+    ck_assert_int_eq(signal_protocol_session_contains_session(bob_store, &alice_address), 1);
 
-    result = axolotl_session_load_session(bob_store, &record, &alice_address);
+    result = signal_protocol_session_load_session(bob_store, &record, &alice_address);
     ck_assert_int_eq(result, 0);
 
     state = session_record_get_state(record);
@@ -1448,8 +1448,8 @@ START_TEST(test_optional_one_time_pre_key)
     signal_buffer_free(bob_signed_pre_key_public_serialized);
     signal_buffer_free(bob_signed_pre_key_signature);
     session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(alice_store);
-    axolotl_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
 }
 END_TEST
 
@@ -1480,7 +1480,7 @@ signal_buffer *create_looping_message_short(int index)
     return buffer;
 }
 
-void run_interaction(axolotl_store_context *alice_store, axolotl_store_context *bob_store)
+void run_interaction(signal_protocol_store_context *alice_store, signal_protocol_store_context *bob_store)
 {
     int result = 0;
 

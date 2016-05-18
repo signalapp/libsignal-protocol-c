@@ -30,12 +30,12 @@ extern "C" {
  * When finished, free the returned instance by calling group_session_builder_free().
  *
  * @param builder set to a freshly allocated group session builder instance
- * @param store the axolotl_store_context to store all state information in
+ * @param store the signal_protocol_store_context to store all state information in
  * @param global_context the global library context
  * @return 0 on success, or negative on failure
  */
 int group_session_builder_create(group_session_builder **builder,
-        axolotl_store_context *store, signal_context *global_context);
+        signal_protocol_store_context *store, signal_context *global_context);
 
 /**
  * Construct a group session for receiving messages from senderKeyName.
@@ -46,7 +46,7 @@ int group_session_builder_create(group_session_builder **builder,
  * @return 0 on success, or negative on failure
  */
 int group_session_builder_process_session(group_session_builder *builder,
-        const axolotl_sender_key_name *sender_key_name,
+        const signal_protocol_sender_key_name *sender_key_name,
         sender_key_distribution_message *distribution_message);
 
 /**
@@ -59,7 +59,7 @@ int group_session_builder_process_session(group_session_builder *builder,
  */
 int group_session_builder_create_session(group_session_builder *builder,
         sender_key_distribution_message **distribution_message,
-        const axolotl_sender_key_name *sender_key_name);
+        const signal_protocol_sender_key_name *sender_key_name);
 
 void group_session_builder_free(group_session_builder *builder);
 

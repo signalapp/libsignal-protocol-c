@@ -76,7 +76,7 @@ int sender_key_state_serialize_prepare(sender_key_state *state, Textsecure__Send
 void sender_key_state_serialize_prepare_free(Textsecure__SenderKeyStateStructure *state_structure);
 int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__SenderKeyStateStructure *state_structure, signal_context *global_context);
 
-void axolotl_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str);
-char *axolotl_str_deserialize_protobuf(ProtobufCBinaryData *buffer);
+void signal_protocol_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str);
+char *signal_protocol_str_deserialize_protobuf(ProtobufCBinaryData *buffer);
 
 #endif /* SIGNAL_PROTOCOL_INTERNAL_H */

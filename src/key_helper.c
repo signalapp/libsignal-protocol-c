@@ -8,13 +8,13 @@
 #include "signal_protocol_internal.h"
 #include "utlist.h"
 
-struct axolotl_key_helper_pre_key_list_node
+struct signal_protocol_key_helper_pre_key_list_node
 {
     session_pre_key *element;
-    struct axolotl_key_helper_pre_key_list_node *next;
+    struct signal_protocol_key_helper_pre_key_list_node *next;
 };
 
-int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, signal_context *global_context)
+int signal_protocol_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, signal_context *global_context)
 {
     int result = 0;
     ratchet_identity_key_pair *result_pair = 0;
@@ -43,7 +43,7 @@ complete:
     return result;
 }
 
-int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, signal_context *global_context)
+int signal_protocol_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, signal_context *global_context)
 {
     uint32_t range;
     uint32_t id_value;
@@ -76,7 +76,7 @@ int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int e
     return 0;
 }
 
-int axolotl_key_helper_get_random_sequence(int *value, int max, signal_context *global_context)
+int signal_protocol_key_helper_get_random_sequence(int *value, int max, signal_context *global_context)
 {
     int result = 0;
     int32_t result_value;
@@ -98,16 +98,16 @@ int axolotl_key_helper_get_random_sequence(int *value, int max, signal_context *
     return 0;
 }
 
-int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **head,
+int signal_protocol_key_helper_generate_pre_keys(signal_protocol_key_helper_pre_key_list_node **head,
         unsigned int start, unsigned int count,
         signal_context *global_context)
 {
     int result = 0;
     ec_key_pair *ec_pair = 0;
     session_pre_key *pre_key = 0;
-    axolotl_key_helper_pre_key_list_node *result_head = 0;
-    axolotl_key_helper_pre_key_list_node *cur_node = 0;
-    axolotl_key_helper_pre_key_list_node *node = 0;
+    signal_protocol_key_helper_pre_key_list_node *result_head = 0;
+    signal_protocol_key_helper_pre_key_list_node *cur_node = 0;
+    signal_protocol_key_helper_pre_key_list_node *node = 0;
     unsigned int start_index = start - 1;
     unsigned int i;
 
@@ -130,7 +130,7 @@ int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **
         SIGNAL_UNREF(ec_pair);
         ec_pair = 0;
 
-        node = malloc(sizeof(axolotl_key_helper_pre_key_list_node));
+        node = malloc(sizeof(signal_protocol_key_helper_pre_key_list_node));
         if(!node) {
             result = SG_ERR_NOMEM;
             goto complete;
@@ -161,7 +161,7 @@ complete:
     }
     if(result < 0) {
         if(result_head) {
-            axolotl_key_helper_pre_key_list_node *tmp_node;
+            signal_protocol_key_helper_pre_key_list_node *tmp_node;
             LL_FOREACH_SAFE(result_head, cur_node, tmp_node) {
                 LL_DELETE(result_head, cur_node);
                 SIGNAL_UNREF(cur_node->element);
@@ -175,24 +175,24 @@ complete:
     return result;
 }
 
-session_pre_key *axolotl_key_helper_key_list_element(const axolotl_key_helper_pre_key_list_node *node)
+session_pre_key *signal_protocol_key_helper_key_list_element(const signal_protocol_key_helper_pre_key_list_node *node)
 {
     assert(node);
     assert(node->element);
     return node->element;
 }
 
-axolotl_key_helper_pre_key_list_node *axolotl_key_helper_key_list_next(const axolotl_key_helper_pre_key_list_node *node)
+signal_protocol_key_helper_pre_key_list_node *signal_protocol_key_helper_key_list_next(const signal_protocol_key_helper_pre_key_list_node *node)
 {
     assert(node);
     return node->next;
 }
 
-void axolotl_key_helper_key_list_free(axolotl_key_helper_pre_key_list_node *head)
+void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key_list_node *head)
 {
     if(head) {
-        axolotl_key_helper_pre_key_list_node *cur_node;
-        axolotl_key_helper_pre_key_list_node *tmp_node;
+        signal_protocol_key_helper_pre_key_list_node *cur_node;
+        signal_protocol_key_helper_pre_key_list_node *tmp_node;
         LL_FOREACH_SAFE(head, cur_node, tmp_node) {
             LL_DELETE(head, cur_node);
             SIGNAL_UNREF(cur_node->element);
@@ -201,7 +201,7 @@ void axolotl_key_helper_key_list_free(axolotl_key_helper_pre_key_list_node *head
     }
 }
 
-int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context)
+int signal_protocol_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context)
 {
     int result = 0;
     session_pre_key *result_pre_key = 0;
@@ -224,7 +224,7 @@ complete:
     return result;
 }
 
-int axolotl_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
+int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
         const ratchet_identity_key_pair *identity_key_pair,
         uint32_t signed_pre_key_id,
         uint64_t timestamp,
@@ -277,7 +277,7 @@ complete:
     return result;
 }
 
-int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signal_context *global_context)
+int signal_protocol_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signal_context *global_context)
 {
     int result;
 
@@ -288,7 +288,7 @@ int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signa
     return result;
 }
 
-int axolotl_key_helper_generate_sender_key(signal_buffer **key_buffer, signal_context *global_context)
+int signal_protocol_key_helper_generate_sender_key(signal_buffer **key_buffer, signal_context *global_context)
 {
     int result = 0;
     signal_buffer *result_buffer = 0;
@@ -316,12 +316,12 @@ complete:
     return result;
 }
 
-int axolotl_key_helper_generate_sender_key_id(uint32_t *key_id, signal_context *global_context)
+int signal_protocol_key_helper_generate_sender_key_id(uint32_t *key_id, signal_context *global_context)
 {
     int result;
     int value;
 
-    result = axolotl_key_helper_get_random_sequence(&value, INT32_MAX, global_context);
+    result = signal_protocol_key_helper_get_random_sequence(&value, INT32_MAX, global_context);
 
     if(result >= 0) {
         *key_id = (uint32_t)value;

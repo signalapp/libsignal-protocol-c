@@ -18,7 +18,7 @@ extern "C" {
  * - A pre_key_signal_message received from a client
  * - A key_exchange_message sent to or received from a client
  *
- * Sessions are constructed per AXOLOTL address
+ * Sessions are constructed per Signal Protocol address
  * (recipient name + device ID tuple). Remote logical users are identified by
  * their recipient name, and each logical recipient can have multiple
  * physical devices.
@@ -33,13 +33,13 @@ extern "C" {
  * When finished, free the returned instance by calling session_builder_free().
  *
  * @param builder set to a freshly allocated session builder instance
- * @param store the axolotl_store_context to store all state information in
+ * @param store the signal_protocol_store_context to store all state information in
  * @param remote_address the address of the remote user to build a session with
  * @param global_context the global library context
  * @return 0 on success, or negative on failure
  */
 int session_builder_create(session_builder **builder,
-        axolotl_store_context *store, const axolotl_address *remote_address,
+        signal_protocol_store_context *store, const signal_protocol_address *remote_address,
         signal_context *global_context);
 
 /**

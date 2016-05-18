@@ -333,18 +333,18 @@ typedef struct signal_crypto_provider {
     void *user_data;
 } signal_crypto_provider;
 
-typedef struct axolotl_session_store {
+typedef struct signal_protocol_session_store {
     /**
      * Returns a copy of the serialized session record corresponding to the
      * provided recipient ID + device ID tuple.
      *
      * @param record pointer to a freshly allocated buffer containing the
      *     serialized session record. Unset if no record was found.
-     *     The axolotl library is responsible for freeing this buffer.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @param address the address of the remote client
      * @return 1 if the session was loaded, 0 if the session was not found, negative on failure
      */
-    int (*load_session_func)(signal_buffer **record, const axolotl_address *address, void *user_data);
+    int (*load_session_func)(signal_buffer **record, const signal_protocol_address *address, void *user_data);
 
     /**
      * Returns all known devices with active sessions for a recipient
@@ -366,7 +366,7 @@ typedef struct axolotl_session_store {
      * @param record_len length of the serialized session record
      * @return 0 on success, negative on failure
      */
-    int (*store_session_func)(const axolotl_address *address, uint8_t *record, size_t record_len, void *user_data);
+    int (*store_session_func)(const signal_protocol_address *address, uint8_t *record, size_t record_len, void *user_data);
 
     /**
      * Determine whether there is a committed session record for a
@@ -375,7 +375,7 @@ typedef struct axolotl_session_store {
      * @param address the address of the remote client
      * @return 1 if a session record exists, 0 otherwise.
      */
-    int (*contains_session_func)(const axolotl_address *address, void *user_data);
+    int (*contains_session_func)(const signal_protocol_address *address, void *user_data);
 
     /**
      * Remove a session record for a recipient ID + device ID tuple.
@@ -383,7 +383,7 @@ typedef struct axolotl_session_store {
      * @param address the address of the remote client
      * @return 1 if a session was deleted, 0 if a session was not deleted, negative on error
      */
-    int (*delete_session_func)(const axolotl_address *address, void *user_data);
+    int (*delete_session_func)(const signal_protocol_address *address, void *user_data);
 
     /**
      * Remove the session records corresponding to all devices of a recipient ID.
@@ -402,15 +402,15 @@ typedef struct axolotl_session_store {
 
     /** User data pointer */
     void *user_data;
-} axolotl_session_store;
+} signal_protocol_session_store;
 
-typedef struct axolotl_pre_key_store {
+typedef struct signal_protocol_pre_key_store {
     /**
      * Load a local serialized PreKey record.
      *
      * @param record pointer to a newly allocated buffer containing the record,
      *     if found. Unset if no record was found.
-     *     The axolotl library is responsible for freeing this buffer.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @param pre_key_id the ID of the local serialized PreKey record
      * @retval SG_SUCCESS if the key was found
      * @retval SG_ERR_INVALID_KEY_ID if the key could not be found
@@ -452,15 +452,15 @@ typedef struct axolotl_pre_key_store {
 
     /** User data pointer */
     void *user_data;
-} axolotl_pre_key_store;
+} signal_protocol_pre_key_store;
 
-typedef struct axolotl_signed_pre_key_store {
+typedef struct signal_protocol_signed_pre_key_store {
     /**
      * Load a local serialized signed PreKey record.
      *
      * @param record pointer to a newly allocated buffer containing the record,
      *     if found. Unset if no record was found.
-     *     The axolotl library is responsible for freeing this buffer.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @param signed_pre_key_id the ID of the local signed PreKey record
      * @retval SG_SUCCESS if the key was found
      * @retval SG_ERR_INVALID_KEY_ID if the key could not be found
@@ -502,18 +502,18 @@ typedef struct axolotl_signed_pre_key_store {
 
     /** User data pointer */
     void *user_data;
-} axolotl_signed_pre_key_store;
+} signal_protocol_signed_pre_key_store;
 
-typedef struct axolotl_identity_key_store {
+typedef struct signal_protocol_identity_key_store {
     /**
      * Get the local client's identity key pair.
      *
      * @param public_data pointer to a newly allocated buffer containing the
      *     public key, if found. Unset if no record was found.
-     *     The axolotl library is responsible for freeing this buffer.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @param private_data pointer to a newly allocated buffer containing the
      *     private key, if found. Unset if no record was found.
-     *     The axolotl library is responsible for freeing this buffer.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @return 0 on success, negative on failure
      */
     int (*get_identity_key_pair)(signal_buffer **public_data, signal_buffer **private_data, void *user_data);
@@ -573,9 +573,9 @@ typedef struct axolotl_identity_key_store {
 
     /** User data pointer */
     void *user_data;
-} axolotl_identity_key_store;
+} signal_protocol_identity_key_store;
 
-typedef struct axolotl_sender_key_store {
+typedef struct signal_protocol_sender_key_store {
     /**
      * Store a serialized sender key record for a given
      * (groupId + senderId + deviceId) tuple.
@@ -585,7 +585,7 @@ typedef struct axolotl_sender_key_store {
      * @param record_len length of the serialized record
      * @return 0 on success, negative on failure
      */
-    int (*store_sender_key)(const axolotl_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, void *user_data);
+    int (*store_sender_key)(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, void *user_data);
 
     /**
      * Returns a copy of the sender key record corresponding to the
@@ -593,11 +593,11 @@ typedef struct axolotl_sender_key_store {
      *
      * @param record pointer to a newly allocated buffer containing the record,
      *     if found. Unset if no record was found.
-     *     The axolotl library is responsible for freeing this buffer.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @param sender_key_name the (groupId + senderId + deviceId) tuple
      * @return 1 if the record was loaded, 0 if the record was not found, negative on failure
      */
-    int (*load_sender_key)(signal_buffer **record, const axolotl_sender_key_name *sender_key_name, void *user_data);
+    int (*load_sender_key)(signal_buffer **record, const signal_protocol_sender_key_name *sender_key_name, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being
@@ -607,7 +607,7 @@ typedef struct axolotl_sender_key_store {
 
     /** User data pointer */
     void *user_data;
-} axolotl_sender_key_store;
+} signal_protocol_sender_key_store;
 
 /**
  * Create a new instance of the global library context.
@@ -648,81 +648,81 @@ int signal_context_set_log_function(signal_context *context,
 void signal_context_destroy(signal_context *context);
 
 /**
- * Create a new instance of the AXOLOTL data store interface.
+ * Create a new instance of the Signal Protocol data store interface.
  */
-int axolotl_store_context_create(axolotl_store_context **context, signal_context *global_context);
+int signal_protocol_store_context_create(signal_protocol_store_context **context, signal_context *global_context);
 
-int axolotl_store_context_set_session_store(axolotl_store_context *context, const axolotl_session_store *store);
-int axolotl_store_context_set_pre_key_store(axolotl_store_context *context, const axolotl_pre_key_store *store);
-int axolotl_store_context_set_signed_pre_key_store(axolotl_store_context *context, const axolotl_signed_pre_key_store *store);
-int axolotl_store_context_set_identity_key_store(axolotl_store_context *context, const axolotl_identity_key_store *store);
-int axolotl_store_context_set_sender_key_store(axolotl_store_context *context, const axolotl_sender_key_store *store);
+int signal_protocol_store_context_set_session_store(signal_protocol_store_context *context, const signal_protocol_session_store *store);
+int signal_protocol_store_context_set_pre_key_store(signal_protocol_store_context *context, const signal_protocol_pre_key_store *store);
+int signal_protocol_store_context_set_signed_pre_key_store(signal_protocol_store_context *context, const signal_protocol_signed_pre_key_store *store);
+int signal_protocol_store_context_set_identity_key_store(signal_protocol_store_context *context, const signal_protocol_identity_key_store *store);
+int signal_protocol_store_context_set_sender_key_store(signal_protocol_store_context *context, const signal_protocol_sender_key_store *store);
 
-void axolotl_store_context_destroy(axolotl_store_context *context);
+void signal_protocol_store_context_destroy(signal_protocol_store_context *context);
 
 /*
  * Interface to the session store.
  * These functions will use the callbacks in the provided
- * axolotl_store_context instance and operate in terms of higher level
+ * signal_protocol_store_context instance and operate in terms of higher level
  * library data structures.
  */
 
-int axolotl_session_load_session(axolotl_store_context *context, session_record **record, const axolotl_address *address);
-int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, signal_int_list **sessions, const char *name, size_t name_len);
-int axolotl_session_store_session(axolotl_store_context *context, const axolotl_address *address, session_record *record);
-int axolotl_session_contains_session(axolotl_store_context *context, const axolotl_address *address);
-int axolotl_session_delete_session(axolotl_store_context *context, const axolotl_address *address);
-int axolotl_session_delete_all_sessions(axolotl_store_context *context, const char *name, size_t name_len);
+int signal_protocol_session_load_session(signal_protocol_store_context *context, session_record **record, const signal_protocol_address *address);
+int signal_protocol_session_get_sub_device_sessions(signal_protocol_store_context *context, signal_int_list **sessions, const char *name, size_t name_len);
+int signal_protocol_session_store_session(signal_protocol_store_context *context, const signal_protocol_address *address, session_record *record);
+int signal_protocol_session_contains_session(signal_protocol_store_context *context, const signal_protocol_address *address);
+int signal_protocol_session_delete_session(signal_protocol_store_context *context, const signal_protocol_address *address);
+int signal_protocol_session_delete_all_sessions(signal_protocol_store_context *context, const char *name, size_t name_len);
 
 
 /*
  * Interface to the pre-key store.
  * These functions will use the callbacks in the provided
- * axolotl_store_context instance and operate in terms of higher level
+ * signal_protocol_store_context instance and operate in terms of higher level
  * library data structures.
  */
 
-int axolotl_pre_key_load_key(axolotl_store_context *context, session_pre_key **pre_key, uint32_t pre_key_id);
-int axolotl_pre_key_store_key(axolotl_store_context *context, session_pre_key *pre_key);
-int axolotl_pre_key_contains_key(axolotl_store_context *context, uint32_t pre_key_id);
-int axolotl_pre_key_remove_key(axolotl_store_context *context, uint32_t pre_key_id);
+int signal_protocol_pre_key_load_key(signal_protocol_store_context *context, session_pre_key **pre_key, uint32_t pre_key_id);
+int signal_protocol_pre_key_store_key(signal_protocol_store_context *context, session_pre_key *pre_key);
+int signal_protocol_pre_key_contains_key(signal_protocol_store_context *context, uint32_t pre_key_id);
+int signal_protocol_pre_key_remove_key(signal_protocol_store_context *context, uint32_t pre_key_id);
 
 
 /*
  * Interface to the signed pre-key store.
  * These functions will use the callbacks in the provided
- * axolotl_store_context instance and operate in terms of higher level
+ * signal_protocol_store_context instance and operate in terms of higher level
  * library data structures.
  */
 
-int axolotl_signed_pre_key_load_key(axolotl_store_context *context, session_signed_pre_key **pre_key, uint32_t signed_pre_key_id);
-int axolotl_signed_pre_key_store_key(axolotl_store_context *context, session_signed_pre_key *pre_key);
-int axolotl_signed_pre_key_contains_key(axolotl_store_context *context, uint32_t signed_pre_key_id);
-int axolotl_signed_pre_key_remove_key(axolotl_store_context *context, uint32_t signed_pre_key_id);
+int signal_protocol_signed_pre_key_load_key(signal_protocol_store_context *context, session_signed_pre_key **pre_key, uint32_t signed_pre_key_id);
+int signal_protocol_signed_pre_key_store_key(signal_protocol_store_context *context, session_signed_pre_key *pre_key);
+int signal_protocol_signed_pre_key_contains_key(signal_protocol_store_context *context, uint32_t signed_pre_key_id);
+int signal_protocol_signed_pre_key_remove_key(signal_protocol_store_context *context, uint32_t signed_pre_key_id);
 
 
 /*
  * Interface to the identity key store.
  * These functions will use the callbacks in the provided
- * axolotl_store_context instance and operate in terms of higher level
+ * signal_protocol_store_context instance and operate in terms of higher level
  * library data structures.
  */
 
-int axolotl_identity_get_key_pair(axolotl_store_context *context, ratchet_identity_key_pair **key_pair);
-int axolotl_identity_get_local_registration_id(axolotl_store_context *context, uint32_t *registration_id);
-int axolotl_identity_save_identity(axolotl_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key);
-int axolotl_identity_is_trusted_identity(axolotl_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key);
+int signal_protocol_identity_get_key_pair(signal_protocol_store_context *context, ratchet_identity_key_pair **key_pair);
+int signal_protocol_identity_get_local_registration_id(signal_protocol_store_context *context, uint32_t *registration_id);
+int signal_protocol_identity_save_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key);
+int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key);
 
 
 /*
  * Interface to the sender key store.
  * These functions will use the callbacks in the provided
- * axolotl_store_context instance and operate in terms of higher level
+ * signal_protocol_store_context instance and operate in terms of higher level
  * library data structures.
  */
 
-int axolotl_sender_key_store_key(axolotl_store_context *context, const axolotl_sender_key_name *sender_key_name, sender_key_record *record);
-int axolotl_sender_key_load_key(axolotl_store_context *context, sender_key_record **record, const axolotl_sender_key_name *sender_key_name);
+int signal_protocol_sender_key_store_key(signal_protocol_store_context *context, const signal_protocol_sender_key_name *sender_key_name, sender_key_record *record);
+int signal_protocol_sender_key_load_key(signal_protocol_store_context *context, sender_key_record **record, const signal_protocol_sender_key_name *sender_key_name);
 
 #ifdef __cplusplus
 }

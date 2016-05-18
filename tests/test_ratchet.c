@@ -473,9 +473,9 @@ START_TEST(test_ratcheting_session_as_bob)
     result = curve_decode_point(&alice_identity_key_public, aliceIdentityPublic, sizeof(aliceIdentityPublic), global_context);
     ck_assert_int_eq(result, 0);
 
-    /* Create Bob's Axolotl parameters */
-    bob_axolotl_parameters *bob_parameters;
-    result = bob_axolotl_parameters_create(&bob_parameters,
+    /* Create Bob's Signal Protocol parameters */
+    bob_signal_protocol_parameters *bob_parameters;
+    result = bob_signal_protocol_parameters_create(&bob_parameters,
             bob_identity_key_pair,
             bob_signed_pre_key_pair,
             0, /* our_one_time_pre_key */
@@ -672,9 +672,9 @@ START_TEST(test_ratcheting_session_as_alice)
     result = session_state_create(&test_session_state, global_context);
     ck_assert_int_eq(result, 0);
 
-    /* Create Alice's Axolotl parameters */
-    alice_axolotl_parameters *alice_parameters;
-    result = alice_axolotl_parameters_create(&alice_parameters,
+    /* Create Alice's Signal Protocol parameters */
+    alice_signal_protocol_parameters *alice_parameters;
+    result = alice_signal_protocol_parameters_create(&alice_parameters,
             alice_identity_key_pair, alice_base_key,
             bob_identity_key_public, bob_signed_pre_key, 0,
             bob_ephemeral_key_public);

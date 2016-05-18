@@ -21,13 +21,13 @@ int type_ref_count = 0;
 int type_unref_count = 0;
 #endif
 
-struct axolotl_store_context {
+struct signal_protocol_store_context {
     signal_context *global_context;
-    axolotl_session_store session_store;
-    axolotl_pre_key_store pre_key_store;
-    axolotl_signed_pre_key_store signed_pre_key_store;
-    axolotl_identity_key_store identity_key_store;
-    axolotl_sender_key_store sender_key_store;
+    signal_protocol_session_store session_store;
+    signal_protocol_pre_key_store pre_key_store;
+    signal_protocol_signed_pre_key_store signed_pre_key_store;
+    signal_protocol_identity_key_store identity_key_store;
+    signal_protocol_sender_key_store sender_key_store;
 };
 
 void signal_type_init(signal_type_base *instance,
@@ -484,7 +484,7 @@ int signal_constant_memcmp(const void *s1, const void *s2, size_t n)
     return result;
 }
 
-void axolotl_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str)
+void signal_protocol_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str)
 {
     assert(buffer);
     assert(str);
@@ -492,7 +492,7 @@ void axolotl_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str
     buffer->len = strlen(str);
 }
 
-char *axolotl_str_deserialize_protobuf(ProtobufCBinaryData *buffer)
+char *signal_protocol_str_deserialize_protobuf(ProtobufCBinaryData *buffer)
 {
     char *str = 0;
     assert(buffer);
@@ -510,64 +510,64 @@ char *axolotl_str_deserialize_protobuf(ProtobufCBinaryData *buffer)
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_store_context_create(axolotl_store_context **context, signal_context *global_context)
+int signal_protocol_store_context_create(signal_protocol_store_context **context, signal_context *global_context)
 {
     assert(global_context);
-    *context = malloc(sizeof(axolotl_store_context));
+    *context = malloc(sizeof(signal_protocol_store_context));
     if(!(*context)) {
         return SG_ERR_NOMEM;
     }
-    memset(*context, 0, sizeof(axolotl_store_context));
+    memset(*context, 0, sizeof(signal_protocol_store_context));
     (*context)->global_context = global_context;
     return 0;
 }
 
-int axolotl_store_context_set_session_store(axolotl_store_context *context, const axolotl_session_store *store)
+int signal_protocol_store_context_set_session_store(signal_protocol_store_context *context, const signal_protocol_session_store *store)
 {
     if(!store) {
         return SG_ERR_INVAL;
     }
-    memcpy(&(context->session_store), store, sizeof(axolotl_session_store));
+    memcpy(&(context->session_store), store, sizeof(signal_protocol_session_store));
     return 0;
 }
 
-int axolotl_store_context_set_pre_key_store(axolotl_store_context *context, const axolotl_pre_key_store *store)
+int signal_protocol_store_context_set_pre_key_store(signal_protocol_store_context *context, const signal_protocol_pre_key_store *store)
 {
     if(!store) {
         return SG_ERR_INVAL;
     }
-    memcpy(&(context->pre_key_store), store, sizeof(axolotl_pre_key_store));
+    memcpy(&(context->pre_key_store), store, sizeof(signal_protocol_pre_key_store));
     return 0;
 }
 
-int axolotl_store_context_set_signed_pre_key_store(axolotl_store_context *context, const axolotl_signed_pre_key_store *store)
+int signal_protocol_store_context_set_signed_pre_key_store(signal_protocol_store_context *context, const signal_protocol_signed_pre_key_store *store)
 {
     if(!store) {
         return SG_ERR_INVAL;
     }
-    memcpy(&(context->signed_pre_key_store), store, sizeof(axolotl_signed_pre_key_store));
+    memcpy(&(context->signed_pre_key_store), store, sizeof(signal_protocol_signed_pre_key_store));
     return 0;
 }
 
-int axolotl_store_context_set_identity_key_store(axolotl_store_context *context, const axolotl_identity_key_store *store)
+int signal_protocol_store_context_set_identity_key_store(signal_protocol_store_context *context, const signal_protocol_identity_key_store *store)
 {
     if(!store) {
         return SG_ERR_INVAL;
     }
-    memcpy(&(context->identity_key_store), store, sizeof(axolotl_identity_key_store));
+    memcpy(&(context->identity_key_store), store, sizeof(signal_protocol_identity_key_store));
     return 0;
 }
 
-int axolotl_store_context_set_sender_key_store(axolotl_store_context *context, const axolotl_sender_key_store *store)
+int signal_protocol_store_context_set_sender_key_store(signal_protocol_store_context *context, const signal_protocol_sender_key_store *store)
 {
     if(!store) {
         return SG_ERR_INVAL;
     }
-    memcpy(&(context->sender_key_store), store, sizeof(axolotl_sender_key_store));
+    memcpy(&(context->sender_key_store), store, sizeof(signal_protocol_sender_key_store));
     return 0;
 }
 
-void axolotl_store_context_destroy(axolotl_store_context *context)
+void signal_protocol_store_context_destroy(signal_protocol_store_context *context)
 {
     if(context) {
         if(context->session_store.destroy_func) {
@@ -591,7 +591,7 @@ void axolotl_store_context_destroy(axolotl_store_context *context)
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_session_load_session(axolotl_store_context *context, session_record **record, const axolotl_address *address)
+int signal_protocol_session_load_session(signal_protocol_store_context *context, session_record **record, const signal_protocol_address *address)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -636,7 +636,7 @@ complete:
     return result;
 }
 
-int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, signal_int_list **sessions, const char *name, size_t name_len)
+int signal_protocol_session_get_sub_device_sessions(signal_protocol_store_context *context, signal_int_list **sessions, const char *name, size_t name_len)
 {
     assert(context);
     assert(context->session_store.get_sub_device_sessions_func);
@@ -646,7 +646,7 @@ int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, sign
             context->session_store.user_data);
 }
 
-int axolotl_session_store_session(axolotl_store_context *context, const axolotl_address *address, session_record *record)
+int signal_protocol_session_store_session(signal_protocol_store_context *context, const signal_protocol_address *address, session_record *record)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -673,7 +673,7 @@ complete:
     return result;
 }
 
-int axolotl_session_contains_session(axolotl_store_context *context, const axolotl_address *address)
+int signal_protocol_session_contains_session(signal_protocol_store_context *context, const signal_protocol_address *address)
 {
     assert(context);
     assert(context->session_store.contains_session_func);
@@ -683,7 +683,7 @@ int axolotl_session_contains_session(axolotl_store_context *context, const axolo
             context->session_store.user_data);
 }
 
-int axolotl_session_delete_session(axolotl_store_context *context, const axolotl_address *address)
+int signal_protocol_session_delete_session(signal_protocol_store_context *context, const signal_protocol_address *address)
 {
     assert(context);
     assert(context->session_store.delete_session_func);
@@ -693,7 +693,7 @@ int axolotl_session_delete_session(axolotl_store_context *context, const axolotl
             context->session_store.user_data);
 }
 
-int axolotl_session_delete_all_sessions(axolotl_store_context *context, const char *name, size_t name_len)
+int signal_protocol_session_delete_all_sessions(signal_protocol_store_context *context, const char *name, size_t name_len)
 {
     assert(context);
     assert(context->session_store.delete_all_sessions_func);
@@ -705,7 +705,7 @@ int axolotl_session_delete_all_sessions(axolotl_store_context *context, const ch
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_pre_key_load_key(axolotl_store_context *context, session_pre_key **pre_key, uint32_t pre_key_id)
+int signal_protocol_pre_key_load_key(signal_protocol_store_context *context, session_pre_key **pre_key, uint32_t pre_key_id)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -734,7 +734,7 @@ complete:
     return result;
 }
 
-int axolotl_pre_key_store_key(axolotl_store_context *context, session_pre_key *pre_key)
+int signal_protocol_pre_key_store_key(signal_protocol_store_context *context, session_pre_key *pre_key)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -764,7 +764,7 @@ complete:
     return result;
 }
 
-int axolotl_pre_key_contains_key(axolotl_store_context *context, uint32_t pre_key_id)
+int signal_protocol_pre_key_contains_key(signal_protocol_store_context *context, uint32_t pre_key_id)
 {
     int result = 0;
 
@@ -777,7 +777,7 @@ int axolotl_pre_key_contains_key(axolotl_store_context *context, uint32_t pre_ke
     return result;
 }
 
-int axolotl_pre_key_remove_key(axolotl_store_context *context, uint32_t pre_key_id)
+int signal_protocol_pre_key_remove_key(signal_protocol_store_context *context, uint32_t pre_key_id)
 {
     int result = 0;
 
@@ -792,7 +792,7 @@ int axolotl_pre_key_remove_key(axolotl_store_context *context, uint32_t pre_key_
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_signed_pre_key_load_key(axolotl_store_context *context, session_signed_pre_key **pre_key, uint32_t signed_pre_key_id)
+int signal_protocol_signed_pre_key_load_key(signal_protocol_store_context *context, session_signed_pre_key **pre_key, uint32_t signed_pre_key_id)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -821,7 +821,7 @@ complete:
     return result;
 }
 
-int axolotl_signed_pre_key_store_key(axolotl_store_context *context, session_signed_pre_key *pre_key)
+int signal_protocol_signed_pre_key_store_key(signal_protocol_store_context *context, session_signed_pre_key *pre_key)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -851,7 +851,7 @@ complete:
     return result;
 }
 
-int axolotl_signed_pre_key_contains_key(axolotl_store_context *context, uint32_t signed_pre_key_id)
+int signal_protocol_signed_pre_key_contains_key(signal_protocol_store_context *context, uint32_t signed_pre_key_id)
 {
     int result = 0;
 
@@ -864,7 +864,7 @@ int axolotl_signed_pre_key_contains_key(axolotl_store_context *context, uint32_t
     return result;
 }
 
-int axolotl_signed_pre_key_remove_key(axolotl_store_context *context, uint32_t signed_pre_key_id)
+int signal_protocol_signed_pre_key_remove_key(signal_protocol_store_context *context, uint32_t signed_pre_key_id)
 {
     int result = 0;
 
@@ -879,7 +879,7 @@ int axolotl_signed_pre_key_remove_key(axolotl_store_context *context, uint32_t s
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_identity_get_key_pair(axolotl_store_context *context, ratchet_identity_key_pair **key_pair)
+int signal_protocol_identity_get_key_pair(signal_protocol_store_context *context, ratchet_identity_key_pair **key_pair)
 {
     int result = 0;
     signal_buffer *public_buf = 0;
@@ -932,7 +932,7 @@ complete:
     return result;
 }
 
-int axolotl_identity_get_local_registration_id(axolotl_store_context *context, uint32_t *registration_id)
+int signal_protocol_identity_get_local_registration_id(signal_protocol_store_context *context, uint32_t *registration_id)
 {
     int result = 0;
 
@@ -945,7 +945,7 @@ int axolotl_identity_get_local_registration_id(axolotl_store_context *context, u
     return result;
 }
 
-int axolotl_identity_save_identity(axolotl_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
+int signal_protocol_identity_save_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -979,7 +979,7 @@ complete:
     return result;
 }
 
-int axolotl_identity_is_trusted_identity(axolotl_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
+int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -1005,7 +1005,7 @@ complete:
     return result;
 }
 
-int axolotl_sender_key_store_key(axolotl_store_context *context, const axolotl_sender_key_name *sender_key_name, sender_key_record *record)
+int signal_protocol_sender_key_store_key(signal_protocol_store_context *context, const signal_protocol_sender_key_name *sender_key_name, sender_key_record *record)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -1032,7 +1032,7 @@ complete:
     return result;
 }
 
-int axolotl_sender_key_load_key(axolotl_store_context *context, sender_key_record **record, const axolotl_sender_key_name *sender_key_name)
+int signal_protocol_sender_key_load_key(signal_protocol_store_context *context, sender_key_record **record, const signal_protocol_sender_key_name *sender_key_name)
 {
     int result = 0;
     signal_buffer *buffer = 0;

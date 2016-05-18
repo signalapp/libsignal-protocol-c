@@ -11,8 +11,8 @@
 
 struct session_cipher
 {
-    axolotl_store_context *store;
-    const axolotl_address *remote_address;
+    signal_protocol_store_context *store;
+    const signal_protocol_address *remote_address;
     session_builder *builder;
     signal_context *global_context;
     int (*decrypt_callback)(session_cipher *cipher, signal_buffer *plaintext, void *decrypt_context);
@@ -45,7 +45,7 @@ static int session_cipher_get_plaintext(session_cipher *cipher,
 static int session_cipher_decrypt_callback(session_cipher *cipher, signal_buffer *plaintext, void *decrypt_context);
 
 int session_cipher_create(session_cipher **cipher,
-        axolotl_store_context *store, const axolotl_address *remote_address,
+        signal_protocol_store_context *store, const signal_protocol_address *remote_address,
         signal_context *global_context)
 {
     int result = 0;
@@ -124,7 +124,7 @@ int session_cipher_encrypt(session_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_session_load_session(cipher->store, &record, cipher->remote_address);
+    result = signal_protocol_session_load_session(cipher->store, &record, cipher->remote_address);
     if(result < 0) {
         goto complete;
     }
@@ -232,7 +232,7 @@ int session_cipher_encrypt(session_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_session_store_session(cipher->store, cipher->remote_address, record);
+    result = signal_protocol_session_store_session(cipher->store, cipher->remote_address, record);
 
 complete:
     if(result >= 0) {
@@ -273,7 +273,7 @@ int session_cipher_decrypt_pre_key_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_session_load_session(cipher->store, &record, cipher->remote_address);
+    result = signal_protocol_session_load_session(cipher->store, &record, cipher->remote_address);
     if(result < 0) {
         goto complete;
     }
@@ -296,13 +296,13 @@ int session_cipher_decrypt_pre_key_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_session_store_session(cipher->store, cipher->remote_address, record);
+    result = signal_protocol_session_store_session(cipher->store, cipher->remote_address, record);
     if(result < 0) {
         goto complete;
     }
 
     if(has_unsigned_pre_key_id) {
-        result = axolotl_pre_key_remove_key(cipher->store, unsigned_pre_key_id);
+        result = signal_protocol_pre_key_remove_key(cipher->store, unsigned_pre_key_id);
         if(result < 0) {
             goto complete;
         }
@@ -336,7 +336,7 @@ int session_cipher_decrypt_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_session_contains_session(cipher->store, cipher->remote_address);
+    result = signal_protocol_session_contains_session(cipher->store, cipher->remote_address);
     if(result == 0) {
         signal_log(cipher->global_context, SG_LOG_WARNING, "No session for: %s:%d", cipher->remote_address->name, cipher->remote_address->device_id);
         result = SG_ERR_NO_SESSION;
@@ -346,7 +346,7 @@ int session_cipher_decrypt_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_session_load_session(cipher->store, &record,
+    result = signal_protocol_session_load_session(cipher->store, &record,
             cipher->remote_address);
     if(result < 0) {
         goto complete;
@@ -363,7 +363,7 @@ int session_cipher_decrypt_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_session_store_session(cipher->store,
+    result = signal_protocol_session_store_session(cipher->store,
             cipher->remote_address, record);
 
 complete:
@@ -729,7 +729,7 @@ int session_cipher_get_remote_registration_id(session_cipher *cipher, uint32_t *
     assert(cipher);
     signal_lock(cipher->global_context);
 
-    result = axolotl_session_load_session(cipher->store, &record, cipher->remote_address);
+    result = signal_protocol_session_load_session(cipher->store, &record, cipher->remote_address);
     if(result < 0) {
         goto complete;
     }
@@ -760,7 +760,7 @@ int session_cipher_get_session_version(session_cipher *cipher, uint32_t *version
     assert(cipher);
     signal_lock(cipher->global_context);
 
-    result = axolotl_session_contains_session(cipher->store, cipher->remote_address);
+    result = signal_protocol_session_contains_session(cipher->store, cipher->remote_address);
     if(result != 1) {
         if(result == 0) {
             signal_log(cipher->global_context, SG_LOG_WARNING, "No session for: %s:%d", cipher->remote_address->name, cipher->remote_address->device_id);
@@ -769,7 +769,7 @@ int session_cipher_get_session_version(session_cipher *cipher, uint32_t *version
         goto complete;
     }
 
-    result = axolotl_session_load_session(cipher->store, &record, cipher->remote_address);
+    result = signal_protocol_session_load_session(cipher->store, &record, cipher->remote_address);
     if(result < 0) {
         goto complete;
     }

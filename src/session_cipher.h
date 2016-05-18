@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 /**
- * The main entry point for Axolotl encrypt/decrypt operations.
+ * The main entry point for Signal Protocol encrypt/decrypt operations.
  *
  * Once a session has been established with session_builder,
  * this class can be used for all encrypt/decrypt operations within
@@ -28,13 +28,13 @@ extern "C" {
  * When finished, free the returned instance by calling session_cipher_free().
  *
  * @param cipher set to a freshly allocated session cipher instance
- * @param store the axolotl_store_context to store all state information in
+ * @param store the signal_protocol_store_context to store all state information in
  * @param remote_address the remote address that messages will be encrypted to or decrypted from.
  * @param global_context the global library context
  * @return 0 on success, or negative on failure
  */
 int session_cipher_create(session_cipher **cipher,
-        axolotl_store_context *store, const axolotl_address *remote_address,
+        signal_protocol_store_context *store, const signal_protocol_address *remote_address,
         signal_context *global_context);
 
 /**

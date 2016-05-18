@@ -601,7 +601,7 @@ void ratchet_identity_key_pair_destroy(signal_type_base *type)
     free(key_pair);
 }
 
-struct symmetric_axolotl_parameters
+struct symmetric_signal_protocol_parameters
 {
     signal_type_base base;
     ratchet_identity_key_pair *our_identity_key;
@@ -612,7 +612,7 @@ struct symmetric_axolotl_parameters
     ec_public_key *their_identity_key;
 };
 
-struct alice_axolotl_parameters
+struct alice_signal_protocol_parameters
 {
     signal_type_base base;
     ratchet_identity_key_pair *our_identity_key;
@@ -623,7 +623,7 @@ struct alice_axolotl_parameters
     ec_public_key *their_ratchet_key;
 };
 
-struct bob_axolotl_parameters
+struct bob_signal_protocol_parameters
 {
     signal_type_base base;
     ratchet_identity_key_pair *our_identity_key;
@@ -634,8 +634,8 @@ struct bob_axolotl_parameters
     ec_public_key *their_base_key;
 };
 
-int symmetric_axolotl_parameters_create(
-        symmetric_axolotl_parameters **parameters,
+int symmetric_signal_protocol_parameters_create(
+        symmetric_signal_protocol_parameters **parameters,
         ratchet_identity_key_pair *our_identity_key,
         ec_key_pair *our_base_key,
         ec_key_pair *our_ratchet_key,
@@ -643,21 +643,21 @@ int symmetric_axolotl_parameters_create(
         ec_public_key *their_ratchet_key,
         ec_public_key *their_identity_key)
 {
-    symmetric_axolotl_parameters *result = 0;
+    symmetric_signal_protocol_parameters *result = 0;
     
     if(!our_identity_key || !our_base_key || !our_ratchet_key
             || !their_base_key || !their_ratchet_key || !their_identity_key) {
         return SG_ERR_INVAL;
     }
 
-    result = malloc(sizeof(symmetric_axolotl_parameters));
+    result = malloc(sizeof(symmetric_signal_protocol_parameters));
     if(!result) {
         return SG_ERR_NOMEM;
     }
 
-    memset(result, 0, sizeof(symmetric_axolotl_parameters));
+    memset(result, 0, sizeof(symmetric_signal_protocol_parameters));
 
-    SIGNAL_INIT(result, symmetric_axolotl_parameters_destroy);
+    SIGNAL_INIT(result, symmetric_signal_protocol_parameters_destroy);
     SIGNAL_REF(our_identity_key);
     SIGNAL_REF(our_base_key);
     SIGNAL_REF(our_ratchet_key);
@@ -675,45 +675,45 @@ int symmetric_axolotl_parameters_create(
     return 0;
 }
 
-ratchet_identity_key_pair *symmetric_axolotl_parameters_get_our_identity_key(const symmetric_axolotl_parameters *parameters)
+ratchet_identity_key_pair *symmetric_signal_protocol_parameters_get_our_identity_key(const symmetric_signal_protocol_parameters *parameters)
 {
     assert(parameters);
     return parameters->our_identity_key;
 }
 
-ec_key_pair *symmetric_axolotl_parameters_get_our_base_key(const symmetric_axolotl_parameters *parameters)
+ec_key_pair *symmetric_signal_protocol_parameters_get_our_base_key(const symmetric_signal_protocol_parameters *parameters)
 {
     assert(parameters);
     return parameters->our_base_key;
 }
 
-ec_key_pair *symmetric_axolotl_parameters_get_our_ratchet_key(const symmetric_axolotl_parameters *parameters)
+ec_key_pair *symmetric_signal_protocol_parameters_get_our_ratchet_key(const symmetric_signal_protocol_parameters *parameters)
 {
     assert(parameters);
     return parameters->our_ratchet_key;
 }
 
-ec_public_key *symmetric_axolotl_parameters_get_their_base_key(const symmetric_axolotl_parameters *parameters)
+ec_public_key *symmetric_signal_protocol_parameters_get_their_base_key(const symmetric_signal_protocol_parameters *parameters)
 {
     assert(parameters);
     return parameters->their_base_key;
 }
 
-ec_public_key *symmetric_axolotl_parameters_get_their_ratchet_key(const symmetric_axolotl_parameters *parameters)
+ec_public_key *symmetric_signal_protocol_parameters_get_their_ratchet_key(const symmetric_signal_protocol_parameters *parameters)
 {
     assert(parameters);
     return parameters->their_ratchet_key;
 }
 
-ec_public_key *symmetric_axolotl_parameters_get_their_identity_key(const symmetric_axolotl_parameters *parameters)
+ec_public_key *symmetric_signal_protocol_parameters_get_their_identity_key(const symmetric_signal_protocol_parameters *parameters)
 {
     assert(parameters);
     return parameters->their_identity_key;
 }
 
-void symmetric_axolotl_parameters_destroy(signal_type_base *type)
+void symmetric_signal_protocol_parameters_destroy(signal_type_base *type)
 {
-    symmetric_axolotl_parameters *parameters = (symmetric_axolotl_parameters *)type;
+    symmetric_signal_protocol_parameters *parameters = (symmetric_signal_protocol_parameters *)type;
 
     SIGNAL_UNREF(parameters->our_identity_key);
     SIGNAL_UNREF(parameters->our_base_key);
@@ -725,8 +725,8 @@ void symmetric_axolotl_parameters_destroy(signal_type_base *type)
     free(parameters);
 }
 
-int alice_axolotl_parameters_create(
-        alice_axolotl_parameters **parameters,
+int alice_signal_protocol_parameters_create(
+        alice_signal_protocol_parameters **parameters,
         ratchet_identity_key_pair *our_identity_key,
         ec_key_pair *our_base_key,
         ec_public_key *their_identity_key,
@@ -734,7 +734,7 @@ int alice_axolotl_parameters_create(
         ec_public_key *their_one_time_pre_key,
         ec_public_key *their_ratchet_key)
 {
-    alice_axolotl_parameters *result = 0;
+    alice_signal_protocol_parameters *result = 0;
 
     /* Only "their_one_time_pre_key" is allowed to be null */
     if(!our_identity_key || !our_base_key || !their_identity_key
@@ -742,14 +742,14 @@ int alice_axolotl_parameters_create(
         return SG_ERR_INVAL;
     }
 
-    result = malloc(sizeof(alice_axolotl_parameters));
+    result = malloc(sizeof(alice_signal_protocol_parameters));
     if(!result) {
         return SG_ERR_NOMEM;
     }
 
-    memset(result, 0, sizeof(alice_axolotl_parameters));
+    memset(result, 0, sizeof(alice_signal_protocol_parameters));
 
-    SIGNAL_INIT(result, alice_axolotl_parameters_destroy);
+    SIGNAL_INIT(result, alice_signal_protocol_parameters_destroy);
     SIGNAL_REF(our_identity_key);
     SIGNAL_REF(our_base_key);
     SIGNAL_REF(their_identity_key);
@@ -770,9 +770,9 @@ int alice_axolotl_parameters_create(
     return 0;
 }
 
-void alice_axolotl_parameters_destroy(signal_type_base *type)
+void alice_signal_protocol_parameters_destroy(signal_type_base *type)
 {
-    alice_axolotl_parameters *parameters = (alice_axolotl_parameters *)type;
+    alice_signal_protocol_parameters *parameters = (alice_signal_protocol_parameters *)type;
 
     SIGNAL_UNREF(parameters->our_identity_key);
     SIGNAL_UNREF(parameters->our_base_key);
@@ -787,8 +787,8 @@ void alice_axolotl_parameters_destroy(signal_type_base *type)
     free(parameters);
 }
 
-int bob_axolotl_parameters_create(
-        bob_axolotl_parameters **parameters,
+int bob_signal_protocol_parameters_create(
+        bob_signal_protocol_parameters **parameters,
         ratchet_identity_key_pair *our_identity_key,
         ec_key_pair *our_signed_pre_key,
         ec_key_pair *our_one_time_pre_key,
@@ -796,7 +796,7 @@ int bob_axolotl_parameters_create(
         ec_public_key *their_identity_key,
         ec_public_key *their_base_key)
 {
-    bob_axolotl_parameters *result = 0;
+    bob_signal_protocol_parameters *result = 0;
 
     /* Only "our_one_time_pre_key" is allowed to be null */
     if(!our_identity_key || !our_signed_pre_key || !our_ratchet_key
@@ -804,14 +804,14 @@ int bob_axolotl_parameters_create(
         return SG_ERR_INVAL;
     }
 
-    result = malloc(sizeof(bob_axolotl_parameters));
+    result = malloc(sizeof(bob_signal_protocol_parameters));
     if(!result) {
         return SG_ERR_NOMEM;
     }
 
-    memset(result, 0, sizeof(bob_axolotl_parameters));
+    memset(result, 0, sizeof(bob_signal_protocol_parameters));
 
-    SIGNAL_INIT(result, bob_axolotl_parameters_destroy);
+    SIGNAL_INIT(result, bob_signal_protocol_parameters_destroy);
     SIGNAL_REF(our_identity_key);
     SIGNAL_REF(our_signed_pre_key);
     SIGNAL_REF(our_ratchet_key);
@@ -832,9 +832,9 @@ int bob_axolotl_parameters_create(
     return 0;
 }
 
-void bob_axolotl_parameters_destroy(signal_type_base *type)
+void bob_signal_protocol_parameters_destroy(signal_type_base *type)
 {
-    bob_axolotl_parameters *parameters = (bob_axolotl_parameters *)type;
+    bob_signal_protocol_parameters *parameters = (bob_signal_protocol_parameters *)type;
 
     SIGNAL_UNREF(parameters->our_identity_key);
     SIGNAL_UNREF(parameters->our_signed_pre_key);
@@ -911,7 +911,7 @@ complete:
     return result;
 }
 
-int ratcheting_session_symmetric_is_alice(symmetric_axolotl_parameters *parameters)
+int ratcheting_session_symmetric_is_alice(symmetric_signal_protocol_parameters *parameters)
 {
     //FIXME Java code checks if our_base_key < their_base_key
     // This comparison may not return the same result. However, we should find
@@ -923,7 +923,7 @@ int ratcheting_session_symmetric_is_alice(symmetric_axolotl_parameters *paramete
 
 int ratcheting_session_symmetric_initialize(
         session_state *state,
-        symmetric_axolotl_parameters *parameters,
+        symmetric_signal_protocol_parameters *parameters,
         signal_context *global_context)
 {
     int result = 0;
@@ -933,8 +933,8 @@ int ratcheting_session_symmetric_initialize(
     assert(global_context);
 
     if(ratcheting_session_symmetric_is_alice(parameters)) {
-        alice_axolotl_parameters *alice_parameters = 0;
-        result = alice_axolotl_parameters_create(&alice_parameters,
+        alice_signal_protocol_parameters *alice_parameters = 0;
+        result = alice_signal_protocol_parameters_create(&alice_parameters,
                 parameters->our_identity_key,
                 parameters->our_base_key,
                 parameters->their_identity_key,
@@ -949,8 +949,8 @@ int ratcheting_session_symmetric_initialize(
         }
     }
     else {
-        bob_axolotl_parameters *bob_parameters = 0;
-        result = bob_axolotl_parameters_create(&bob_parameters,
+        bob_signal_protocol_parameters *bob_parameters = 0;
+        result = bob_signal_protocol_parameters_create(&bob_parameters,
                 parameters->our_identity_key,
                 parameters->our_base_key,
                 0,
@@ -969,7 +969,7 @@ int ratcheting_session_symmetric_initialize(
 
 int ratcheting_session_alice_initialize(
         session_state *state,
-        alice_axolotl_parameters *parameters,
+        alice_signal_protocol_parameters *parameters,
         signal_context *global_context)
 {
     int result = 0;
@@ -1116,7 +1116,7 @@ complete:
 
 int ratcheting_session_bob_initialize(
         session_state *state,
-        bob_axolotl_parameters *parameters,
+        bob_signal_protocol_parameters *parameters,
         signal_context *global_context)
 {
     int result = 0;

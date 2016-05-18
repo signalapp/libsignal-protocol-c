@@ -89,15 +89,15 @@ registration id, and prekeys.
 
     ratchet_identity_key_pair *identity_key_pair;
     uint32_t registration_id;
-    axolotl_key_helper_pre_key_list_node *pre_keys_head;
+    signal_protocol_key_helper_pre_key_list_node *pre_keys_head;
     session_pre_key *last_resort_key;
     session_signed_pre_key *signed_pre_key;
 
-    axolotl_key_helper_generate_identity_key_pair(&identity_key_pair, global_context);
-    axolotl_key_helper_generate_registration_id(&registration_id, 0, global_context);
-    axolotl_key_helper_generate_pre_keys(&pre_keys_head, start_id, 100, global_context);
-    axolotl_key_helper_generate_last_resort_pre_key(&last_resort_key, global_context);
-    axolotl_key_helper_generate_signed_pre_key(&signed_pre_key, identity_key_pair, 5, timestamp, global_context);
+    signal_protocol_key_helper_generate_identity_key_pair(&identity_key_pair, global_context);
+    signal_protocol_key_helper_generate_registration_id(&registration_id, 0, global_context);
+    signal_protocol_key_helper_generate_pre_keys(&pre_keys_head, start_id, 100, global_context);
+    signal_protocol_key_helper_generate_last_resort_pre_key(&last_resort_key, global_context);
+    signal_protocol_key_helper_generate_signed_pre_key(&signed_pre_key, identity_key_pair, 5, timestamp, global_context);
 
     /* Store identity_key_pair somewhere durable and safe. */
     /* Store registration_id somewhere durable and safe. */
@@ -114,8 +114,8 @@ be used as appropriate.
 ## Building a session
 
 A libsignal-protocol-c client needs to implement four data store callback interfaces:
-`axolotl_identity_key_store`, `axolotl_pre_key_store`,
-`axolotl_signed_pre_key_store`, and `axolotl_session_store`.
+`signal_protocol_identity_key_store`, `signal_protocol_pre_key_store`,
+`signal_protocol_signed_pre_key_store`, and `signal_protocol_session_store`.
 These will manage loading and storing of identity, prekeys, signed prekeys,
 and session state.
 
@@ -130,15 +130,15 @@ Once the callbacks for these data stores are implemented, building a session
 is fairly straightforward:
 
     /* Create the data store context, and add all the callbacks to it */
-    axolotl_store_context *store_context;
-    axolotl_store_context_create(&store_context, context);
-    axolotl_store_context_set_session_store(store_context, &session_store);
-    axolotl_store_context_set_pre_key_store(store_context, &pre_key_store);
-    axolotl_store_context_set_signed_pre_key_store(store_context, &signed_pre_key_store);
-    axolotl_store_context_set_identity_key_store(store_context, &identity_key_store);
+    signal_protocol_store_context *store_context;
+    signal_protocol_store_context_create(&store_context, context);
+    signal_protocol_store_context_set_session_store(store_context, &session_store);
+    signal_protocol_store_context_set_pre_key_store(store_context, &pre_key_store);
+    signal_protocol_store_context_set_signed_pre_key_store(store_context, &signed_pre_key_store);
+    signal_protocol_store_context_set_identity_key_store(store_context, &identity_key_store);
 
     /* Instantiate a session_builder for a recipient address. */
-    axolotl_address address = {
+    signal_protocol_address address = {
         "+14159998888", 12, 1
     };
     session_builder *builder;
@@ -163,7 +163,7 @@ is fairly straightforward:
     SIGNAL_UNREF(encrypted_message);
     session_cipher_free(cipher);
     session_builder_free(builder);
-    axolotl_store_context_destroy(store_context);
+    signal_protocol_store_context_destroy(store_context);
 
 The above example is simplified for the sake of clarity. All of these functions return errors
 on failure, and those errors should be checked for in real usage.
@@ -176,8 +176,8 @@ is provided.
 
 The more basic and higher level data types provide a type-specific free or
 destroy function. These types include `signal_context`,
-`axolotl_store_context`, `signal_buffer`, `signal_buffer_list`,
-`signal_int_list`, `axolotl_key_helper_pre_key_list_node`, `session_builder`,
+`signal_protocol_store_context`, `signal_buffer`, `signal_buffer_list`,
+`signal_int_list`, `signal_protocol_key_helper_pre_key_list_node`, `session_builder`,
 `session_cipher`, `group_session_builder`, `group_cipher`, and
 `fingerprint_generator`.
 

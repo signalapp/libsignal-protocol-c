@@ -14,7 +14,7 @@ signal_context *global_context;
 pthread_mutex_t global_mutex;
 pthread_mutexattr_t global_mutex_attr;
 
-static axolotl_sender_key_name GROUP_SENDER = {
+static signal_protocol_sender_key_name GROUP_SENDER = {
         "nihilist history reading group", 30,
         {"+14150001111", 12, 1}
 };
@@ -57,10 +57,10 @@ START_TEST(test_no_session)
     int result = 0;
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Create the session builders */
@@ -118,8 +118,8 @@ START_TEST(test_no_session)
     group_cipher_free(alice_group_cipher);
     group_session_builder_free(bob_session_builder);
     group_session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(bob_store);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
@@ -128,10 +128,10 @@ START_TEST(test_basic_encrypt_decrypt)
     int result = 0;
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Create the session builders */
@@ -197,8 +197,8 @@ START_TEST(test_basic_encrypt_decrypt)
     group_cipher_free(alice_group_cipher);
     group_session_builder_free(bob_session_builder);
     group_session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(bob_store);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
@@ -207,10 +207,10 @@ START_TEST(test_basic_ratchet)
     int result = 0;
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Create the session builders */
@@ -222,7 +222,7 @@ START_TEST(test_basic_ratchet)
     result = group_session_builder_create(&bob_session_builder, bob_store, global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_sender_key_name *alice_name = &GROUP_SENDER;
+    signal_protocol_sender_key_name *alice_name = &GROUP_SENDER;
 
     /* Create the group ciphers */
     group_cipher *alice_group_cipher = 0;
@@ -325,8 +325,8 @@ START_TEST(test_basic_ratchet)
     group_cipher_free(alice_group_cipher);
     group_session_builder_free(bob_session_builder);
     group_session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(bob_store);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
@@ -335,10 +335,10 @@ START_TEST(test_late_join)
     int result = 0;
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Create Alice's the session builder */
@@ -346,7 +346,7 @@ START_TEST(test_late_join)
     result = group_session_builder_create(&alice_session_builder, alice_store, global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_sender_key_name *alice_name = &GROUP_SENDER;
+    signal_protocol_sender_key_name *alice_name = &GROUP_SENDER;
 
     /* Create Alice's group cipher */
     group_cipher *alice_group_cipher = 0;
@@ -429,8 +429,8 @@ START_TEST(test_late_join)
     SIGNAL_UNREF(alice_distribution_message);
     group_cipher_free(alice_group_cipher);
     group_session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(bob_store);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
@@ -439,10 +439,10 @@ START_TEST(test_out_of_order)
     int result = 0;
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Create the session builders */
@@ -454,7 +454,7 @@ START_TEST(test_out_of_order)
     result = group_session_builder_create(&bob_session_builder, bob_store, global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_sender_key_name *alice_name = &GROUP_SENDER;
+    signal_protocol_sender_key_name *alice_name = &GROUP_SENDER;
 
     /* Create the group ciphers */
     group_cipher *alice_group_cipher = 0;
@@ -531,21 +531,21 @@ START_TEST(test_out_of_order)
     group_cipher_free(alice_group_cipher);
     group_session_builder_free(bob_session_builder);
     group_session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(bob_store);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
 START_TEST(test_encrypt_no_session)
 {
     int result = 0;
-    static const axolotl_sender_key_name alice_sender_name = {
+    static const signal_protocol_sender_key_name alice_sender_name = {
             "coolio groupio", 14,
             {"+10002223333", 12, 1}
     };
 
     /* Create the test data store for Alice */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
     /* Create Alice's group cipher */
@@ -566,7 +566,7 @@ START_TEST(test_encrypt_no_session)
 
     /* Cleanup */
     group_cipher_free(alice_group_cipher);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
@@ -575,10 +575,10 @@ START_TEST(test_too_far_in_future)
     int result = 0;
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Create the session builders */
@@ -590,7 +590,7 @@ START_TEST(test_too_far_in_future)
     result = group_session_builder_create(&bob_session_builder, bob_store, global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_sender_key_name *alice_name = &GROUP_SENDER;
+    signal_protocol_sender_key_name *alice_name = &GROUP_SENDER;
 
     /* Create the group ciphers */
     group_cipher *alice_group_cipher = 0;
@@ -644,8 +644,8 @@ START_TEST(test_too_far_in_future)
     group_cipher_free(alice_group_cipher);
     group_session_builder_free(bob_session_builder);
     group_session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(bob_store);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 
@@ -655,10 +655,10 @@ START_TEST(test_message_key_limit)
     int i;
 
     /* Create the test data stores */
-    axolotl_store_context *alice_store = 0;
+    signal_protocol_store_context *alice_store = 0;
     setup_test_store_context(&alice_store, global_context);
 
-    axolotl_store_context *bob_store = 0;
+    signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
     /* Create the session builders */
@@ -670,7 +670,7 @@ START_TEST(test_message_key_limit)
     result = group_session_builder_create(&bob_session_builder, bob_store, global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_sender_key_name *alice_name = &GROUP_SENDER;
+    signal_protocol_sender_key_name *alice_name = &GROUP_SENDER;
 
     /* Create the group ciphers */
     group_cipher *alice_group_cipher = 0;
@@ -730,8 +730,8 @@ START_TEST(test_message_key_limit)
     group_cipher_free(alice_group_cipher);
     group_session_builder_free(bob_session_builder);
     group_session_builder_free(alice_session_builder);
-    axolotl_store_context_destroy(bob_store);
-    axolotl_store_context_destroy(alice_store);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
 }
 END_TEST
 

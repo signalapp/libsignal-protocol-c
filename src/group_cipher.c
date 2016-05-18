@@ -10,8 +10,8 @@
 
 struct group_cipher
 {
-    axolotl_store_context *store;
-    const axolotl_sender_key_name *sender_key_id;
+    signal_protocol_store_context *store;
+    const signal_protocol_sender_key_name *sender_key_id;
     signal_context *global_context;
     int (*decrypt_callback)(group_cipher *cipher, signal_buffer *plaintext, void *decrypt_context);
     int inside_callback;
@@ -22,7 +22,7 @@ static int group_cipher_get_sender_key(group_cipher *cipher, sender_message_key 
 static int group_cipher_decrypt_callback(group_cipher *cipher, signal_buffer *plaintext, void *decrypt_context);
 
 int group_cipher_create(group_cipher **cipher,
-        axolotl_store_context *store, const axolotl_sender_key_name *sender_key_id,
+        signal_protocol_store_context *store, const signal_protocol_sender_key_name *sender_key_id,
         signal_context *global_context)
 {
     group_cipher *result_cipher;
@@ -86,7 +86,7 @@ int group_cipher_encrypt(group_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_sender_key_load_key(cipher->store, &record, cipher->sender_key_id);
+    result = signal_protocol_sender_key_load_key(cipher->store, &record, cipher->sender_key_id);
     if(result < 0) {
         goto complete;
     }
@@ -135,7 +135,7 @@ int group_cipher_encrypt(group_cipher *cipher,
 
     sender_key_state_set_chain_key(state, next_chain_key);
 
-    result = axolotl_sender_key_store_key(cipher->store, cipher->sender_key_id, record);
+    result = signal_protocol_sender_key_store_key(cipher->store, cipher->sender_key_id, record);
 
 complete:
     if(result >= 0) {
@@ -176,7 +176,7 @@ int group_cipher_decrypt(group_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_sender_key_load_key(cipher->store, &record, cipher->sender_key_id);
+    result = signal_protocol_sender_key_load_key(cipher->store, &record, cipher->sender_key_id);
     if(result < 0) {
         goto complete;
     }
@@ -222,7 +222,7 @@ int group_cipher_decrypt(group_cipher *cipher,
         goto complete;
     }
 
-    result = axolotl_sender_key_store_key(cipher->store, cipher->sender_key_id, record);
+    result = signal_protocol_sender_key_store_key(cipher->store, cipher->sender_key_id, record);
 
 complete:
     SIGNAL_UNREF(sender_key);

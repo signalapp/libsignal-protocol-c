@@ -35,13 +35,13 @@ sender_key_state *create_test_sender_key_state(int id, int iteration)
     sender_chain_key *chain_key = 0;
     ec_key_pair *key_pair = 0;
 
-    result = axolotl_key_helper_generate_sender_key(&buffer, global_context);
+    result = signal_protocol_key_helper_generate_sender_key(&buffer, global_context);
     ck_assert_int_eq(result, 0);
 
     result = sender_chain_key_create(&chain_key, iteration, buffer, global_context);
     ck_assert_int_eq(result, 0);
 
-    result = axolotl_key_helper_generate_sender_signing_key(&key_pair, global_context);
+    result = signal_protocol_key_helper_generate_sender_signing_key(&key_pair, global_context);
     ck_assert_int_eq(result, 0);
 
     result = sender_key_state_create(&state, id, chain_key,
@@ -225,9 +225,9 @@ START_TEST(test_serialize_sender_key_record_with_states)
     ck_assert_int_eq(result, 0);
 
     /* Create and set state id=1000, iteration=1 */
-    result = axolotl_key_helper_generate_sender_key(&buffer, global_context);
+    result = signal_protocol_key_helper_generate_sender_key(&buffer, global_context);
     ck_assert_int_eq(result, 0);
-    result = axolotl_key_helper_generate_sender_signing_key(&key_pair, global_context);
+    result = signal_protocol_key_helper_generate_sender_signing_key(&key_pair, global_context);
     ck_assert_int_eq(result, 0);
 
     result = sender_key_record_set_sender_key_state(record, 1000, 1, buffer, key_pair);
@@ -237,9 +237,9 @@ START_TEST(test_serialize_sender_key_record_with_states)
     SIGNAL_UNREF(key_pair);
 
     /* Create and add state id=1001, iteration=2 */
-    result = axolotl_key_helper_generate_sender_key(&buffer, global_context);
+    result = signal_protocol_key_helper_generate_sender_key(&buffer, global_context);
     ck_assert_int_eq(result, 0);
-    result = axolotl_key_helper_generate_sender_signing_key(&key_pair, global_context);
+    result = signal_protocol_key_helper_generate_sender_signing_key(&key_pair, global_context);
     ck_assert_int_eq(result, 0);
 
     sender_key_record_add_sender_key_state(record, 1001, 2, buffer, ec_key_pair_get_public(key_pair));
@@ -285,9 +285,9 @@ START_TEST(test_sender_key_record_too_many_states)
     ck_assert_int_eq(result, 0);
 
     /* Create and set state id=1000, iteration=1 */
-    result = axolotl_key_helper_generate_sender_key(&buffer, global_context);
+    result = signal_protocol_key_helper_generate_sender_key(&buffer, global_context);
     ck_assert_int_eq(result, 0);
-    result = axolotl_key_helper_generate_sender_signing_key(&key_pair, global_context);
+    result = signal_protocol_key_helper_generate_sender_signing_key(&key_pair, global_context);
     ck_assert_int_eq(result, 0);
 
     result = sender_key_record_set_sender_key_state(record, 1000, 1, buffer, key_pair);
@@ -298,9 +298,9 @@ START_TEST(test_sender_key_record_too_many_states)
 
     /* Create and set states id=1001..1010, iteration=2..11 */
     for(i = 0; i < 10; i++) {
-        result = axolotl_key_helper_generate_sender_key(&buffer, global_context);
+        result = signal_protocol_key_helper_generate_sender_key(&buffer, global_context);
         ck_assert_int_eq(result, 0);
-        result = axolotl_key_helper_generate_sender_signing_key(&key_pair, global_context);
+        result = signal_protocol_key_helper_generate_sender_signing_key(&key_pair, global_context);
         ck_assert_int_eq(result, 0);
 
         sender_key_record_add_sender_key_state(record, 1001 + i, 2 + i, buffer, ec_key_pair_get_public(key_pair));
