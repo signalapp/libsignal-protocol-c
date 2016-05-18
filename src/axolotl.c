@@ -21,7 +21,7 @@ int type_unref_count = 0;
 #endif
 
 struct axolotl_store_context {
-    axolotl_context *global_context;
+    signal_context *global_context;
     axolotl_session_store session_store;
     axolotl_pre_key_store pre_key_store;
     axolotl_signed_pre_key_store signed_pre_key_store;
@@ -29,8 +29,8 @@ struct axolotl_store_context {
     axolotl_sender_key_store sender_key_store;
 };
 
-void axolotl_type_init(axolotl_type_base *instance,
-        void (*destroy_func)(axolotl_type_base *instance))
+void signal_type_init(signal_type_base *instance,
+        void (*destroy_func)(signal_type_base *instance))
 {
     instance->ref_count = 1;
     instance->destroy = destroy_func;
@@ -39,7 +39,7 @@ void axolotl_type_init(axolotl_type_base *instance,
 #endif
 }
 
-void axolotl_type_ref(axolotl_type_base *instance)
+void signal_type_ref(signal_type_base *instance)
 {
 #ifdef DEBUG_REFCOUNT
     type_ref_count++;
@@ -49,7 +49,7 @@ void axolotl_type_ref(axolotl_type_base *instance)
     instance->ref_count++;
 }
 
-void axolotl_type_unref(axolotl_type_base *instance)
+void signal_type_unref(signal_type_base *instance)
 {
     if(instance) {
 #ifdef DEBUG_REFCOUNT
@@ -66,7 +66,7 @@ void axolotl_type_unref(axolotl_type_base *instance)
 }
 
 #ifdef DEBUG_REFCOUNT
-int axolotl_type_ref_count(axolotl_type_base *instance)
+int signal_type_ref_count(signal_type_base *instance)
 {
     return instance->ref_count;
 }
@@ -74,23 +74,23 @@ int axolotl_type_ref_count(axolotl_type_base *instance)
 
 /*------------------------------------------------------------------------*/
 
-axolotl_buffer *axolotl_buffer_alloc(size_t len)
+signal_buffer *signal_buffer_alloc(size_t len)
 {
-    axolotl_buffer *buffer;
-    if(len > (SIZE_MAX - sizeof(struct axolotl_buffer)) / sizeof(uint8_t)) {
+    signal_buffer *buffer;
+    if(len > (SIZE_MAX - sizeof(struct signal_buffer)) / sizeof(uint8_t)) {
         return 0;
     }
 
-    buffer = malloc(sizeof(struct axolotl_buffer) + (sizeof(uint8_t) * len));
+    buffer = malloc(sizeof(struct signal_buffer) + (sizeof(uint8_t) * len));
     if(buffer) {
         buffer->len = len;
     }
     return buffer;
 }
 
-axolotl_buffer *axolotl_buffer_create(const uint8_t *data, size_t len)
+signal_buffer *signal_buffer_create(const uint8_t *data, size_t len)
 {
-    axolotl_buffer *buffer = axolotl_buffer_alloc(len);
+    signal_buffer *buffer = signal_buffer_alloc(len);
     if(!buffer) {
         return 0;
     }
@@ -99,16 +99,16 @@ axolotl_buffer *axolotl_buffer_create(const uint8_t *data, size_t len)
     return buffer;
 }
 
-axolotl_buffer *axolotl_buffer_copy(const axolotl_buffer *buffer)
+signal_buffer *signal_buffer_copy(const signal_buffer *buffer)
 {
-    return axolotl_buffer_create(buffer->data, buffer->len);
+    return signal_buffer_create(buffer->data, buffer->len);
 }
 
-axolotl_buffer *axolotl_buffer_append(axolotl_buffer *buffer, const uint8_t *data, size_t len)
+signal_buffer *signal_buffer_append(signal_buffer *buffer, const uint8_t *data, size_t len)
 {
-    axolotl_buffer *tmp_buffer;
+    signal_buffer *tmp_buffer;
     size_t previous_size = buffer->len;
-    size_t previous_alloc = sizeof(struct axolotl_buffer) + (sizeof(uint8_t) * previous_size);
+    size_t previous_alloc = sizeof(struct signal_buffer) + (sizeof(uint8_t) * previous_size);
 
     if(len > (SIZE_MAX - previous_alloc)) {
         return 0;
@@ -124,17 +124,17 @@ axolotl_buffer *axolotl_buffer_append(axolotl_buffer *buffer, const uint8_t *dat
     return tmp_buffer;
 }
 
-uint8_t *axolotl_buffer_data(axolotl_buffer *buffer)
+uint8_t *signal_buffer_data(signal_buffer *buffer)
 {
     return buffer->data;
 }
 
-size_t axolotl_buffer_len(axolotl_buffer *buffer)
+size_t signal_buffer_len(signal_buffer *buffer)
 {
     return buffer->len;
 }
 
-int axolotl_buffer_compare(axolotl_buffer *buffer1, axolotl_buffer *buffer2)
+int signal_buffer_compare(signal_buffer *buffer1, signal_buffer *buffer2)
 {
     if(buffer1 == buffer2) {
         return 0;
@@ -153,65 +153,65 @@ int axolotl_buffer_compare(axolotl_buffer *buffer1, axolotl_buffer *buffer2)
             return 1;
         }
         else {
-            return axolotl_constant_memcmp(buffer1->data, buffer2->data, buffer1->len);
+            return signal_constant_memcmp(buffer1->data, buffer2->data, buffer1->len);
         }
     }
 }
 
-void axolotl_buffer_free(axolotl_buffer *buffer)
+void signal_buffer_free(signal_buffer *buffer)
 {
     if(buffer) {
         free(buffer);
     }
 }
 
-void axolotl_buffer_bzero_free(axolotl_buffer *buffer)
+void signal_buffer_bzero_free(signal_buffer *buffer)
 {
     if(buffer) {
-        axolotl_explicit_bzero(buffer->data, buffer->len);
+        signal_explicit_bzero(buffer->data, buffer->len);
         free(buffer);
     }
 }
 
 /*------------------------------------------------------------------------*/
 
-typedef struct axolotl_buffer_list_node
+typedef struct signal_buffer_list_node
 {
-    axolotl_buffer *buffer;
-    struct axolotl_buffer_list_node *next;
-} axolotl_buffer_list_node;
+    signal_buffer *buffer;
+    struct signal_buffer_list_node *next;
+} signal_buffer_list_node;
 
-struct axolotl_buffer_list
+struct signal_buffer_list
 {
     int size;
-    axolotl_buffer_list_node *head;
+    signal_buffer_list_node *head;
 };
 
-struct axolotl_int_list
+struct signal_int_list
 {
     UT_array *values;
 };
 
-axolotl_buffer_list *axolotl_buffer_list_alloc(void)
+signal_buffer_list *signal_buffer_list_alloc(void)
 {
-    axolotl_buffer_list *list = malloc(sizeof(axolotl_buffer_list));
+    signal_buffer_list *list = malloc(sizeof(signal_buffer_list));
     if(list) {
-        memset(list, 0, sizeof(axolotl_buffer_list));
+        memset(list, 0, sizeof(signal_buffer_list));
     }
     return list;
 }
 
-int axolotl_buffer_list_push(axolotl_buffer_list *list, axolotl_buffer *buffer)
+int signal_buffer_list_push(signal_buffer_list *list, signal_buffer *buffer)
 {
-    axolotl_buffer_list_node *node = 0;
+    signal_buffer_list_node *node = 0;
 
     assert(list);
     assert(buffer);
 
-    node = malloc(sizeof(axolotl_buffer_list_node));
+    node = malloc(sizeof(signal_buffer_list_node));
 
     if(!node) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     node->buffer = buffer;
@@ -220,56 +220,56 @@ int axolotl_buffer_list_push(axolotl_buffer_list *list, axolotl_buffer *buffer)
     return 0;
 }
 
-int axolotl_buffer_list_size(axolotl_buffer_list *list)
+int signal_buffer_list_size(signal_buffer_list *list)
 {
     assert(list);
     return list->size;
 }
 
-void axolotl_buffer_list_free(axolotl_buffer_list *list)
+void signal_buffer_list_free(signal_buffer_list *list)
 {
-    axolotl_buffer_list_node *cur_node;
-    axolotl_buffer_list_node *tmp_node;
+    signal_buffer_list_node *cur_node;
+    signal_buffer_list_node *tmp_node;
 
     assert(list);
 
     LL_FOREACH_SAFE(list->head, cur_node, tmp_node) {
         LL_DELETE(list->head, cur_node);
         if(cur_node->buffer) {
-            axolotl_buffer_free(cur_node->buffer);
+            signal_buffer_free(cur_node->buffer);
         }
         free(cur_node);
     }
     free(list);
 }
-axolotl_int_list *axolotl_int_list_alloc();
+signal_int_list *signal_int_list_alloc();
 
 /*------------------------------------------------------------------------*/
 
-axolotl_int_list *axolotl_int_list_alloc()
+signal_int_list *signal_int_list_alloc()
 {
-    axolotl_int_list *list = malloc(sizeof(axolotl_int_list));
+    signal_int_list *list = malloc(sizeof(signal_int_list));
     if(!list) {
         return 0;
     }
-    memset(list, 0, sizeof(axolotl_int_list));
+    memset(list, 0, sizeof(signal_int_list));
     utarray_new(list->values, &ut_int_icd);
     return list;
 }
 
-void axolotl_int_list_push_back(axolotl_int_list *list, int value)
+void signal_int_list_push_back(signal_int_list *list, int value)
 {
     assert(list);
     utarray_push_back(list->values, &value);
 }
 
-unsigned int axolotl_int_list_size(axolotl_int_list *list)
+unsigned int signal_int_list_size(signal_int_list *list)
 {
     assert(list);
     return utarray_len(list->values);
 }
 
-int axolotl_int_list_at(axolotl_int_list *list, unsigned int index)
+int signal_int_list_at(signal_int_list *list, unsigned int index)
 {
     int *value = 0;
 
@@ -283,7 +283,7 @@ int axolotl_int_list_at(axolotl_int_list *list, unsigned int index)
     return *value;
 }
 
-void axolotl_int_list_free(axolotl_int_list *list)
+void signal_int_list_free(signal_int_list *list)
 {
     if(list) {
         utarray_free(list->values);
@@ -293,13 +293,13 @@ void axolotl_int_list_free(axolotl_int_list *list)
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_context_create(axolotl_context **context, void *user_data)
+int signal_context_create(signal_context **context, void *user_data)
 {
-    *context = malloc(sizeof(axolotl_context));
+    *context = malloc(sizeof(signal_context));
     if(!(*context)) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
-    memset(*context, 0, sizeof(axolotl_context));
+    memset(*context, 0, sizeof(signal_context));
     (*context)->user_data = user_data;
 #ifdef DEBUG_REFCOUNT
     type_ref_count = 0;
@@ -308,7 +308,7 @@ int axolotl_context_create(axolotl_context **context, void *user_data)
     return 0;
 }
 
-int axolotl_context_set_crypto_provider(axolotl_context *context, const axolotl_crypto_provider *crypto_provider)
+int signal_context_set_crypto_provider(signal_context *context, const signal_crypto_provider *crypto_provider)
 {
     assert(context);
     if(!crypto_provider
@@ -316,18 +316,18 @@ int axolotl_context_set_crypto_provider(axolotl_context *context, const axolotl_
             || !crypto_provider->hmac_sha256_update_func
             || !crypto_provider->hmac_sha256_final_func
             || !crypto_provider->hmac_sha256_cleanup_func) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
-    memcpy(&(context->crypto_provider), crypto_provider, sizeof(axolotl_crypto_provider));
+    memcpy(&(context->crypto_provider), crypto_provider, sizeof(signal_crypto_provider));
     return 0;
 }
 
-int axolotl_context_set_locking_functions(axolotl_context *context,
+int signal_context_set_locking_functions(signal_context *context,
         void (*lock)(void *user_data), void (*unlock)(void *user_data))
 {
     assert(context);
     if((lock && !unlock) || (!lock && unlock)) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     context->lock = lock;
@@ -335,7 +335,7 @@ int axolotl_context_set_locking_functions(axolotl_context *context,
     return 0;
 }
 
-int axolotl_context_set_log_function(axolotl_context *context,
+int signal_context_set_log_function(signal_context *context,
         void (*log)(int level, const char *message, size_t len, void *user_data))
 {
     assert(context);
@@ -343,7 +343,7 @@ int axolotl_context_set_log_function(axolotl_context *context,
     return 0;
 }
 
-void axolotl_context_destroy(axolotl_context *context)
+void signal_context_destroy(signal_context *context)
 {
 #ifdef DEBUG_REFCOUNT
     fprintf(stderr, "Global REF count: %d\n", type_ref_count);
@@ -356,50 +356,50 @@ void axolotl_context_destroy(axolotl_context *context)
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_crypto_random(axolotl_context *context, uint8_t *data, size_t len)
+int signal_crypto_random(signal_context *context, uint8_t *data, size_t len)
 {
     assert(context);
     assert(context->crypto_provider.random_func);
     return context->crypto_provider.random_func(data, len, context->crypto_provider.user_data);
 }
 
-int axolotl_hmac_sha256_init(axolotl_context *context, void **hmac_context, const uint8_t *key, size_t key_len)
+int signal_hmac_sha256_init(signal_context *context, void **hmac_context, const uint8_t *key, size_t key_len)
 {
     assert(context);
     assert(context->crypto_provider.hmac_sha256_init_func);
     return context->crypto_provider.hmac_sha256_init_func(hmac_context, key, key_len, context->crypto_provider.user_data);
 }
 
-int axolotl_hmac_sha256_update(axolotl_context *context, void *hmac_context, const uint8_t *data, size_t data_len)
+int signal_hmac_sha256_update(signal_context *context, void *hmac_context, const uint8_t *data, size_t data_len)
 {
     assert(context);
     assert(context->crypto_provider.hmac_sha256_update_func);
     return context->crypto_provider.hmac_sha256_update_func(hmac_context, data, data_len, context->crypto_provider.user_data);
 }
 
-int axolotl_hmac_sha256_final(axolotl_context *context, void *hmac_context, axolotl_buffer **output)
+int signal_hmac_sha256_final(signal_context *context, void *hmac_context, signal_buffer **output)
 {
     assert(context);
     assert(context->crypto_provider.hmac_sha256_final_func);
     return context->crypto_provider.hmac_sha256_final_func(hmac_context, output, context->crypto_provider.user_data);
 }
 
-void axolotl_hmac_sha256_cleanup(axolotl_context *context, void *hmac_context)
+void signal_hmac_sha256_cleanup(signal_context *context, void *hmac_context)
 {
     assert(context);
     assert(context->crypto_provider.hmac_sha256_cleanup_func);
     context->crypto_provider.hmac_sha256_cleanup_func(hmac_context, context->crypto_provider.user_data);
 }
 
-int axolotl_sha512_digest(axolotl_context *context, axolotl_buffer **output, const uint8_t *data, size_t data_len)
+int signal_sha512_digest(signal_context *context, signal_buffer **output, const uint8_t *data, size_t data_len)
 {
     assert(context);
     assert(context->crypto_provider.sha512_digest_func);
     return context->crypto_provider.sha512_digest_func(output, data, data_len, context->crypto_provider.user_data);
 }
 
-int axolotl_encrypt(axolotl_context *context,
-        axolotl_buffer **output,
+int signal_encrypt(signal_context *context,
+        signal_buffer **output,
         int cipher,
         const uint8_t *key, size_t key_len,
         const uint8_t *iv, size_t iv_len,
@@ -413,8 +413,8 @@ int axolotl_encrypt(axolotl_context *context,
             context->crypto_provider.user_data);
 }
 
-int axolotl_decrypt(axolotl_context *context,
-        axolotl_buffer **output,
+int signal_decrypt(signal_context *context,
+        signal_buffer **output,
         int cipher,
         const uint8_t *key, size_t key_len,
         const uint8_t *iv, size_t iv_len,
@@ -428,21 +428,21 @@ int axolotl_decrypt(axolotl_context *context,
             context->crypto_provider.user_data);
 }
 
-void axolotl_lock(axolotl_context *context)
+void signal_lock(signal_context *context)
 {
     if(context->lock) {
         context->lock(context->user_data);
     }
 }
 
-void axolotl_unlock(axolotl_context *context)
+void signal_unlock(signal_context *context)
 {
     if(context->unlock) {
         context->unlock(context->user_data);
     }
 }
 
-void axolotl_log(axolotl_context *context, int level, const char *format, ...)
+void signal_log(signal_context *context, int level, const char *format, ...)
 {
     char buf[256];
     int n;
@@ -457,7 +457,7 @@ void axolotl_log(axolotl_context *context, int level, const char *format, ...)
     }
 }
 
-void axolotl_explicit_bzero(void *v, size_t n)
+void signal_explicit_bzero(void *v, size_t n)
 {
 #ifdef HAVE_SECUREZEROMEMORY
     SecureZeroMemory(v, n);
@@ -469,7 +469,7 @@ void axolotl_explicit_bzero(void *v, size_t n)
 #endif
 }
 
-int axolotl_constant_memcmp(const void *s1, const void *s2, size_t n)
+int signal_constant_memcmp(const void *s1, const void *s2, size_t n)
 {
     size_t i;
     const unsigned char *c1 = (const unsigned char *) s1;
@@ -509,12 +509,12 @@ char *axolotl_str_deserialize_protobuf(ProtobufCBinaryData *buffer)
 
 /*------------------------------------------------------------------------*/
 
-int axolotl_store_context_create(axolotl_store_context **context, axolotl_context *global_context)
+int axolotl_store_context_create(axolotl_store_context **context, signal_context *global_context)
 {
     assert(global_context);
     *context = malloc(sizeof(axolotl_store_context));
     if(!(*context)) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(*context, 0, sizeof(axolotl_store_context));
     (*context)->global_context = global_context;
@@ -524,7 +524,7 @@ int axolotl_store_context_create(axolotl_store_context **context, axolotl_contex
 int axolotl_store_context_set_session_store(axolotl_store_context *context, const axolotl_session_store *store)
 {
     if(!store) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
     memcpy(&(context->session_store), store, sizeof(axolotl_session_store));
     return 0;
@@ -533,7 +533,7 @@ int axolotl_store_context_set_session_store(axolotl_store_context *context, cons
 int axolotl_store_context_set_pre_key_store(axolotl_store_context *context, const axolotl_pre_key_store *store)
 {
     if(!store) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
     memcpy(&(context->pre_key_store), store, sizeof(axolotl_pre_key_store));
     return 0;
@@ -542,7 +542,7 @@ int axolotl_store_context_set_pre_key_store(axolotl_store_context *context, cons
 int axolotl_store_context_set_signed_pre_key_store(axolotl_store_context *context, const axolotl_signed_pre_key_store *store)
 {
     if(!store) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
     memcpy(&(context->signed_pre_key_store), store, sizeof(axolotl_signed_pre_key_store));
     return 0;
@@ -551,7 +551,7 @@ int axolotl_store_context_set_signed_pre_key_store(axolotl_store_context *contex
 int axolotl_store_context_set_identity_key_store(axolotl_store_context *context, const axolotl_identity_key_store *store)
 {
     if(!store) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
     memcpy(&(context->identity_key_store), store, sizeof(axolotl_identity_key_store));
     return 0;
@@ -560,7 +560,7 @@ int axolotl_store_context_set_identity_key_store(axolotl_store_context *context,
 int axolotl_store_context_set_sender_key_store(axolotl_store_context *context, const axolotl_sender_key_store *store)
 {
     if(!store) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
     memcpy(&(context->sender_key_store), store, sizeof(axolotl_sender_key_store));
     return 0;
@@ -593,7 +593,7 @@ void axolotl_store_context_destroy(axolotl_store_context *context)
 int axolotl_session_load_session(axolotl_store_context *context, session_record **record, const axolotl_address *address)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     session_record *result_record = 0;
 
     assert(context);
@@ -608,7 +608,7 @@ int axolotl_session_load_session(axolotl_store_context *context, session_record 
 
     if(result == 0) {
         if(buffer) {
-            result = AX_ERR_UNKNOWN;
+            result = SG_ERR_UNKNOWN;
             goto complete;
         }
         result = session_record_create(&result_record, 0, context->global_context);
@@ -619,15 +619,15 @@ int axolotl_session_load_session(axolotl_store_context *context, session_record 
             goto complete;
         }
         result = session_record_deserialize(&result_record,
-                axolotl_buffer_data(buffer), axolotl_buffer_len(buffer), context->global_context);
+                signal_buffer_data(buffer), signal_buffer_len(buffer), context->global_context);
     }
     else {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
     }
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     if(result >= 0) {
         *record = result_record;
@@ -635,7 +635,7 @@ complete:
     return result;
 }
 
-int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, axolotl_int_list **sessions, const char *name, size_t name_len)
+int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, signal_int_list **sessions, const char *name, size_t name_len)
 {
     assert(context);
     assert(context->session_store.get_sub_device_sessions_func);
@@ -648,7 +648,7 @@ int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, axol
 int axolotl_session_store_session(axolotl_store_context *context, const axolotl_address *address, session_record *record)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     assert(context);
     assert(context->session_store.store_session_func);
@@ -661,12 +661,12 @@ int axolotl_session_store_session(axolotl_store_context *context, const axolotl_
 
     result = context->session_store.store_session_func(
             address,
-            axolotl_buffer_data(buffer), axolotl_buffer_len(buffer),
+            signal_buffer_data(buffer), signal_buffer_len(buffer),
             context->session_store.user_data);
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
 
     return result;
@@ -707,7 +707,7 @@ int axolotl_session_delete_all_sessions(axolotl_store_context *context, const ch
 int axolotl_pre_key_load_key(axolotl_store_context *context, session_pre_key **pre_key, uint32_t pre_key_id)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     session_pre_key *result_key = 0;
 
     assert(context);
@@ -721,11 +721,11 @@ int axolotl_pre_key_load_key(axolotl_store_context *context, session_pre_key **p
     }
 
     result = session_pre_key_deserialize(&result_key,
-            axolotl_buffer_data(buffer), axolotl_buffer_len(buffer), context->global_context);
+            signal_buffer_data(buffer), signal_buffer_len(buffer), context->global_context);
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     if(result >= 0) {
         *pre_key = result_key;
@@ -736,7 +736,7 @@ complete:
 int axolotl_pre_key_store_key(axolotl_store_context *context, session_pre_key *pre_key)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     uint32_t id = 0;
 
     assert(context);
@@ -752,12 +752,12 @@ int axolotl_pre_key_store_key(axolotl_store_context *context, session_pre_key *p
 
     result = context->pre_key_store.store_pre_key(
             id,
-            axolotl_buffer_data(buffer), axolotl_buffer_len(buffer),
+            signal_buffer_data(buffer), signal_buffer_len(buffer),
             context->pre_key_store.user_data);
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
 
     return result;
@@ -794,7 +794,7 @@ int axolotl_pre_key_remove_key(axolotl_store_context *context, uint32_t pre_key_
 int axolotl_signed_pre_key_load_key(axolotl_store_context *context, session_signed_pre_key **pre_key, uint32_t signed_pre_key_id)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     session_signed_pre_key *result_key = 0;
 
     assert(context);
@@ -808,11 +808,11 @@ int axolotl_signed_pre_key_load_key(axolotl_store_context *context, session_sign
     }
 
     result = session_signed_pre_key_deserialize(&result_key,
-            axolotl_buffer_data(buffer), axolotl_buffer_len(buffer), context->global_context);
+            signal_buffer_data(buffer), signal_buffer_len(buffer), context->global_context);
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     if(result >= 0) {
         *pre_key = result_key;
@@ -823,7 +823,7 @@ complete:
 int axolotl_signed_pre_key_store_key(axolotl_store_context *context, session_signed_pre_key *pre_key)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     uint32_t id = 0;
 
     assert(context);
@@ -839,12 +839,12 @@ int axolotl_signed_pre_key_store_key(axolotl_store_context *context, session_sig
 
     result = context->signed_pre_key_store.store_signed_pre_key(
             id,
-            axolotl_buffer_data(buffer), axolotl_buffer_len(buffer),
+            signal_buffer_data(buffer), signal_buffer_len(buffer),
             context->signed_pre_key_store.user_data);
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
 
     return result;
@@ -881,8 +881,8 @@ int axolotl_signed_pre_key_remove_key(axolotl_store_context *context, uint32_t s
 int axolotl_identity_get_key_pair(axolotl_store_context *context, ratchet_identity_key_pair **key_pair)
 {
     int result = 0;
-    axolotl_buffer *public_buf = 0;
-    axolotl_buffer *private_buf = 0;
+    signal_buffer *public_buf = 0;
+    signal_buffer *private_buf = 0;
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
     ratchet_identity_key_pair *result_key = 0;
@@ -914,16 +914,16 @@ int axolotl_identity_get_key_pair(axolotl_store_context *context, ratchet_identi
 
 complete:
     if(public_buf) {
-        axolotl_buffer_free(public_buf);
+        signal_buffer_free(public_buf);
     }
     if(private_buf) {
-        axolotl_buffer_free(private_buf);
+        signal_buffer_free(private_buf);
     }
     if(public_key) {
-        AXOLOTL_UNREF(public_key);
+        SIGNAL_UNREF(public_key);
     }
     if(private_key) {
-        AXOLOTL_UNREF(private_key);
+        SIGNAL_UNREF(private_key);
     }
     if(result >= 0) {
         *key_pair = result_key;
@@ -947,7 +947,7 @@ int axolotl_identity_get_local_registration_id(axolotl_store_context *context, u
 int axolotl_identity_save_identity(axolotl_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     assert(context);
     assert(context->identity_key_store.save_identity);
@@ -960,8 +960,8 @@ int axolotl_identity_save_identity(axolotl_store_context *context, const char *n
 
         result = context->identity_key_store.save_identity(
                 name, name_len,
-                axolotl_buffer_data(buffer),
-                axolotl_buffer_len(buffer),
+                signal_buffer_data(buffer),
+                signal_buffer_len(buffer),
                 context->identity_key_store.user_data);
     }
     else {
@@ -972,7 +972,7 @@ int axolotl_identity_save_identity(axolotl_store_context *context, const char *n
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
 
     return result;
@@ -981,7 +981,7 @@ complete:
 int axolotl_identity_is_trusted_identity(axolotl_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     assert(context);
     assert(context->identity_key_store.is_trusted_identity);
@@ -993,12 +993,12 @@ int axolotl_identity_is_trusted_identity(axolotl_store_context *context, const c
 
     result = context->identity_key_store.is_trusted_identity(
             name, name_len,
-            axolotl_buffer_data(buffer),
-            axolotl_buffer_len(buffer),
+            signal_buffer_data(buffer),
+            signal_buffer_len(buffer),
             context->identity_key_store.user_data);
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
 
     return result;
@@ -1007,7 +1007,7 @@ complete:
 int axolotl_sender_key_store_key(axolotl_store_context *context, const axolotl_sender_key_name *sender_key_name, sender_key_record *record)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     assert(context);
     assert(context->sender_key_store.store_sender_key);
@@ -1020,12 +1020,12 @@ int axolotl_sender_key_store_key(axolotl_store_context *context, const axolotl_s
 
     result = context->sender_key_store.store_sender_key(
             sender_key_name,
-            axolotl_buffer_data(buffer), axolotl_buffer_len(buffer),
+            signal_buffer_data(buffer), signal_buffer_len(buffer),
             context->sender_key_store.user_data);
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
 
     return result;
@@ -1034,7 +1034,7 @@ complete:
 int axolotl_sender_key_load_key(axolotl_store_context *context, sender_key_record **record, const axolotl_sender_key_name *sender_key_name)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     sender_key_record *result_record = 0;
 
     assert(context);
@@ -1049,7 +1049,7 @@ int axolotl_sender_key_load_key(axolotl_store_context *context, sender_key_recor
 
     if(result == 0) {
         if(buffer) {
-            result = AX_ERR_UNKNOWN;
+            result = SG_ERR_UNKNOWN;
             goto complete;
         }
         result = sender_key_record_create(&result_record, context->global_context);
@@ -1060,15 +1060,15 @@ int axolotl_sender_key_load_key(axolotl_store_context *context, sender_key_recor
             goto complete;
         }
         result = sender_key_record_deserialize(&result_record,
-                axolotl_buffer_data(buffer), axolotl_buffer_len(buffer), context->global_context);
+                signal_buffer_data(buffer), signal_buffer_len(buffer), context->global_context);
     }
     else {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
     }
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     if(result >= 0) {
         *record = result_record;

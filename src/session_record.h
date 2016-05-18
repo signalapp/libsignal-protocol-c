@@ -9,10 +9,10 @@
 extern "C" {
 #endif
 
-int session_record_create(session_record **record, session_state *state, axolotl_context *global_context);
-int session_record_serialize(axolotl_buffer **buffer, const session_record *record);
-int session_record_deserialize(session_record **record, const uint8_t *data, size_t len, axolotl_context *global_context);
-int session_record_copy(session_record **record, session_record *other_record, axolotl_context *global_context);
+int session_record_create(session_record **record, session_state *state, signal_context *global_context);
+int session_record_serialize(signal_buffer **buffer, const session_record *record);
+int session_record_deserialize(session_record **record, const uint8_t *data, size_t len, signal_context *global_context);
+int session_record_copy(session_record **record, session_record *other_record, signal_context *global_context);
 
 int session_record_has_session_state(session_record *record, uint32_t version, const ec_public_key *alice_base_key);
 session_state *session_record_get_state(session_record *record);
@@ -41,7 +41,7 @@ int session_record_archive_current_state(session_record *record);
 
 int session_record_promote_state(session_record *record, session_state *promoted_state);
 
-void session_record_destroy(axolotl_type_base *type);
+void session_record_destroy(signal_type_base *type);
 
 #ifdef __cplusplus
 }

@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-int hkdf_create(hkdf_context **context, int message_version, axolotl_context *global_context);
+int hkdf_create(hkdf_context **context, int message_version, signal_context *global_context);
 
 ssize_t hkdf_derive_secrets(hkdf_context *context,
         uint8_t **output,
@@ -20,7 +20,7 @@ ssize_t hkdf_derive_secrets(hkdf_context *context,
 
 int hkdf_compare(const hkdf_context *context1, const hkdf_context *context2);
 
-void hkdf_destroy(axolotl_type_base *type);
+void hkdf_destroy(signal_type_base *type);
 
 #ifdef __cplusplus
 }

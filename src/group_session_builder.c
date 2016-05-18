@@ -12,11 +12,11 @@
 struct group_session_builder
 {
     axolotl_store_context *store;
-    axolotl_context *global_context;
+    signal_context *global_context;
 };
 
 int group_session_builder_create(group_session_builder **builder,
-        axolotl_store_context *store, axolotl_context *global_context)
+        axolotl_store_context *store, signal_context *global_context)
 {
     group_session_builder *result = 0;
 
@@ -25,7 +25,7 @@ int group_session_builder_create(group_session_builder **builder,
 
     result = malloc(sizeof(group_session_builder));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result, 0, sizeof(group_session_builder));
 
@@ -45,7 +45,7 @@ int group_session_builder_process_session(group_session_builder *builder,
 
     assert(builder);
     assert(builder->store);
-    axolotl_lock(builder->global_context);
+    signal_lock(builder->global_context);
 
     result = axolotl_sender_key_load_key(builder->store, &record, sender_key_name);
     if(result < 0) {
@@ -64,8 +64,8 @@ int group_session_builder_process_session(group_session_builder *builder,
     result = axolotl_sender_key_store_key(builder->store, sender_key_name, record);
 
 complete:
-    AXOLOTL_UNREF(record);
-    axolotl_unlock(builder->global_context);
+    SIGNAL_UNREF(record);
+    signal_unlock(builder->global_context);
     return result;
 }
 
@@ -77,14 +77,14 @@ int group_session_builder_create_session(group_session_builder *builder,
     sender_key_record *record = 0;
     sender_key_state *state = 0;
     uint32_t sender_key_id = 0;
-    axolotl_buffer *sender_key = 0;
+    signal_buffer *sender_key = 0;
     ec_key_pair *sender_signing_key = 0;
     sender_chain_key *chain_key = 0;
-    axolotl_buffer *seed = 0;
+    signal_buffer *seed = 0;
 
     assert(builder);
     assert(builder->store);
-    axolotl_lock(builder->global_context);
+    signal_lock(builder->global_context);
 
     result = axolotl_sender_key_load_key(builder->store, &record, sender_key_name);
     if(result < 0) {
@@ -129,15 +129,15 @@ int group_session_builder_create_session(group_session_builder *builder,
     result = sender_key_distribution_message_create(distribution_message,
             sender_key_state_get_key_id(state),
             sender_chain_key_get_iteration(chain_key),
-            axolotl_buffer_data(seed), axolotl_buffer_len(seed),
+            signal_buffer_data(seed), signal_buffer_len(seed),
             sender_key_state_get_signing_key_public(state),
             builder->global_context);
 
 complete:
-    axolotl_buffer_free(sender_key);
-    AXOLOTL_UNREF(sender_signing_key);
-    AXOLOTL_UNREF(record);
-    axolotl_unlock(builder->global_context);
+    signal_buffer_free(sender_key);
+    SIGNAL_UNREF(sender_signing_key);
+    SIGNAL_UNREF(record);
+    signal_unlock(builder->global_context);
     return result;
 }
 

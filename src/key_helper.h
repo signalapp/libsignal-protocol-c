@@ -15,7 +15,7 @@ extern "C" {
 * @param key_pair the generated identity key pair
 * @return 0 on success, or negative on failure
 */
-int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, axolotl_context *global_context);
+int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, signal_context *global_context);
 
 /**
  * Generate a registration ID.  Clients should only do this once,
@@ -29,7 +29,7 @@ int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **ke
  *                      higher encoding overhead.
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, axolotl_context *global_context);
+int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, signal_context *global_context);
 
 /**
  * Generate a random number bounded by the provided maximum
@@ -38,7 +38,7 @@ int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int e
  * @param max the maximum value of the random number
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_get_random_sequence(int *value, int max, axolotl_context *global_context);
+int axolotl_key_helper_get_random_sequence(int *value, int max, signal_context *global_context);
 
 /**
  * Generate a list of PreKeys.  Clients should do this at install time, and
@@ -58,7 +58,7 @@ int axolotl_key_helper_get_random_sequence(int *value, int max, axolotl_context 
  */
 int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **head,
         unsigned int start, unsigned int count,
-        axolotl_context *global_context);
+        signal_context *global_context);
 
 /**
  * Get the pre key element for the current node in the key list.
@@ -90,7 +90,7 @@ void axolotl_key_helper_key_list_free(axolotl_key_helper_pre_key_list_node *head
  * @param pre_key set to the generated pre key
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, axolotl_context *global_context);
+int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context);
 
 /**
  * Generate a signed pre key
@@ -106,7 +106,7 @@ int axolotl_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_p
         const ratchet_identity_key_pair *identity_key_pair,
         uint32_t signed_pre_key_id,
         uint64_t timestamp,
-        axolotl_context *global_context);
+        signal_context *global_context);
 
 /*
  * Generate a sender signing key pair
@@ -114,7 +114,7 @@ int axolotl_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_p
 * @param key_pair the generated key pair
 * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, axolotl_context *global_context);
+int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signal_context *global_context);
 
 /*
  * Generate a sender key
@@ -122,7 +122,7 @@ int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, axolo
  * @param key_buffer buffer to be allocated and populated with the result
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_sender_key(axolotl_buffer **key_buffer, axolotl_context *global_context);
+int axolotl_key_helper_generate_sender_key(signal_buffer **key_buffer, signal_context *global_context);
 
 /*
  * Generate a sender key ID
@@ -130,7 +130,7 @@ int axolotl_key_helper_generate_sender_key(axolotl_buffer **key_buffer, axolotl_
  * @param key_id assigned to the generated ID
  * @return 0 on success, or negative on failure
  */
-int axolotl_key_helper_generate_sender_key_id(uint32_t *key_id, axolotl_context *global_context);
+int axolotl_key_helper_generate_sender_key_id(uint32_t *key_id, signal_context *global_context);
 
 #ifdef __cplusplus
 }

@@ -7,21 +7,21 @@
 #include "curve.h"
 #include "test_common.h"
 
-axolotl_context *global_context;
+signal_context *global_context;
 
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
     setup_test_crypto_provider(global_context);
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 START_TEST(test_curve25519_agreement)
@@ -117,10 +117,10 @@ START_TEST(test_curve25519_agreement)
     /* Cleanup */
     if(shared_one) { free(shared_one); }
     if(shared_two) { free(shared_two); }
-    AXOLOTL_UNREF(alice_public_key);
-    AXOLOTL_UNREF(alice_private_key);
-    AXOLOTL_UNREF(bob_public_key);
-    AXOLOTL_UNREF(bob_private_key);
+    SIGNAL_UNREF(alice_public_key);
+    SIGNAL_UNREF(alice_private_key);
+    SIGNAL_UNREF(bob_public_key);
+    SIGNAL_UNREF(bob_private_key);
 }
 END_TEST
 
@@ -169,9 +169,9 @@ START_TEST(test_curve25519_generate_public)
     ck_assert_int_eq(ec_public_key_compare(alice_expected_public_key, alice_public_key), 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(alice_public_key);
-    AXOLOTL_UNREF(alice_expected_public_key);
-    AXOLOTL_UNREF(alice_private_key);
+    SIGNAL_UNREF(alice_public_key);
+    SIGNAL_UNREF(alice_expected_public_key);
+    SIGNAL_UNREF(alice_private_key);
 }
 END_TEST
 
@@ -189,8 +189,8 @@ START_TEST(test_curve25519_random_agreements)
     uint8_t *shared_alice = 0;
     uint8_t *shared_bob = 0;
 
-    axolotl_context *context;
-    axolotl_context_create(&context, 0);
+    signal_context *context;
+    signal_context_create(&context, 0);
     setup_test_crypto_provider(context);
 
     for(i = 0; i < 50; i++) {
@@ -226,8 +226,8 @@ START_TEST(test_curve25519_random_agreements)
         /* Cleanup */
         if(shared_alice) { free(shared_alice); }
         if(shared_bob) { free(shared_bob); }
-        AXOLOTL_UNREF(alice_key_pair);
-        AXOLOTL_UNREF(bob_key_pair);
+        SIGNAL_UNREF(alice_key_pair);
+        SIGNAL_UNREF(bob_key_pair);
         alice_key_pair = 0;
         bob_key_pair = 0;
         alice_public_key = 0;
@@ -238,7 +238,7 @@ START_TEST(test_curve25519_random_agreements)
         shared_bob = 0;
     }
 
-    axolotl_context_destroy(context);
+    signal_context_destroy(context);
 }
 END_TEST
 
@@ -314,9 +314,9 @@ START_TEST(test_curve25519_signature)
     }
 
     /* Cleanup */
-    AXOLOTL_UNREF(alice_private_key);
-    AXOLOTL_UNREF(alice_public_key);
-    AXOLOTL_UNREF(alice_ephemeral);
+    SIGNAL_UNREF(alice_private_key);
+    SIGNAL_UNREF(alice_public_key);
+    SIGNAL_UNREF(alice_ephemeral);
 }
 END_TEST
 
@@ -331,14 +331,14 @@ START_TEST(test_curve25519_large_signatures)
     uint8_t message[1048576];
     memset(message, 0, sizeof(message));
 
-    axolotl_buffer *signature = 0;
+    signal_buffer *signature = 0;
 
     result = curve_calculate_signature(global_context, &signature,
             ec_key_pair_get_private(keys), message, sizeof(message));
     ck_assert_int_eq(result, 0);
 
-    uint8_t *data = axolotl_buffer_data(signature);
-    size_t len = axolotl_buffer_len(signature);
+    uint8_t *data = signal_buffer_data(signature);
+    size_t len = signal_buffer_len(signature);
 
     result = curve_verify_signature(ec_key_pair_get_public(keys),
             message, sizeof(message), data, len);
@@ -351,9 +351,9 @@ START_TEST(test_curve25519_large_signatures)
     ck_assert_int_eq(result, 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(keys);
+    SIGNAL_UNREF(keys);
     if(signature) {
-        axolotl_buffer_free(signature);
+        signal_buffer_free(signature);
     }
 }
 END_TEST

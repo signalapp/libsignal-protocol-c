@@ -10,28 +10,28 @@
 #include "sender_key_record.h"
 #include "test_common.h"
 
-axolotl_context *global_context;
+signal_context *global_context;
 
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
     setup_test_crypto_provider(global_context);
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 sender_key_state *create_test_sender_key_state(int id, int iteration)
 {
     int result = 0;
     sender_key_state *state = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     sender_chain_key *chain_key = 0;
     ec_key_pair *key_pair = 0;
 
@@ -49,9 +49,9 @@ sender_key_state *create_test_sender_key_state(int id, int iteration)
     ck_assert_int_eq(result, 0);
 
     /* Cleanup */
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(chain_key);
-    AXOLOTL_UNREF(key_pair);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(chain_key);
+    SIGNAL_UNREF(key_pair);
 
     return state;
 }
@@ -62,9 +62,9 @@ void compare_sender_chain_keys(sender_chain_key *chain_key1, sender_chain_key *c
     int iteration2 = sender_chain_key_get_iteration(chain_key2);
     ck_assert_int_eq(iteration1, iteration2);
 
-    axolotl_buffer *seed1 = sender_chain_key_get_seed(chain_key1);
-    axolotl_buffer *seed2 = sender_chain_key_get_seed(chain_key2);
-    ck_assert_int_eq(axolotl_buffer_compare(seed1, seed2), 0);
+    signal_buffer *seed1 = sender_chain_key_get_seed(chain_key1);
+    signal_buffer *seed2 = sender_chain_key_get_seed(chain_key2);
+    ck_assert_int_eq(signal_buffer_compare(seed1, seed2), 0);
 }
 
 void compare_sender_key_states(sender_key_state *state1, sender_key_state *state2)
@@ -98,17 +98,17 @@ void compare_sender_message_keys(sender_message_key *message_key1, sender_messag
     int iteration2 = sender_message_key_get_iteration(message_key1);
     ck_assert_int_eq(iteration1, iteration2);
 
-    axolotl_buffer *iv1 = sender_message_key_get_iv(message_key1);
-    axolotl_buffer *iv2 = sender_message_key_get_iv(message_key2);
-    ck_assert_int_eq(axolotl_buffer_compare(iv1, iv2), 0);
+    signal_buffer *iv1 = sender_message_key_get_iv(message_key1);
+    signal_buffer *iv2 = sender_message_key_get_iv(message_key2);
+    ck_assert_int_eq(signal_buffer_compare(iv1, iv2), 0);
 
-    axolotl_buffer *cipher_key1 = sender_message_key_get_cipher_key(message_key1);
-    axolotl_buffer *cipher_key2 = sender_message_key_get_cipher_key(message_key2);
-    ck_assert_int_eq(axolotl_buffer_compare(cipher_key1, cipher_key2), 0);
+    signal_buffer *cipher_key1 = sender_message_key_get_cipher_key(message_key1);
+    signal_buffer *cipher_key2 = sender_message_key_get_cipher_key(message_key2);
+    ck_assert_int_eq(signal_buffer_compare(cipher_key1, cipher_key2), 0);
 
-    axolotl_buffer *seed1 = sender_message_key_get_seed(message_key1);
-    axolotl_buffer *seed2 = sender_message_key_get_seed(message_key2);
-    ck_assert_int_eq(axolotl_buffer_compare(seed1, seed2), 0);
+    signal_buffer *seed1 = sender_message_key_get_seed(message_key1);
+    signal_buffer *seed2 = sender_message_key_get_seed(message_key2);
+    ck_assert_int_eq(signal_buffer_compare(seed1, seed2), 0);
 }
 
 START_TEST(test_serialize_sender_key_state)
@@ -124,13 +124,13 @@ START_TEST(test_serialize_sender_key_state)
     ck_assert_int_eq(result, 0);
 
     /* Serialize the state */
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     result = sender_key_state_serialize(&buffer, state);
     ck_assert_int_ge(result, 0);
 
     /* Deserialize the state */
-    uint8_t *data = axolotl_buffer_data(buffer);
-    int len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    int len = signal_buffer_len(buffer);
     sender_key_state *state_deserialized = 0;
     result = sender_key_state_deserialize(&state_deserialized, data, len, global_context);
     ck_assert_int_eq(result, 0);
@@ -147,11 +147,11 @@ START_TEST(test_serialize_sender_key_state)
     compare_sender_message_keys(message_key, message_key_deserialized);
 
     /* Cleanup */
-    AXOLOTL_UNREF(state);
-    AXOLOTL_UNREF(message_key);
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(state_deserialized);
-    AXOLOTL_UNREF(message_key_deserialized);
+    SIGNAL_UNREF(state);
+    SIGNAL_UNREF(message_key);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(state_deserialized);
+    SIGNAL_UNREF(message_key_deserialized);
 }
 END_TEST
 
@@ -192,13 +192,13 @@ START_TEST(test_serialize_sender_key_record)
     ck_assert_int_eq(result, 0);
 
     /* Serialize the record */
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     result = sender_key_record_serialize(&buffer, record);
     ck_assert_int_ge(result, 0);
 
     /* Deserialize the record */
-    uint8_t *data = axolotl_buffer_data(buffer);
-    int len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    int len = signal_buffer_len(buffer);
     sender_key_record *record_deserialized = 0;
     result = sender_key_record_deserialize(&record_deserialized, data, len, global_context);
     ck_assert_int_eq(result, 0);
@@ -207,9 +207,9 @@ START_TEST(test_serialize_sender_key_record)
     compare_sender_key_records(record, record_deserialized);
 
     /* Cleanup */
-    AXOLOTL_UNREF(record);
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(record_deserialized);
+    SIGNAL_UNREF(record);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(record_deserialized);
 }
 END_TEST
 
@@ -217,7 +217,7 @@ START_TEST(test_serialize_sender_key_record_with_states)
 {
     int result = 0;
     sender_key_record *record = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     ec_key_pair *key_pair = 0;
 
     /* Create the record */
@@ -233,8 +233,8 @@ START_TEST(test_serialize_sender_key_record_with_states)
     result = sender_key_record_set_sender_key_state(record, 1000, 1, buffer, key_pair);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(key_pair);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(key_pair);
 
     /* Create and add state id=1001, iteration=2 */
     result = axolotl_key_helper_generate_sender_key(&buffer, global_context);
@@ -245,16 +245,16 @@ START_TEST(test_serialize_sender_key_record_with_states)
     sender_key_record_add_sender_key_state(record, 1001, 2, buffer, ec_key_pair_get_public(key_pair));
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(key_pair);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(key_pair);
 
     /* Serialize the record */
     result = sender_key_record_serialize(&buffer, record);
     ck_assert_int_ge(result, 0);
 
     /* Deserialize the record */
-    uint8_t *data = axolotl_buffer_data(buffer);
-    int len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    int len = signal_buffer_len(buffer);
     sender_key_record *record_deserialized = 0;
     result = sender_key_record_deserialize(&record_deserialized, data, len, global_context);
     ck_assert_int_eq(result, 0);
@@ -265,9 +265,9 @@ START_TEST(test_serialize_sender_key_record_with_states)
     compare_sender_key_record_states(record, record_deserialized, 1001);
 
     /* Cleanup */
-    AXOLOTL_UNREF(record);
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(record_deserialized);
+    SIGNAL_UNREF(record);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(record_deserialized);
 }
 END_TEST
 
@@ -277,7 +277,7 @@ START_TEST(test_sender_key_record_too_many_states)
     int i;
     sender_key_record *record = 0;
     sender_key_state *state = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     ec_key_pair *key_pair = 0;
 
     /* Create the record */
@@ -293,8 +293,8 @@ START_TEST(test_sender_key_record_too_many_states)
     result = sender_key_record_set_sender_key_state(record, 1000, 1, buffer, key_pair);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(key_pair);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(key_pair);
 
     /* Create and set states id=1001..1010, iteration=2..11 */
     for(i = 0; i < 10; i++) {
@@ -306,8 +306,8 @@ START_TEST(test_sender_key_record_too_many_states)
         sender_key_record_add_sender_key_state(record, 1001 + i, 2 + i, buffer, ec_key_pair_get_public(key_pair));
         ck_assert_int_eq(result, 0);
 
-        axolotl_buffer_free(buffer);
-        AXOLOTL_UNREF(key_pair);
+        signal_buffer_free(buffer);
+        SIGNAL_UNREF(key_pair);
     }
 
     /* Get the latest state from the record */
@@ -316,7 +316,7 @@ START_TEST(test_sender_key_record_too_many_states)
     ck_assert_int_eq(sender_key_state_get_key_id(state), 1010);
 
     /* Cleanup */
-    AXOLOTL_UNREF(record);
+    SIGNAL_UNREF(record);
 }
 END_TEST
 

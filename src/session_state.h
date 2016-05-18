@@ -11,10 +11,10 @@ extern "C" {
 
 /*------------------------------------------------------------------------*/
 
-int session_state_create(session_state **state, axolotl_context *global_context);
-int session_state_serialize(axolotl_buffer **buffer, session_state *state);
-int session_state_deserialize(session_state **state, const uint8_t *data, size_t len, axolotl_context *global_context);
-int session_state_copy(session_state **state, session_state *other_state, axolotl_context *global_context);
+int session_state_create(session_state **state, signal_context *global_context);
+int session_state_serialize(signal_buffer **buffer, session_state *state);
+int session_state_deserialize(session_state **state, const uint8_t *data, size_t len, signal_context *global_context);
+int session_state_copy(session_state **state, session_state *other_state, signal_context *global_context);
 
 void session_state_set_session_version(session_state *state, uint32_t version);
 uint32_t session_state_get_session_version(const session_state *state);
@@ -80,7 +80,7 @@ int session_state_get_needs_refresh(const session_state *state);
 void session_state_set_alice_base_key(session_state *state, ec_public_key *key);
 ec_public_key *session_state_get_alice_base_key(const session_state *state);
 
-void session_state_destroy(axolotl_type_base *type);
+void session_state_destroy(signal_type_base *type);
 
 #ifdef __cplusplus
 }

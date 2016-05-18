@@ -34,7 +34,7 @@ extern "C" {
  */
 int group_cipher_create(group_cipher **cipher,
         axolotl_store_context *store, const axolotl_sender_key_name *sender_key_id,
-        axolotl_context *global_context);
+        signal_context *global_context);
 
 /**
  * Set the optional user data pointer for the group cipher.
@@ -70,7 +70,7 @@ void *group_cipher_get_user_data(group_cipher *cipher);
  * @param user_data user data pointer provided to the callback
  */
 void group_cipher_set_decryption_callback(group_cipher *cipher,
-        int (*callback)(group_cipher *cipher, axolotl_buffer *plaintext, void *decrypt_context));
+        int (*callback)(group_cipher *cipher, signal_buffer *plaintext, void *decrypt_context));
 
 /**
  * Encrypt a message.
@@ -79,7 +79,7 @@ void group_cipher_set_decryption_callback(group_cipher *cipher,
  * @param padded_message_len The length of the data pointed to by padded_message
  * @param encrypted_message Set to a ciphertext message encrypted to the group+sender+device tuple.
  *
- * @return AX_SUCCESS on success, negative on error
+ * @return SG_SUCCESS on success, negative on error
  */
 int group_cipher_encrypt(group_cipher *cipher,
         const uint8_t *padded_plaintext, size_t padded_plaintext_len,
@@ -93,16 +93,16 @@ int group_cipher_encrypt(group_cipher *cipher,
  *   ciphertext, which is passed to the decryption callback function
  * @param plaintext Set to a newly allocated buffer containing the plaintext.
  *
- * @retval AX_SUCCESS Success
- * @retval AX_ERR_INVALID_MESSAGE if the input is not valid ciphertext.
- * @retval AX_ERR_DUPLICATE_MESSAGE if the input is a message that has already been received.
- * @retval AX_ERR_LEGACY_MESSAGE if the input is a message formatted by a protocol version that
+ * @retval SG_SUCCESS Success
+ * @retval SG_ERR_INVALID_MESSAGE if the input is not valid ciphertext.
+ * @retval SG_ERR_DUPLICATE_MESSAGE if the input is a message that has already been received.
+ * @retval SG_ERR_LEGACY_MESSAGE if the input is a message formatted by a protocol version that
  *                               is no longer supported.
- * @retval AX_ERR_NO_SESSION if there is no established session for this contact.
+ * @retval SG_ERR_NO_SESSION if there is no established session for this contact.
  */
 int group_cipher_decrypt(group_cipher *cipher,
         sender_key_message *ciphertext, void *decrypt_context,
-        axolotl_buffer **plaintext);
+        signal_buffer **plaintext);
 
 void group_cipher_free(group_cipher *cipher);
 

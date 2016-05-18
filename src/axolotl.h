@@ -16,27 +16,27 @@
 extern "C" {
 #endif
 
-#define AX_SUCCESS 0
+#define SG_SUCCESS 0
 
 /* Standard error codes with values that match errno.h equivalents */
-#define AX_ERR_NOMEM -12   /* Not enough space */
-#define AX_ERR_INVAL -22   /* Invalid argument */
+#define SG_ERR_NOMEM -12   /* Not enough space */
+#define SG_ERR_INVAL -22   /* Invalid argument */
 
 /* Custom error codes for error conditions specific to the library */
-#define AX_ERR_UNKNOWN              -1000
-#define AX_ERR_DUPLICATE_MESSAGE    -1001
-#define AX_ERR_INVALID_KEY          -1002
-#define AX_ERR_INVALID_KEY_ID       -1003
-#define AX_ERR_INVALID_MAC          -1004
-#define AX_ERR_INVALID_MESSAGE      -1005
-#define AX_ERR_INVALID_VERSION      -1006
-#define AX_ERR_LEGACY_MESSAGE       -1007
-#define AX_ERR_NO_SESSION           -1008
-#define AX_ERR_STALE_KEY_EXCHANGE   -1009
-#define AX_ERR_UNTRUSTED_IDENTITY   -1010
-#define AX_ERR_INVALID_PROTO_BUF    -1100
-#define AX_ERR_FP_VERSION_MISMATCH  -1200
-#define AX_ERR_FP_IDENT_MISMATCH    -1201
+#define SG_ERR_UNKNOWN              -1000
+#define SG_ERR_DUPLICATE_MESSAGE    -1001
+#define SG_ERR_INVALID_KEY          -1002
+#define SG_ERR_INVALID_KEY_ID       -1003
+#define SG_ERR_INVALID_MAC          -1004
+#define SG_ERR_INVALID_MESSAGE      -1005
+#define SG_ERR_INVALID_VERSION      -1006
+#define SG_ERR_LEGACY_MESSAGE       -1007
+#define SG_ERR_NO_SESSION           -1008
+#define SG_ERR_STALE_KEY_EXCHANGE   -1009
+#define SG_ERR_UNTRUSTED_IDENTITY   -1010
+#define SG_ERR_INVALID_PROTO_BUF    -1100
+#define SG_ERR_FP_VERSION_MISMATCH  -1200
+#define SG_ERR_FP_IDENT_MISMATCH    -1201
 
 /*
  * Minimum negative error code value that this library may use.
@@ -44,36 +44,36 @@ extern "C" {
  * less than this constant will ensure that application-specific
  * errors can be distinguished from library errors.
  */
-#define AX_ERR_MINIMUM              -9999
+#define SG_ERR_MINIMUM              -9999
 
 /* Log levels */
-#define AX_LOG_ERROR   0
-#define AX_LOG_WARNING 1
-#define AX_LOG_NOTICE  2
-#define AX_LOG_INFO    3
-#define AX_LOG_DEBUG   4
+#define SG_LOG_ERROR   0
+#define SG_LOG_WARNING 1
+#define SG_LOG_NOTICE  2
+#define SG_LOG_INFO    3
+#define SG_LOG_DEBUG   4
 
 /* Mode settings for the crypto callbacks */
-#define AX_CIPHER_AES_CTR_NOPADDING 1
-#define AX_CIPHER_AES_CBC_PKCS5     2
+#define SG_CIPHER_AES_CTR_NOPADDING 1
+#define SG_CIPHER_AES_CBC_PKCS5     2
 
-void axolotl_type_ref(axolotl_type_base *instance);
-void axolotl_type_unref(axolotl_type_base *instance);
+void signal_type_ref(signal_type_base *instance);
+void signal_type_unref(signal_type_base *instance);
 
 #ifdef DEBUG_REFCOUNT
-int axolotl_type_ref_count(axolotl_type_base *instance);
-#define AXOLOTL_REF(instance) do { \
-    axolotl_type_ref((axolotl_type_base *)instance); \
-    fprintf(stderr, "REF: " #instance " = %d\n", axolotl_type_ref_count((axolotl_type_base *)instance)); \
+int signal_type_ref_count(signal_type_base *instance);
+#define SIGNAL_REF(instance) do { \
+    signal_type_ref((signal_type_base *)instance); \
+    fprintf(stderr, "REF: " #instance " = %d\n", signal_type_ref_count((signal_type_base *)instance)); \
     } while (0)
-#define AXOLOTL_UNREF(instance) do { \
-    fprintf(stderr, "UNREF: " #instance " = %d\n", axolotl_type_ref_count((axolotl_type_base *)instance)); \
-    axolotl_type_unref((axolotl_type_base *)instance); \
+#define SIGNAL_UNREF(instance) do { \
+    fprintf(stderr, "UNREF: " #instance " = %d\n", signal_type_ref_count((signal_type_base *)instance)); \
+    signal_type_unref((signal_type_base *)instance); \
     instance = 0; \
     } while(0)
 #else
-#define AXOLOTL_REF(instance) axolotl_type_ref((axolotl_type_base *)instance)
-#define AXOLOTL_UNREF(instance) do { axolotl_type_unref((axolotl_type_base *)instance); instance = 0; } while(0)
+#define SIGNAL_REF(instance) signal_type_ref((signal_type_base *)instance)
+#define SIGNAL_UNREF(instance) do { signal_type_unref((signal_type_base *)instance); instance = 0; } while(0)
 #endif
 
 /**
@@ -82,7 +82,7 @@ int axolotl_type_ref_count(axolotl_type_base *instance);
  * @param len length of the buffer to allocate
  * @return pointer to the allocated buffer, or 0 on failure
  */
-axolotl_buffer *axolotl_buffer_alloc(size_t len);
+signal_buffer *signal_buffer_alloc(size_t len);
 
 /**
  * Create a new buffer and copy the provided data into it.
@@ -91,7 +91,7 @@ axolotl_buffer *axolotl_buffer_alloc(size_t len);
  * @param len length of the data
  * @return pointer to the allocated buffer, or 0 on failure
  */
-axolotl_buffer *axolotl_buffer_create(const uint8_t *data, size_t len);
+signal_buffer *signal_buffer_create(const uint8_t *data, size_t len);
 
 /**
  * Create a copy of an existing buffer.
@@ -99,7 +99,7 @@ axolotl_buffer *axolotl_buffer_create(const uint8_t *data, size_t len);
  * @param buffer the existing buffer to copy
  * @return pointer to the updated buffer, or 0 on failure
  */
-axolotl_buffer *axolotl_buffer_copy(const axolotl_buffer *buffer);
+signal_buffer *signal_buffer_copy(const signal_buffer *buffer);
 
 /**
  * Append the provided data to an existing buffer.
@@ -112,7 +112,7 @@ axolotl_buffer *axolotl_buffer_copy(const axolotl_buffer *buffer);
  * @param len length of the data
  * @return pointer to the updated buffer, or 0 on failure
  */
-axolotl_buffer *axolotl_buffer_append(axolotl_buffer *buffer, const uint8_t *data, size_t len);
+signal_buffer *signal_buffer_append(signal_buffer *buffer, const uint8_t *data, size_t len);
 
 /**
  * Gets the data pointer for the buffer.
@@ -121,7 +121,7 @@ axolotl_buffer *axolotl_buffer_append(axolotl_buffer *buffer, const uint8_t *dat
  * @param buffer pointer to the buffer instance
  * @return data pointer
  */
-uint8_t *axolotl_buffer_data(axolotl_buffer *buffer);
+uint8_t *signal_buffer_data(signal_buffer *buffer);
 
 /**
  * Gets the length of the data stored within the buffer.
@@ -129,7 +129,7 @@ uint8_t *axolotl_buffer_data(axolotl_buffer *buffer);
  * @param buffer pointer to the buffer instance
  * @return data length
  */
-size_t axolotl_buffer_len(axolotl_buffer *buffer);
+size_t signal_buffer_len(signal_buffer *buffer);
 
 /**
  * Compare two buffers.
@@ -138,14 +138,14 @@ size_t axolotl_buffer_len(axolotl_buffer *buffer);
  * @param buffer2 second buffer to compare
  * @return 0 if the two buffers are equal, negative or positive otherwise
  */
-int axolotl_buffer_compare(axolotl_buffer *buffer1, axolotl_buffer *buffer2);
+int signal_buffer_compare(signal_buffer *buffer1, signal_buffer *buffer2);
 
 /**
  * Free the data buffer.
  *
  * @param buffer pointer to the buffer instance to free
  */
-void axolotl_buffer_free(axolotl_buffer *buffer);
+void signal_buffer_free(signal_buffer *buffer);
 
 /**
  * Zero and free the data buffer.
@@ -154,14 +154,14 @@ void axolotl_buffer_free(axolotl_buffer *buffer);
  *
  * @param buffer pointer to the buffer instance to free
  */
-void axolotl_buffer_bzero_free(axolotl_buffer *buffer);
+void signal_buffer_bzero_free(signal_buffer *buffer);
 
 /**
  * Allocate a new buffer list.
  *
  * @return pointer to the allocated buffer, or 0 on failure
  */
-axolotl_buffer_list *axolotl_buffer_list_alloc(void);
+signal_buffer_list *signal_buffer_list_alloc(void);
 
 /**
  * Push the provided buffer onto the head of the list.
@@ -170,7 +170,7 @@ axolotl_buffer_list *axolotl_buffer_list_alloc(void);
  * @param buffer the buffer to push
  * @return 0 on success, or negative on failure
  */
-int axolotl_buffer_list_push(axolotl_buffer_list *list, axolotl_buffer *buffer);
+int signal_buffer_list_push(signal_buffer_list *list, signal_buffer *buffer);
 
 /**
  * Gets the size of the buffer list.
@@ -178,21 +178,21 @@ int axolotl_buffer_list_push(axolotl_buffer_list *list, axolotl_buffer *buffer);
  * @param list the buffer list
  * @return the size of the list
  */
-int axolotl_buffer_list_size(axolotl_buffer_list *list);
+int signal_buffer_list_size(signal_buffer_list *list);
 
 /**
  * Free the buffer list, including all the buffers added to it.
  *
  * @param list the buffer list
  */
-void axolotl_buffer_list_free(axolotl_buffer_list *list);
+void signal_buffer_list_free(signal_buffer_list *list);
 
 /**
  * Allocate a new int list
  *
  * @return pointer to the allocated buffer, or 0 on failure
  */
-axolotl_int_list *axolotl_int_list_alloc(void);
+signal_int_list *signal_int_list_alloc(void);
 
 /**
  * Push a new value onto the end of the list
@@ -200,7 +200,7 @@ axolotl_int_list *axolotl_int_list_alloc(void);
  * @param list the list
  * @param value the value to push
  */
-void axolotl_int_list_push_back(axolotl_int_list *list, int value);
+void signal_int_list_push_back(signal_int_list *list, int value);
 
 /**
  * Gets the size of the list.
@@ -208,7 +208,7 @@ void axolotl_int_list_push_back(axolotl_int_list *list, int value);
  * @param list the list
  * @return the size of the list
  */
-unsigned int axolotl_int_list_size(axolotl_int_list *list);
+unsigned int signal_int_list_size(signal_int_list *list);
 
 /**
  * Gets the value of the element at a particular index in the list
@@ -217,15 +217,15 @@ unsigned int axolotl_int_list_size(axolotl_int_list *list);
  * @param index the index within the list
  * @return the value
  */
-int axolotl_int_list_at(axolotl_int_list *list, unsigned int index);
+int signal_int_list_at(signal_int_list *list, unsigned int index);
 
 /**
  * Free the int list
  * @param list the list to free
  */
-void axolotl_int_list_free(axolotl_int_list *list);
+void signal_int_list_free(signal_int_list *list);
 
-typedef struct axolotl_crypto_provider {
+typedef struct signal_crypto_provider {
     /**
      * Callback for a secure random number generator.
      * This function shall fill the provided buffer with random bytes.
@@ -267,7 +267,7 @@ typedef struct axolotl_crypto_provider {
      * @param output buffer to be allocated and populated with the result
      * @return 0 on success, negative on failure
      */
-    int (*hmac_sha256_final_func)(void *hmac_context, axolotl_buffer **output, void *user_data);
+    int (*hmac_sha256_final_func)(void *hmac_context, signal_buffer **output, void *user_data);
 
     /**
      * Callback for an HMAC-SHA256 implementation.
@@ -287,13 +287,13 @@ typedef struct axolotl_crypto_provider {
      * @param data_len length of the data
      * @return 0 on success, negative on failure
      */
-    int (*sha512_digest_func)(axolotl_buffer **output, const uint8_t *data, size_t data_len, void *user_data);
+    int (*sha512_digest_func)(signal_buffer **output, const uint8_t *data, size_t data_len, void *user_data);
 
     /**
      * Callback for an AES encryption implementation.
      *
      * @param output buffer to be allocated and populated with the ciphertext
-     * @param cipher specific cipher variant to use, either AX_CIPHER_AES_CTR_NOPADDING or AX_CIPHER_AES_CBC_PKCS5
+     * @param cipher specific cipher variant to use, either SG_CIPHER_AES_CTR_NOPADDING or SG_CIPHER_AES_CBC_PKCS5
      * @param key the encryption key
      * @param key_len length of the encryption key
      * @param iv the initialization vector
@@ -302,7 +302,7 @@ typedef struct axolotl_crypto_provider {
      * @param plaintext_len length of the plaintext
      * @return 0 on success, negative on failure
      */
-    int (*encrypt_func)(axolotl_buffer **output,
+    int (*encrypt_func)(signal_buffer **output,
             int cipher,
             const uint8_t *key, size_t key_len,
             const uint8_t *iv, size_t iv_len,
@@ -313,7 +313,7 @@ typedef struct axolotl_crypto_provider {
      * Callback for an AES decryption implementation.
      *
      * @param output buffer to be allocated and populated with the plaintext
-     * @param cipher specific cipher variant to use, either AX_CIPHER_AES_CTR_NOPADDING or AX_CIPHER_AES_CBC_PKCS5
+     * @param cipher specific cipher variant to use, either SG_CIPHER_AES_CTR_NOPADDING or SG_CIPHER_AES_CBC_PKCS5
      * @param key the encryption key
      * @param key_len length of the encryption key
      * @param iv the initialization vector
@@ -322,7 +322,7 @@ typedef struct axolotl_crypto_provider {
      * @param ciphertext_len length of the ciphertext
      * @return 0 on success, negative on failure
      */
-    int (*decrypt_func)(axolotl_buffer **output,
+    int (*decrypt_func)(signal_buffer **output,
             int cipher,
             const uint8_t *key, size_t key_len,
             const uint8_t *iv, size_t iv_len,
@@ -331,7 +331,7 @@ typedef struct axolotl_crypto_provider {
 
     /** User data pointer */
     void *user_data;
-} axolotl_crypto_provider;
+} signal_crypto_provider;
 
 typedef struct axolotl_session_store {
     /**
@@ -344,7 +344,7 @@ typedef struct axolotl_session_store {
      * @param address the address of the remote client
      * @return 1 if the session was loaded, 0 if the session was not found, negative on failure
      */
-    int (*load_session_func)(axolotl_buffer **record, const axolotl_address *address, void *user_data);
+    int (*load_session_func)(signal_buffer **record, const axolotl_address *address, void *user_data);
 
     /**
      * Returns all known devices with active sessions for a recipient
@@ -354,7 +354,7 @@ typedef struct axolotl_session_store {
      * @param name_len the length of the name
      * @return size of the sessions array, or negative on failure
      */
-    int (*get_sub_device_sessions_func)(axolotl_int_list **sessions, const char *name, size_t name_len, void *user_data);
+    int (*get_sub_device_sessions_func)(signal_int_list **sessions, const char *name, size_t name_len, void *user_data);
 
     /**
      * Commit to storage the session record for a given
@@ -412,10 +412,10 @@ typedef struct axolotl_pre_key_store {
      *     if found. Unset if no record was found.
      *     The axolotl library is responsible for freeing this buffer.
      * @param pre_key_id the ID of the local serialized PreKey record
-     * @retval AX_SUCCESS if the key was found
-     * @retval AX_ERR_INVALID_KEY_ID if the key could not be found
+     * @retval SG_SUCCESS if the key was found
+     * @retval SG_ERR_INVALID_KEY_ID if the key could not be found
      */
-    int (*load_pre_key)(axolotl_buffer **record, uint32_t pre_key_id, void *user_data);
+    int (*load_pre_key)(signal_buffer **record, uint32_t pre_key_id, void *user_data);
 
     /**
      * Store a local serialized PreKey record.
@@ -462,10 +462,10 @@ typedef struct axolotl_signed_pre_key_store {
      *     if found. Unset if no record was found.
      *     The axolotl library is responsible for freeing this buffer.
      * @param signed_pre_key_id the ID of the local signed PreKey record
-     * @retval AX_SUCCESS if the key was found
-     * @retval AX_ERR_INVALID_KEY_ID if the key could not be found
+     * @retval SG_SUCCESS if the key was found
+     * @retval SG_ERR_INVALID_KEY_ID if the key could not be found
      */
-    int (*load_signed_pre_key)(axolotl_buffer **record, uint32_t signed_pre_key_id, void *user_data);
+    int (*load_signed_pre_key)(signal_buffer **record, uint32_t signed_pre_key_id, void *user_data);
 
     /**
      * Store a local serialized signed PreKey record.
@@ -516,7 +516,7 @@ typedef struct axolotl_identity_key_store {
      *     The axolotl library is responsible for freeing this buffer.
      * @return 0 on success, negative on failure
      */
-    int (*get_identity_key_pair)(axolotl_buffer **public_data, axolotl_buffer **private_data, void *user_data);
+    int (*get_identity_key_pair)(signal_buffer **public_data, signal_buffer **private_data, void *user_data);
 
     /**
      * Return the local client's registration ID.
@@ -597,7 +597,7 @@ typedef struct axolotl_sender_key_store {
      * @param sender_key_name the (groupId + senderId + deviceId) tuple
      * @return 1 if the record was loaded, 0 if the record was not found, negative on failure
      */
-    int (*load_sender_key)(axolotl_buffer **record, const axolotl_sender_key_name *sender_key_name, void *user_data);
+    int (*load_sender_key)(signal_buffer **record, const axolotl_sender_key_name *sender_key_name, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being
@@ -612,20 +612,20 @@ typedef struct axolotl_sender_key_store {
 /**
  * Create a new instance of the global library context.
  */
-int axolotl_context_create(axolotl_context **context, void *user_data);
+int signal_context_create(signal_context **context, void *user_data);
 
 /**
- * Set the crypto provider to be used by the AXOLOTL library.
+ * Set the crypto provider to be used by the Signal Protocol library.
  *
  * @param crypto_provider Populated structure of crypto provider function
  *     pointers. The contents of this structure are copied, so the caller
  *     does not need to maintain its instance.
  * @return 0 on success, negative on failure
  */
-int axolotl_context_set_crypto_provider(axolotl_context *context, const axolotl_crypto_provider *crypto_provider);
+int signal_context_set_crypto_provider(signal_context *context, const signal_crypto_provider *crypto_provider);
 
 /**
- * Set the locking functions to be used by the AXOLOTL library for
+ * Set the locking functions to be used by the Signal Protocol library for
  * synchronization.
  *
  * Note: These functions must allow recursive locking (e.g. PTHREAD_MUTEX_RECURSIVE)
@@ -634,23 +634,23 @@ int axolotl_context_set_crypto_provider(axolotl_context *context, const axolotl_
  * @param unlock function to unlock a mutex
  * @return 0 on success, negative on failure
  */
-int axolotl_context_set_locking_functions(axolotl_context *context,
+int signal_context_set_locking_functions(signal_context *context,
         void (*lock)(void *user_data), void (*unlock)(void *user_data));
 
 /**
- * Set the log function to be used by the AXOLOTL library for logging.
+ * Set the log function to be used by the Signal Protocol library for logging.
  *
  * @return 0 on success, negative on failure
  */
-int axolotl_context_set_log_function(axolotl_context *context,
+int signal_context_set_log_function(signal_context *context,
         void (*log)(int level, const char *message, size_t len, void *user_data));
 
-void axolotl_context_destroy(axolotl_context *context);
+void signal_context_destroy(signal_context *context);
 
 /**
  * Create a new instance of the AXOLOTL data store interface.
  */
-int axolotl_store_context_create(axolotl_store_context **context, axolotl_context *global_context);
+int axolotl_store_context_create(axolotl_store_context **context, signal_context *global_context);
 
 int axolotl_store_context_set_session_store(axolotl_store_context *context, const axolotl_session_store *store);
 int axolotl_store_context_set_pre_key_store(axolotl_store_context *context, const axolotl_pre_key_store *store);
@@ -668,7 +668,7 @@ void axolotl_store_context_destroy(axolotl_store_context *context);
  */
 
 int axolotl_session_load_session(axolotl_store_context *context, session_record **record, const axolotl_address *address);
-int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, axolotl_int_list **sessions, const char *name, size_t name_len);
+int axolotl_session_get_sub_device_sessions(axolotl_store_context *context, signal_int_list **sessions, const char *name, size_t name_len);
 int axolotl_session_store_session(axolotl_store_context *context, const axolotl_address *address, session_record *record);
 int axolotl_session_contains_session(axolotl_store_context *context, const axolotl_address *address);
 int axolotl_session_delete_session(axolotl_store_context *context, const axolotl_address *address);

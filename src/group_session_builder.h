@@ -35,7 +35,7 @@ extern "C" {
  * @return 0 on success, or negative on failure
  */
 int group_session_builder_create(group_session_builder **builder,
-        axolotl_store_context *store, axolotl_context *global_context);
+        axolotl_store_context *store, signal_context *global_context);
 
 /**
  * Construct a group session for receiving messages from senderKeyName.

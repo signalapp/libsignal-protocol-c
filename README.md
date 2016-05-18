@@ -77,10 +77,10 @@ of functions used across the library that need client-specific implementations.
 Refer to "axolotl.h" for detailed documentation on these functions, and the unit
 tests for example implementations.
 
-    axolotl_context *global_context;    
-    axolotl_context_create(&global_context, user_data);
-    axolotl_context_set_crypto_provider(global_context, &provider);
-    axolotl_context_set_locking_functions(global_context, lock_function, unlock_function);
+    signal_context *global_context;    
+    signal_context_create(&global_context, user_data);
+    signal_context_set_crypto_provider(global_context, &provider);
+    signal_context_set_locking_functions(global_context, lock_function, unlock_function);
 
 ## Client install time
 
@@ -155,12 +155,12 @@ is fairly straightforward:
     session_cipher_encrypt(cipher, message, message_len, &encrypted_message);
 
     /* Get the serialized content and deliver it */
-    axolotl_buffer *serialized = ciphertext_message_get_serialized(encrypted_message);
+    signal_buffer *serialized = ciphertext_message_get_serialized(encrypted_message);
     
-    deliver(axolotl_buffer_data(serialized), axolotl_buffer_len(serialized));
+    deliver(signal_buffer_data(serialized), signal_buffer_len(serialized));
 
     /* Cleanup */
-    AXOLOTL_UNREF(encrypted_message);
+    SIGNAL_UNREF(encrypted_message);
     session_cipher_free(cipher);
     session_builder_free(builder);
     axolotl_store_context_destroy(store_context);
@@ -175,16 +175,16 @@ return, a corresponding way of deallocating an instance of that data type
 is provided.
 
 The more basic and higher level data types provide a type-specific free or
-destroy function. These types include `axolotl_context`,
-`axolotl_store_context`, `axolotl_buffer`, `axolotl_buffer_list`,
-`axolotl_int_list`, `axolotl_key_helper_pre_key_list_node`, `session_builder`,
+destroy function. These types include `signal_context`,
+`axolotl_store_context`, `signal_buffer`, `signal_buffer_list`,
+`signal_int_list`, `axolotl_key_helper_pre_key_list_node`, `session_builder`,
 `session_cipher`, `group_session_builder`, `group_cipher`, and
 `fingerprint_generator`.
 
 Most of the other data types, including everything internal, use a reference
 counting mechanism. If you are going to hold onto a reference to one of these
-types, use the `AXOLOTL_REF(x)` macro to increment its count. If you are done
-with a reference, use `AXOLOTL_UNREF(x)` to decrement its count. When the count
+types, use the `SIGNAL_REF(x)` macro to increment its count. If you are done
+with a reference, use `SIGNAL_UNREF(x)` to decrement its count. When the count
 reaches 0, the type's destructor function is called.
 
 # Legal things

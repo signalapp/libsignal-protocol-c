@@ -8,21 +8,21 @@
 #include "ratchet.h"
 #include "test_common.h"
 
-axolotl_context *global_context;
+signal_context *global_context;
 
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
     setup_test_crypto_provider(global_context);
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 START_TEST(test_serialize_key_exchange_message)
@@ -46,11 +46,11 @@ START_TEST(test_serialize_key_exchange_message)
             ratchet_key, identity_key);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *serialized = key_exchange_message_get_serialized(message);
+    signal_buffer *serialized = key_exchange_message_get_serialized(message);
 
     result = key_exchange_message_deserialize(&result_message,
-            axolotl_buffer_data(serialized),
-            axolotl_buffer_len(serialized), global_context);
+            signal_buffer_data(serialized),
+            signal_buffer_len(serialized), global_context);
     ck_assert_int_eq(result, 0);
 
     int version1 = key_exchange_message_get_version(message);
@@ -86,11 +86,11 @@ START_TEST(test_serialize_key_exchange_message)
     ck_assert_int_eq(sequence1, sequence2);
 
     /* Cleanup */
-    AXOLOTL_UNREF(message);
-    AXOLOTL_UNREF(result_message);
-    AXOLOTL_UNREF(base_key);
-    AXOLOTL_UNREF(ratchet_key);
-    AXOLOTL_UNREF(identity_key);
+    SIGNAL_UNREF(message);
+    SIGNAL_UNREF(result_message);
+    SIGNAL_UNREF(base_key);
+    SIGNAL_UNREF(ratchet_key);
+    SIGNAL_UNREF(identity_key);
 }
 END_TEST
 
@@ -108,9 +108,9 @@ void compare_signal_messages(signal_message *message1, signal_message *message2)
     int counter2 = signal_message_get_counter(message2);
     ck_assert_int_eq(counter1, counter2);
 
-    axolotl_buffer *body1 = signal_message_get_body(message1);
-    axolotl_buffer *body2 = signal_message_get_body(message2);
-    ck_assert_int_eq(axolotl_buffer_compare(body1, body2), 0);
+    signal_buffer *body1 = signal_message_get_body(message1);
+    signal_buffer *body2 = signal_message_get_body(message2);
+    ck_assert_int_eq(signal_buffer_compare(body1, body2), 0);
 }
 
 START_TEST(test_serialize_signal_message)
@@ -137,12 +137,12 @@ START_TEST(test_serialize_signal_message)
             global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)message);
+    signal_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)message);
     ck_assert_ptr_ne(serialized, 0);
 
     result = signal_message_deserialize(&result_message,
-            axolotl_buffer_data(serialized),
-            axolotl_buffer_len(serialized),
+            signal_buffer_data(serialized),
+            signal_buffer_len(serialized),
             global_context);
     ck_assert_int_eq(result, 0);
 
@@ -155,11 +155,11 @@ START_TEST(test_serialize_signal_message)
     ck_assert_int_eq(result, 1);
 
     /* Cleanup */
-    AXOLOTL_UNREF(message);
-    AXOLOTL_UNREF(result_message);
-    AXOLOTL_UNREF(sender_ratchet_key);
-    AXOLOTL_UNREF(sender_identity_key);
-    AXOLOTL_UNREF(receiver_identity_key);
+    SIGNAL_UNREF(message);
+    SIGNAL_UNREF(result_message);
+    SIGNAL_UNREF(sender_ratchet_key);
+    SIGNAL_UNREF(sender_identity_key);
+    SIGNAL_UNREF(receiver_identity_key);
 }
 END_TEST
 
@@ -201,12 +201,12 @@ START_TEST(test_serialize_pre_key_signal_message)
             global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)pre_key_message);
+    signal_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)pre_key_message);
     ck_assert_ptr_ne(serialized, 0);
 
     result = pre_key_signal_message_deserialize(&result_pre_key_message,
-            axolotl_buffer_data(serialized),
-            axolotl_buffer_len(serialized),
+            signal_buffer_data(serialized),
+            signal_buffer_len(serialized),
             global_context);
     ck_assert_int_eq(result, 0);
 
@@ -245,14 +245,14 @@ START_TEST(test_serialize_pre_key_signal_message)
     compare_signal_messages(message1, message2);
 
     /* Cleanup */
-    AXOLOTL_UNREF(message);
-    AXOLOTL_UNREF(result_pre_key_message);
-    AXOLOTL_UNREF(pre_key_message);
-    AXOLOTL_UNREF(sender_ratchet_key);
-    AXOLOTL_UNREF(sender_identity_key);
-    AXOLOTL_UNREF(receiver_identity_key);
-    AXOLOTL_UNREF(base_key);
-    AXOLOTL_UNREF(identity_key);
+    SIGNAL_UNREF(message);
+    SIGNAL_UNREF(result_pre_key_message);
+    SIGNAL_UNREF(pre_key_message);
+    SIGNAL_UNREF(sender_ratchet_key);
+    SIGNAL_UNREF(sender_identity_key);
+    SIGNAL_UNREF(receiver_identity_key);
+    SIGNAL_UNREF(base_key);
+    SIGNAL_UNREF(identity_key);
 }
 END_TEST
 
@@ -278,12 +278,12 @@ START_TEST(test_serialize_sender_key_message)
     result = sender_key_message_verify_signature(message, ec_key_pair_get_public(signature_key_pair));
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)message);
+    signal_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)message);
     ck_assert_ptr_ne(serialized, 0);
 
     result = sender_key_message_deserialize(&result_message,
-            axolotl_buffer_data(serialized),
-            axolotl_buffer_len(serialized),
+            signal_buffer_data(serialized),
+            signal_buffer_len(serialized),
             global_context);
     ck_assert_int_eq(result, 0);
 
@@ -298,14 +298,14 @@ START_TEST(test_serialize_sender_key_message)
     int iteration2 = sender_key_message_get_iteration(result_message);
     ck_assert_int_eq(iteration1, iteration2);
 
-    axolotl_buffer *ciphertext1 = sender_key_message_get_ciphertext(message);
-    axolotl_buffer *ciphertext2 = sender_key_message_get_ciphertext(result_message);
-    ck_assert_int_eq(axolotl_buffer_compare(ciphertext1, ciphertext2), 0);
+    signal_buffer *ciphertext1 = sender_key_message_get_ciphertext(message);
+    signal_buffer *ciphertext2 = sender_key_message_get_ciphertext(result_message);
+    ck_assert_int_eq(signal_buffer_compare(ciphertext1, ciphertext2), 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(message);
-    AXOLOTL_UNREF(result_message);
-    AXOLOTL_UNREF(signature_key_pair);
+    SIGNAL_UNREF(message);
+    SIGNAL_UNREF(result_message);
+    SIGNAL_UNREF(signature_key_pair);
 }
 END_TEST
 
@@ -325,12 +325,12 @@ START_TEST(test_serialize_sender_key_distribution_message)
             global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)message);
+    signal_buffer *serialized = ciphertext_message_get_serialized((ciphertext_message *)message);
     ck_assert_ptr_ne(serialized, 0);
 
     result = sender_key_distribution_message_deserialize(&result_message,
-            axolotl_buffer_data(serialized),
-            axolotl_buffer_len(serialized),
+            signal_buffer_data(serialized),
+            signal_buffer_len(serialized),
             global_context);
     ck_assert_int_eq(result, 0);
 
@@ -342,18 +342,18 @@ START_TEST(test_serialize_sender_key_distribution_message)
     int iteration2 = sender_key_distribution_message_get_iteration(result_message);
     ck_assert_int_eq(iteration1, iteration2);
 
-    axolotl_buffer *chain_key1 = sender_key_distribution_message_get_chain_key(message);
-    axolotl_buffer *chain_key2 = sender_key_distribution_message_get_chain_key(result_message);
-    ck_assert_int_eq(axolotl_buffer_compare(chain_key1, chain_key2), 0);
+    signal_buffer *chain_key1 = sender_key_distribution_message_get_chain_key(message);
+    signal_buffer *chain_key2 = sender_key_distribution_message_get_chain_key(result_message);
+    ck_assert_int_eq(signal_buffer_compare(chain_key1, chain_key2), 0);
 
     ec_public_key *signature_key1 = sender_key_distribution_message_get_signature_key(message);
     ec_public_key *signature_key2 = sender_key_distribution_message_get_signature_key(result_message);
     ck_assert_int_eq(ec_public_key_compare(signature_key1, signature_key2), 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(message);
-    AXOLOTL_UNREF(result_message);
-    AXOLOTL_UNREF(signature_key);
+    SIGNAL_UNREF(message);
+    SIGNAL_UNREF(result_message);
+    SIGNAL_UNREF(signature_key);
 }
 END_TEST
 

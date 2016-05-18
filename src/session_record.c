@@ -19,34 +19,34 @@ struct session_record_state_node
 
 struct session_record
 {
-    axolotl_type_base base;
+    signal_type_base base;
     session_state *state;
     session_record_state_node *previous_states_head;
     int is_fresh;
-    axolotl_context *global_context;
+    signal_context *global_context;
 };
 
 static void session_record_free_previous_states(session_record *record);
 
-int session_record_create(session_record **record, session_state *state, axolotl_context *global_context)
+int session_record_create(session_record **record, session_state *state, signal_context *global_context)
 {
     session_record *result = malloc(sizeof(session_record));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result, 0, sizeof(session_record));
-    AXOLOTL_INIT(result, session_record_destroy);
+    SIGNAL_INIT(result, session_record_destroy);
 
     if(!state) {
         int ret = session_state_create(&result->state, global_context);
         if(ret < 0) {
-            AXOLOTL_UNREF(result);
+            SIGNAL_UNREF(result);
             return ret;
         }
         result->is_fresh = 1;
     }
     else {
-        AXOLOTL_REF(state);
+        SIGNAL_REF(state);
         result->state = state;
         result->is_fresh = 0;
     }
@@ -56,21 +56,21 @@ int session_record_create(session_record **record, session_state *state, axolotl
     return 0;
 }
 
-int session_record_serialize(axolotl_buffer **buffer, const session_record *record)
+int session_record_serialize(signal_buffer **buffer, const session_record *record)
 {
     int result = 0;
     size_t result_size = 0;
     unsigned int i = 0;
     Textsecure__RecordStructure record_structure = TEXTSECURE__RECORD_STRUCTURE__INIT;
     session_record_state_node *cur_node = 0;
-    axolotl_buffer *result_buf = 0;
+    signal_buffer *result_buf = 0;
     size_t len = 0;
     uint8_t *data = 0;
 
     if(record->state) {
         record_structure.currentsession = malloc(sizeof(Textsecure__SessionStructure));
         if(!record_structure.currentsession) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
         textsecure__session_structure__init(record_structure.currentsession);
@@ -85,13 +85,13 @@ int session_record_serialize(axolotl_buffer **buffer, const session_record *reco
         DL_COUNT(record->previous_states_head, cur_node, count);
 
         if(count > SIZE_MAX / sizeof(Textsecure__SessionStructure *)) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
         record_structure.previoussessions = malloc(sizeof(Textsecure__SessionStructure *) * count);
         if(!record_structure.previoussessions) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
@@ -99,7 +99,7 @@ int session_record_serialize(axolotl_buffer **buffer, const session_record *reco
         DL_FOREACH(record->previous_states_head, cur_node) {
             record_structure.previoussessions[i] = malloc(sizeof(Textsecure__SessionStructure));
             if(!record_structure.previoussessions[i]) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 break;
             }
             textsecure__session_structure__init(record_structure.previoussessions[i]);
@@ -117,17 +117,17 @@ int session_record_serialize(axolotl_buffer **buffer, const session_record *reco
 
     len = textsecure__record_structure__get_packed_size(&record_structure);
 
-    result_buf = axolotl_buffer_alloc(len);
+    result_buf = signal_buffer_alloc(len);
     if(!result_buf) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    data = axolotl_buffer_data(result_buf);
+    data = signal_buffer_data(result_buf);
     result_size = textsecure__record_structure__pack(&record_structure, data);
     if(result_size != len) {
-        axolotl_buffer_free(result_buf);
-        result = AX_ERR_INVALID_PROTO_BUF;
+        signal_buffer_free(result_buf);
+        result = SG_ERR_INVALID_PROTO_BUF;
         result_buf = 0;
         goto complete;
     }
@@ -151,7 +151,7 @@ complete:
     return result;
 }
 
-int session_record_deserialize(session_record **record, const uint8_t *data, size_t len, axolotl_context *global_context)
+int session_record_deserialize(session_record **record, const uint8_t *data, size_t len, signal_context *global_context)
 {
     int result = 0;
     session_record *result_record = 0;
@@ -161,7 +161,7 @@ int session_record_deserialize(session_record **record, const uint8_t *data, siz
 
     record_structure = textsecure__record_structure__unpack(0, len, data);
     if(!record_structure) {
-        result = AX_ERR_INVALID_PROTO_BUF;
+        result = SG_ERR_INVALID_PROTO_BUF;
         goto complete;
     }
 
@@ -176,7 +176,7 @@ int session_record_deserialize(session_record **record, const uint8_t *data, siz
     if(result < 0) {
         goto complete;
     }
-    AXOLOTL_UNREF(current_state);
+    SIGNAL_UNREF(current_state);
     current_state = 0;
     result_record->is_fresh = 0;
 
@@ -188,7 +188,7 @@ int session_record_deserialize(session_record **record, const uint8_t *data, siz
 
             session_record_state_node *node = malloc(sizeof(session_record_state_node));
             if(!node) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
 
@@ -209,7 +209,7 @@ complete:
         textsecure__record_structure__free_unpacked(record_structure, 0);
     }
     if(current_state) {
-        AXOLOTL_UNREF(current_state);
+        SIGNAL_UNREF(current_state);
     }
     if(previous_states_head) {
         session_record_state_node *cur_node;
@@ -221,7 +221,7 @@ complete:
     }
     if(result_record) {
         if(result < 0) {
-            AXOLOTL_UNREF(result_record);
+            SIGNAL_UNREF(result_record);
         }
         else {
             *record = result_record;
@@ -231,10 +231,10 @@ complete:
     return result;
 }
 
-int session_record_copy(session_record **record, session_record *other_record, axolotl_context *global_context)
+int session_record_copy(session_record **record, session_record *other_record, signal_context *global_context)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     size_t len = 0;
     uint8_t *data = 0;
 
@@ -246,8 +246,8 @@ int session_record_copy(session_record **record, session_record *other_record, a
         goto complete;
     }
 
-    data = axolotl_buffer_data(buffer);
-    len = axolotl_buffer_len(buffer);
+    data = signal_buffer_data(buffer);
+    len = signal_buffer_len(buffer);
 
     result = session_record_deserialize(record, data, len, global_context);
     if(result < 0) {
@@ -256,7 +256,7 @@ int session_record_copy(session_record **record, session_record *other_record, a
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     return result;
 }
@@ -297,9 +297,9 @@ void session_record_set_state(session_record *record, session_state *state)
     assert(record);
     assert(state);
     if(record->state) {
-        AXOLOTL_UNREF(record->state);
+        SIGNAL_UNREF(record->state);
     }
-    AXOLOTL_REF(state);
+    SIGNAL_REF(state);
     record->state = state;
 }
 
@@ -330,7 +330,7 @@ session_record_state_node *session_record_get_previous_states_remove(session_rec
 
     next_node = node->next;
     DL_DELETE(record->previous_states_head, node);
-    AXOLOTL_UNREF(node->state);
+    SIGNAL_UNREF(node->state);
     free(node);
     return next_node;
 }
@@ -356,7 +356,7 @@ int session_record_archive_current_state(session_record *record)
     result = session_record_promote_state(record, new_state);
 
 complete:
-    AXOLOTL_UNREF(new_state);
+    SIGNAL_UNREF(new_state);
     return result;
 }
 
@@ -373,7 +373,7 @@ int session_record_promote_state(session_record *record, session_state *promoted
     if(record->state) {
         session_record_state_node *node = malloc(sizeof(session_record_state_node));
         if(!node) {
-            return AX_ERR_NOMEM;
+            return SG_ERR_NOMEM;
         }
 
         node->state = record->state;
@@ -382,7 +382,7 @@ int session_record_promote_state(session_record *record, session_state *promoted
     }
 
     // Make the promoted state the current state
-    AXOLOTL_REF(promoted_state);
+    SIGNAL_REF(promoted_state);
     record->state = promoted_state;
 
     // Remove any previous nodes beyond the maximum length
@@ -391,7 +391,7 @@ int session_record_promote_state(session_record *record, session_state *promoted
         if(count > ARCHIVED_STATES_MAX_LENGTH) {
             DL_DELETE(record->previous_states_head, cur_node);
             if(cur_node->state) {
-                AXOLOTL_UNREF(cur_node->state);
+                SIGNAL_UNREF(cur_node->state);
             }
             free(cur_node);
         }
@@ -407,19 +407,19 @@ static void session_record_free_previous_states(session_record *record)
     DL_FOREACH_SAFE(record->previous_states_head, cur_node, tmp_node) {
         DL_DELETE(record->previous_states_head, cur_node);
         if(cur_node->state) {
-            AXOLOTL_UNREF(cur_node->state);
+            SIGNAL_UNREF(cur_node->state);
         }
         free(cur_node);
     }
     record->previous_states_head = 0;
 }
 
-void session_record_destroy(axolotl_type_base *type)
+void session_record_destroy(signal_type_base *type)
 {
     session_record *record = (session_record *)type;
 
     if(record->state) {
-        AXOLOTL_UNREF(record->state);
+        SIGNAL_UNREF(record->state);
     }
     session_record_free_previous_states(record);
 

@@ -16,7 +16,7 @@ struct session_builder
 {
     axolotl_store_context *store;
     const axolotl_address *remote_address;
-    axolotl_context *global_context;
+    signal_context *global_context;
 };
 
 static int session_builder_process_pre_key_signal_message_v3(session_builder *builder,
@@ -28,7 +28,7 @@ static int session_builder_process_response(session_builder *builder,
 
 int session_builder_create(session_builder **builder,
         axolotl_store_context *store, const axolotl_address *remote_address,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     session_builder *result = 0;
 
@@ -37,7 +37,7 @@ int session_builder_create(session_builder **builder,
 
     result = malloc(sizeof(session_builder));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result, 0, sizeof(session_builder));
 
@@ -64,7 +64,7 @@ int session_builder_process_pre_key_signal_message(session_builder *builder,
         goto complete;
     }
     if(result == 0) {
-        result = AX_ERR_UNTRUSTED_IDENTITY;
+        result = SG_ERR_UNTRUSTED_IDENTITY;
         goto complete;
     }
 
@@ -107,7 +107,7 @@ static int session_builder_process_pre_key_signal_message_v3(session_builder *bu
             pre_key_signal_message_get_message_version(message),
             pre_key_signal_message_get_base_key(message));
     if(has_session_state) {
-        axolotl_log(builder->global_context, AX_LOG_INFO, "We've already setup a session for this V3 message, letting bundled message fall through...");
+        signal_log(builder->global_context, SG_LOG_INFO, "We've already setup a session for this V3 message, letting bundled message fall through...");
         result = 0;
         goto complete;
     }
@@ -180,10 +180,10 @@ static int session_builder_process_pre_key_signal_message_v3(session_builder *bu
     }
 
 complete:
-    AXOLOTL_UNREF(parameters);
-    AXOLOTL_UNREF(our_identity_key);
-    AXOLOTL_UNREF(our_signed_pre_key);
-    AXOLOTL_UNREF(session_our_one_time_pre_key);
+    SIGNAL_UNREF(parameters);
+    SIGNAL_UNREF(our_identity_key);
+    SIGNAL_UNREF(our_signed_pre_key);
+    SIGNAL_UNREF(session_our_one_time_pre_key);
     if(result >= 0) {
         *unsigned_pre_key_id = unsigned_pre_key_id_result;
     }
@@ -210,7 +210,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     assert(builder);
     assert(builder->store);
     assert(bundle);
-    axolotl_lock(builder->global_context);
+    signal_lock(builder->global_context);
 
     result = axolotl_identity_is_trusted_identity(builder->store,
             builder->remote_address->name, builder->remote_address->name_len,
@@ -219,7 +219,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
         goto complete;
     }
     if(result == 0) {
-        result = AX_ERR_UNTRUSTED_IDENTITY;
+        result = SG_ERR_UNTRUSTED_IDENTITY;
         goto complete;
     }
 
@@ -228,25 +228,25 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
 
     if(signed_pre_key) {
         ec_public_key *identity_key = session_pre_key_bundle_get_identity_key(bundle);
-        axolotl_buffer *signature = session_pre_key_bundle_get_signed_pre_key_signature(bundle);
+        signal_buffer *signature = session_pre_key_bundle_get_signed_pre_key_signature(bundle);
 
-        axolotl_buffer *serialized_signed_pre_key = 0;
+        signal_buffer *serialized_signed_pre_key = 0;
         result = ec_public_key_serialize(&serialized_signed_pre_key, signed_pre_key);
         if(result < 0) {
             goto complete;
         }
 
         result = curve_verify_signature(identity_key,
-                axolotl_buffer_data(serialized_signed_pre_key),
-                axolotl_buffer_len(serialized_signed_pre_key),
-                axolotl_buffer_data(signature),
-                axolotl_buffer_len(signature));
+                signal_buffer_data(serialized_signed_pre_key),
+                signal_buffer_len(serialized_signed_pre_key),
+                signal_buffer_data(signature),
+                signal_buffer_len(signature));
 
-        axolotl_buffer_free(serialized_signed_pre_key);
+        signal_buffer_free(serialized_signed_pre_key);
 
         if(result == 0) {
-            axolotl_log(builder->global_context, AX_LOG_WARNING, "invalid signature on device key!");
-            result = AX_ERR_INVALID_KEY;
+            signal_log(builder->global_context, SG_LOG_WARNING, "invalid signature on device key!");
+            result = SG_ERR_INVALID_KEY;
         }
         if(result < 0) {
             goto complete;
@@ -254,8 +254,8 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     }
 
     if(!signed_pre_key) {
-        result = AX_ERR_INVALID_KEY;
-        axolotl_log(builder->global_context, AX_LOG_WARNING, "no signed pre key!");
+        result = SG_ERR_INVALID_KEY;
+        signal_log(builder->global_context, SG_LOG_WARNING, "no signed pre key!");
         goto complete;
     }
 
@@ -328,11 +328,11 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
             their_identity_key);
 
 complete:
-    AXOLOTL_UNREF(record);
-    AXOLOTL_UNREF(our_base_key);
-    AXOLOTL_UNREF(our_identity_key);
-    AXOLOTL_UNREF(parameters);
-    axolotl_unlock(builder->global_context);
+    SIGNAL_UNREF(record);
+    SIGNAL_UNREF(our_base_key);
+    SIGNAL_UNREF(our_identity_key);
+    SIGNAL_UNREF(parameters);
+    signal_unlock(builder->global_context);
     return result;
 }
 
@@ -343,7 +343,7 @@ int session_builder_process_key_exchange_message(session_builder *builder, key_e
 
     assert(builder);
     assert(builder->store);
-    axolotl_lock(builder->global_context);
+    signal_lock(builder->global_context);
 
     result = axolotl_identity_is_trusted_identity(builder->store,
             builder->remote_address->name, builder->remote_address->name_len,
@@ -352,7 +352,7 @@ int session_builder_process_key_exchange_message(session_builder *builder, key_e
         goto complete;
     }
     if(result == 0) {
-        result = AX_ERR_UNTRUSTED_IDENTITY;
+        result = SG_ERR_UNTRUSTED_IDENTITY;
         goto complete;
     }
     result = 0;
@@ -369,9 +369,9 @@ complete:
         *response_message = result_response_message;
     }
     else {
-        AXOLOTL_UNREF(result_response_message);
+        SIGNAL_UNREF(result_response_message);
     }
-    axolotl_unlock(builder->global_context);
+    signal_unlock(builder->global_context);
     return result;
 }
 
@@ -389,12 +389,12 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
     symmetric_axolotl_parameters *parameters = 0;
     ratchet_identity_key_pair *parameters_identity_key = 0;
     ec_key_pair *parameters_base_key = 0;
-    axolotl_buffer *parameters_public_base_key_serialized = 0;
+    signal_buffer *parameters_public_base_key_serialized = 0;
     ec_key_pair *parameters_ratchet_key = 0;
-    axolotl_buffer *base_key_signature = 0;
+    signal_buffer *base_key_signature = 0;
     ec_public_key *message_identity_key = 0;
     ec_public_key *message_base_key = 0;
-    axolotl_buffer *message_base_key_serialized = 0;
+    signal_buffer *message_base_key_serialized = 0;
     uint8_t *message_base_key_signature = 0;
 
     result = axolotl_session_load_session(builder->store, &record, builder->remote_address);
@@ -410,16 +410,16 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
     message_base_key_signature = key_exchange_message_get_base_key_signature(message);
 
     result = curve_verify_signature(message_identity_key,
-            axolotl_buffer_data(message_base_key_serialized),
-            axolotl_buffer_len(message_base_key_serialized),
+            signal_buffer_data(message_base_key_serialized),
+            signal_buffer_len(message_base_key_serialized),
             message_base_key_signature, CURVE_SIGNATURE_LEN);
-    axolotl_buffer_free(message_base_key_serialized);
+    signal_buffer_free(message_base_key_serialized);
     if(result < 0) {
         goto complete;
     }
     if(result != 1) {
-        axolotl_log(builder->global_context, AX_LOG_WARNING, "Bad signature!");
-        result = AX_ERR_INVALID_KEY;
+        signal_log(builder->global_context, SG_LOG_WARNING, "Bad signature!");
+        result = SG_ERR_INVALID_KEY;
         goto complete;
     }
 
@@ -505,8 +505,8 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
     result = curve_calculate_signature(builder->global_context,
             &base_key_signature,
             ratchet_identity_key_pair_get_private(parameters_identity_key),
-            axolotl_buffer_data(parameters_public_base_key_serialized),
-            axolotl_buffer_len(parameters_public_base_key_serialized));
+            signal_buffer_data(parameters_public_base_key_serialized),
+            signal_buffer_len(parameters_public_base_key_serialized));
     if(result < 0) {
         goto complete;
     }
@@ -516,23 +516,23 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
             key_exchange_message_get_sequence(message),
             flags,
             ec_key_pair_get_public(parameters_base_key),
-            axolotl_buffer_data(base_key_signature),
+            signal_buffer_data(base_key_signature),
             ec_key_pair_get_public(parameters_ratchet_key),
             ratchet_identity_key_pair_get_public(parameters_identity_key));
 
 complete:
-    axolotl_buffer_free(parameters_public_base_key_serialized);
-    axolotl_buffer_free(base_key_signature);
-    AXOLOTL_UNREF(our_base_key);
-    AXOLOTL_UNREF(our_ratchet_key);
-    AXOLOTL_UNREF(identity_key_pair);
-    AXOLOTL_UNREF(parameters);
-    AXOLOTL_UNREF(record);
+    signal_buffer_free(parameters_public_base_key_serialized);
+    signal_buffer_free(base_key_signature);
+    SIGNAL_UNREF(our_base_key);
+    SIGNAL_UNREF(our_ratchet_key);
+    SIGNAL_UNREF(identity_key_pair);
+    SIGNAL_UNREF(parameters);
+    SIGNAL_UNREF(record);
     if(result >= 0) {
         *response_message = result_response_message;
     }
     else {
-        AXOLOTL_UNREF(result_response_message);
+        SIGNAL_UNREF(result_response_message);
     }
     return result;
 }
@@ -557,13 +557,13 @@ static int session_builder_process_response(session_builder *builder, key_exchan
 
     if(!has_pending_key_exchange ||
             session_state_get_pending_key_exchange_sequence(state) != key_exchange_message_get_sequence(message)) {
-        axolotl_log(builder->global_context, AX_LOG_INFO, "No matching sequence for response. Is simultaneous initiate response: %d", is_simultaneous_initiate_response);
+        signal_log(builder->global_context, SG_LOG_INFO, "No matching sequence for response. Is simultaneous initiate response: %d", is_simultaneous_initiate_response);
         if(!is_simultaneous_initiate_response) {
-            result = AX_ERR_STALE_KEY_EXCHANGE;
+            result = SG_ERR_STALE_KEY_EXCHANGE;
             goto complete;
         }
         else  {
-            result = AX_SUCCESS;
+            result = SG_SUCCESS;
             goto complete;
         }
     }
@@ -600,7 +600,7 @@ static int session_builder_process_response(session_builder *builder, key_exchan
     if(session_state_get_session_version(state) >= 3) {
         ec_public_key *message_identity_key = key_exchange_message_get_identity_key(message);
         ec_public_key *message_base_key = key_exchange_message_get_base_key(message);
-        axolotl_buffer *message_base_key_serialized = 0;
+        signal_buffer *message_base_key_serialized = 0;
         uint8_t *message_base_key_signature = 0;
 
         ec_public_key_serialize(&message_base_key_serialized, message_base_key);
@@ -608,16 +608,16 @@ static int session_builder_process_response(session_builder *builder, key_exchan
         message_base_key_signature = key_exchange_message_get_base_key_signature(message);
 
         result = curve_verify_signature(message_identity_key,
-                axolotl_buffer_data(message_base_key_serialized),
-                axolotl_buffer_len(message_base_key_serialized),
+                signal_buffer_data(message_base_key_serialized),
+                signal_buffer_len(message_base_key_serialized),
                 message_base_key_signature, CURVE_SIGNATURE_LEN);
-        axolotl_buffer_free(message_base_key_serialized);
+        signal_buffer_free(message_base_key_serialized);
         if(result < 0) {
             goto complete;
         }
         if(result != 1) {
-            axolotl_log(builder->global_context, AX_LOG_WARNING, "Base key signature doesn't match!");
-            result = AX_ERR_INVALID_KEY;
+            signal_log(builder->global_context, SG_LOG_WARNING, "Base key signature doesn't match!");
+            result = SG_ERR_INVALID_KEY;
             goto complete;
         }
     }
@@ -635,8 +635,8 @@ static int session_builder_process_response(session_builder *builder, key_exchan
     }
 
 complete:
-    AXOLOTL_UNREF(parameters);
-    AXOLOTL_UNREF(record);
+    SIGNAL_UNREF(parameters);
+    SIGNAL_UNREF(record);
     return result;
 }
 
@@ -650,14 +650,14 @@ int session_builder_process(session_builder *builder, key_exchange_message **mes
     ec_key_pair *base_key = 0;
     ec_key_pair *ratchet_key = 0;
     ratchet_identity_key_pair *identity_key = 0;
-    axolotl_buffer *base_key_public_serialized = 0;
-    axolotl_buffer *base_key_signature = 0;
+    signal_buffer *base_key_public_serialized = 0;
+    signal_buffer *base_key_signature = 0;
     session_record *record = 0;
     session_state *state = 0;
 
     assert(builder);
     assert(builder->store);
-    axolotl_lock(builder->global_context);
+    signal_lock(builder->global_context);
 
     result = axolotl_key_helper_get_random_sequence(&random_value, 65534, builder->global_context);
     if(result < 0) {
@@ -687,14 +687,14 @@ int session_builder_process(session_builder *builder, key_exchange_message **mes
 
     result = curve_calculate_signature(builder->global_context, &base_key_signature,
             ratchet_identity_key_pair_get_private(identity_key),
-            axolotl_buffer_data(base_key_public_serialized),
-            axolotl_buffer_len(base_key_public_serialized));
+            signal_buffer_data(base_key_public_serialized),
+            signal_buffer_len(base_key_public_serialized));
     if(result < 0) {
         goto complete;
     }
 
-    if(axolotl_buffer_len(base_key_signature) != CURVE_SIGNATURE_LEN) {
-        result = AX_ERR_UNKNOWN;
+    if(signal_buffer_len(base_key_signature) != CURVE_SIGNATURE_LEN) {
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -714,25 +714,25 @@ int session_builder_process(session_builder *builder, key_exchange_message **mes
     result = key_exchange_message_create(&result_message,
             CIPHERTEXT_CURRENT_VERSION, sequence, flags,
             ec_key_pair_get_public(base_key),
-            axolotl_buffer_data(base_key_signature),
+            signal_buffer_data(base_key_signature),
             ec_key_pair_get_public(ratchet_key),
             ratchet_identity_key_pair_get_public(identity_key));
 
 complete:
-    AXOLOTL_UNREF(record);
-    axolotl_buffer_free(base_key_signature);
-    axolotl_buffer_free(base_key_public_serialized);
-    AXOLOTL_UNREF(identity_key);
-    AXOLOTL_UNREF(ratchet_key);
-    AXOLOTL_UNREF(base_key);
+    SIGNAL_UNREF(record);
+    signal_buffer_free(base_key_signature);
+    signal_buffer_free(base_key_public_serialized);
+    SIGNAL_UNREF(identity_key);
+    SIGNAL_UNREF(ratchet_key);
+    SIGNAL_UNREF(base_key);
     if(result >= 0) {
         *message = result_message;
     }
     else {
-        result = AX_ERR_INVALID_KEY;
-        AXOLOTL_UNREF(result_message);
+        result = SG_ERR_INVALID_KEY;
+        SIGNAL_UNREF(result_message);
     }
-    axolotl_unlock(builder->global_context);
+    signal_unlock(builder->global_context);
     return result;
 }
 

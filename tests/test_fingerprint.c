@@ -5,20 +5,20 @@
 #include "fingerprint.h"
 #include "test_common.h"
 
-axolotl_context *global_context;
+signal_context *global_context;
 
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
     setup_test_crypto_provider(global_context);
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 START_TEST(test_scannable_fingerprint_serialize)
@@ -28,7 +28,7 @@ START_TEST(test_scannable_fingerprint_serialize)
     ec_public_key *bob_identity_key = create_test_ec_public_key(global_context);
     scannable_fingerprint *alice_scannable = 0;
     scannable_fingerprint *bob_scannable = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     scannable_fingerprint *bob_deserialized = 0;
 
     result = scannable_fingerprint_create(&alice_scannable, 1,
@@ -47,20 +47,20 @@ START_TEST(test_scannable_fingerprint_serialize)
     ck_assert_int_eq(result, 0);
 
     result = scannable_fingerprint_deserialize(&bob_deserialized,
-            axolotl_buffer_data(buffer),
-            axolotl_buffer_len(buffer),
+            signal_buffer_data(buffer),
+            signal_buffer_len(buffer),
             global_context);
     ck_assert_int_eq(result, 0);
 
     ck_assert_int_eq(scannable_fingerprint_compare(alice_scannable, bob_deserialized), 1);
 
     /* Cleanup */
-    AXOLOTL_UNREF(alice_identity_key);
-    AXOLOTL_UNREF(bob_identity_key);
-    AXOLOTL_UNREF(alice_scannable);
-    AXOLOTL_UNREF(bob_scannable);
-    AXOLOTL_UNREF(bob_deserialized);
-    axolotl_buffer_free(buffer);
+    SIGNAL_UNREF(alice_identity_key);
+    SIGNAL_UNREF(bob_identity_key);
+    SIGNAL_UNREF(alice_scannable);
+    SIGNAL_UNREF(bob_scannable);
+    SIGNAL_UNREF(bob_deserialized);
+    signal_buffer_free(buffer);
 }
 END_TEST
 
@@ -125,19 +125,19 @@ START_TEST(test_expected_fingerprints)
 
     scannable_fingerprint *alice_scannable = fingerprint_get_scannable(alice_fingerprint);
 
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     scannable_fingerprint_serialize(&buffer, alice_scannable);
     ck_assert_int_eq(result, 0);
 
-    ck_assert_int_eq(axolotl_buffer_len(buffer), sizeof(expectedScannableBytes));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(buffer), expectedScannableBytes, sizeof(expectedScannableBytes)), 0);
+    ck_assert_int_eq(signal_buffer_len(buffer), sizeof(expectedScannableBytes));
+    ck_assert_int_eq(memcmp(signal_buffer_data(buffer), expectedScannableBytes, sizeof(expectedScannableBytes)), 0);
 
     /* Cleanup */
-    axolotl_buffer_free(buffer);
+    signal_buffer_free(buffer);
     fingerprint_generator_free(generator);
-    AXOLOTL_UNREF(alice_identity_key);
-    AXOLOTL_UNREF(bob_identity_key);
-    AXOLOTL_UNREF(alice_fingerprint);
+    SIGNAL_UNREF(alice_identity_key);
+    SIGNAL_UNREF(bob_identity_key);
+    SIGNAL_UNREF(alice_fingerprint);
 }
 END_TEST
 
@@ -182,10 +182,10 @@ START_TEST(test_matching_fingerprints)
 
     /* Cleanup */
     fingerprint_generator_free(generator);
-    AXOLOTL_UNREF(alice_identity_key);
-    AXOLOTL_UNREF(bob_identity_key);
-    AXOLOTL_UNREF(alice_fingerprint);
-    AXOLOTL_UNREF(bob_fingerprint);
+    SIGNAL_UNREF(alice_identity_key);
+    SIGNAL_UNREF(bob_identity_key);
+    SIGNAL_UNREF(alice_fingerprint);
+    SIGNAL_UNREF(bob_fingerprint);
 }
 END_TEST
 
@@ -229,11 +229,11 @@ START_TEST(test_mismatching_fingerprints)
 
     /* Cleanup */
     fingerprint_generator_free(generator);
-    AXOLOTL_UNREF(alice_identity_key);
-    AXOLOTL_UNREF(bob_identity_key);
-    AXOLOTL_UNREF(mitm_identity_key);
-    AXOLOTL_UNREF(alice_fingerprint);
-    AXOLOTL_UNREF(bob_fingerprint);
+    SIGNAL_UNREF(alice_identity_key);
+    SIGNAL_UNREF(bob_identity_key);
+    SIGNAL_UNREF(mitm_identity_key);
+    SIGNAL_UNREF(alice_fingerprint);
+    SIGNAL_UNREF(bob_fingerprint);
 }
 END_TEST
 
@@ -271,15 +271,15 @@ START_TEST(test_mismatching_identifiers)
     scannable_fingerprint *alice_scannable = fingerprint_get_scannable(alice_fingerprint);
     scannable_fingerprint *bob_scannable = fingerprint_get_scannable(bob_fingerprint);
 
-    ck_assert_int_eq(scannable_fingerprint_compare(alice_scannable, bob_scannable), AX_ERR_FP_IDENT_MISMATCH);
-    ck_assert_int_eq(scannable_fingerprint_compare(bob_scannable, alice_scannable), AX_ERR_FP_IDENT_MISMATCH);
+    ck_assert_int_eq(scannable_fingerprint_compare(alice_scannable, bob_scannable), SG_ERR_FP_IDENT_MISMATCH);
+    ck_assert_int_eq(scannable_fingerprint_compare(bob_scannable, alice_scannable), SG_ERR_FP_IDENT_MISMATCH);
 
     /* Cleanup */
     fingerprint_generator_free(generator);
-    AXOLOTL_UNREF(alice_identity_key);
-    AXOLOTL_UNREF(bob_identity_key);
-    AXOLOTL_UNREF(alice_fingerprint);
-    AXOLOTL_UNREF(bob_fingerprint);
+    SIGNAL_UNREF(alice_identity_key);
+    SIGNAL_UNREF(bob_identity_key);
+    SIGNAL_UNREF(alice_fingerprint);
+    SIGNAL_UNREF(bob_fingerprint);
 }
 END_TEST
 

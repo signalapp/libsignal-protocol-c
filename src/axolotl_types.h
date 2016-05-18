@@ -18,15 +18,15 @@ extern "C" {
 /*
  * Base library types
  */
-typedef struct axolotl_type_base axolotl_type_base;
-typedef struct axolotl_buffer axolotl_buffer;
-typedef struct axolotl_buffer_list axolotl_buffer_list;
-typedef struct axolotl_int_list axolotl_int_list;
+typedef struct signal_type_base signal_type_base;
+typedef struct signal_buffer signal_buffer;
+typedef struct signal_buffer_list signal_buffer_list;
+typedef struct signal_int_list signal_int_list;
 
 /*
- * Global context for the AXOLOTL library
+ * Global context for the Signal Protocol library
  */
-typedef struct axolotl_context axolotl_context;
+typedef struct signal_context signal_context;
 
 /*
  * Context for the AXOLOTL data store implementation

@@ -19,8 +19,8 @@
 #define DERIVED_ROOT_SECRETS_SIZE 64
 
 struct ratchet_chain_key {
-    axolotl_type_base base;
-    axolotl_context *global_context;
+    signal_type_base base;
+    signal_context *global_context;
     hkdf_context *kdf;
     uint8_t *key;
     size_t key_len;
@@ -28,62 +28,62 @@ struct ratchet_chain_key {
 };
 
 struct ratchet_root_key {
-    axolotl_type_base base;
-    axolotl_context *global_context;
+    signal_type_base base;
+    signal_context *global_context;
     hkdf_context *kdf;
     uint8_t *key;
     size_t key_len;
 };
 
 struct ratchet_identity_key_pair {
-    axolotl_type_base base;
+    signal_type_base base;
     ec_public_key *public_key;
     ec_private_key *private_key;
 };
 
-int ratchet_chain_key_create(ratchet_chain_key **chain_key, hkdf_context *kdf, uint8_t *key, size_t key_len, uint32_t index, axolotl_context *global_context)
+int ratchet_chain_key_create(ratchet_chain_key **chain_key, hkdf_context *kdf, uint8_t *key, size_t key_len, uint32_t index, signal_context *global_context)
 {
     ratchet_chain_key *result = 0;
 
     if(!kdf || !key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = malloc(sizeof(ratchet_chain_key));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
-    AXOLOTL_INIT(result, ratchet_chain_key_destroy);
+    SIGNAL_INIT(result, ratchet_chain_key_destroy);
     result->global_context = global_context;
     result->kdf = kdf;
 
     result->key = malloc(key_len);
     if(!result->key) {
         free(result);
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memcpy(result->key, key, key_len);
     result->key_len = key_len;
 
     result->index = index;
-    AXOLOTL_REF(result->kdf);
+    SIGNAL_REF(result->kdf);
     *chain_key = result;
 
     return 0;
 }
 
-int ratchet_chain_key_get_key(const ratchet_chain_key *chain_key, axolotl_buffer **buffer)
+int ratchet_chain_key_get_key(const ratchet_chain_key *chain_key, signal_buffer **buffer)
 {
-    axolotl_buffer *buf = 0;
+    signal_buffer *buf = 0;
     uint8_t *data = 0;
     
-    buf = axolotl_buffer_alloc(chain_key->key_len);
+    buf = signal_buffer_alloc(chain_key->key_len);
     if(!buf) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
-    data = axolotl_buffer_data(buf);
+    data = signal_buffer_data(buf);
     memcpy(data, chain_key->key, chain_key->key_len);
 
     *buffer = buf;
@@ -100,7 +100,7 @@ int ratchet_chain_key_get_key_protobuf(const ratchet_chain_key *chain_key, Proto
 
     data = malloc(chain_key->key_len);
     if(!data) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memcpy(data, chain_key->key, chain_key->key_len);
@@ -118,38 +118,38 @@ uint32_t ratchet_chain_key_get_index(const ratchet_chain_key *chain_key)
 ssize_t ratchet_chain_key_get_base_material(const ratchet_chain_key *chain_key, uint8_t **material, const uint8_t *seed, size_t seed_len)
 {
     int result = 0;
-    axolotl_buffer *output_buffer = 0;
+    signal_buffer *output_buffer = 0;
     uint8_t *output = 0;
     size_t output_len = 0;
 
     void *hmac_context = 0;
-    result = axolotl_hmac_sha256_init(chain_key->global_context, &hmac_context, chain_key->key, chain_key->key_len);
+    result = signal_hmac_sha256_init(chain_key->global_context, &hmac_context, chain_key->key, chain_key->key_len);
     if(result < 0) {
         goto complete;
     }
 
-    result = axolotl_hmac_sha256_update(chain_key->global_context, hmac_context, seed, seed_len);
+    result = signal_hmac_sha256_update(chain_key->global_context, hmac_context, seed, seed_len);
     if(result < 0) {
         goto complete;
     }
 
-    result = axolotl_hmac_sha256_final(chain_key->global_context, hmac_context, &output_buffer);
+    result = signal_hmac_sha256_final(chain_key->global_context, hmac_context, &output_buffer);
     if(result < 0) {
         goto complete;
     }
 
-    output_len = axolotl_buffer_len(output_buffer);
+    output_len = signal_buffer_len(output_buffer);
     output = malloc(output_len);
     if(!output) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    memcpy(output, axolotl_buffer_data(output_buffer), output_len);
+    memcpy(output, signal_buffer_data(output_buffer), output_len);
 
 complete:
-    axolotl_hmac_sha256_cleanup(chain_key->global_context, hmac_context);
-    axolotl_buffer_free(output_buffer);
+    signal_hmac_sha256_cleanup(chain_key->global_context, hmac_context);
+    signal_buffer_free(output_buffer);
 
     if(result >= 0) {
         *material = output;
@@ -177,7 +177,7 @@ int ratchet_chain_key_get_message_keys(ratchet_chain_key *chain_key, ratchet_mes
     result_size = ratchet_chain_key_get_base_material(chain_key, &input_key_material, &message_key_seed, sizeof(message_key_seed));
     if(result_size < 0) {
         result = (int)result_size;
-        axolotl_log(chain_key->global_context, AX_LOG_WARNING, "ratchet_chain_key_get_base_material failed");
+        signal_log(chain_key->global_context, SG_LOG_WARNING, "ratchet_chain_key_get_base_material failed");
         goto complete;
     }
     input_key_material_len = (size_t)result_size;
@@ -192,16 +192,16 @@ int ratchet_chain_key_get_message_keys(ratchet_chain_key *chain_key, ratchet_mes
             DERIVED_MESSAGE_SECRETS_SIZE);
     if(result_size < 0) {
         result = (int)result_size;
-        axolotl_log(chain_key->global_context, AX_LOG_WARNING, "hkdf_derive_secrets failed");
+        signal_log(chain_key->global_context, SG_LOG_WARNING, "hkdf_derive_secrets failed");
         goto complete;
     }
     key_material_data_len = (size_t)result_size;
 
     if(key_material_data_len != RATCHET_CIPHER_KEY_LENGTH + RATCHET_MAC_KEY_LENGTH + RATCHET_IV_LENGTH) {
-        axolotl_log(chain_key->global_context, AX_LOG_WARNING,
+        signal_log(chain_key->global_context, SG_LOG_WARNING,
                 "key_material_data length mismatch: %d != %d",
                 key_material_data_len, (RATCHET_CIPHER_KEY_LENGTH + RATCHET_MAC_KEY_LENGTH + RATCHET_IV_LENGTH));
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -236,7 +236,7 @@ int ratchet_chain_key_create_next(const ratchet_chain_key *chain_key, ratchet_ch
     result_size = ratchet_chain_key_get_base_material(chain_key, &next_key, &chain_key_seed, sizeof(chain_key_seed));
     if(result_size < 0) {
         result = (int)result_size;
-        axolotl_log(chain_key->global_context, AX_LOG_WARNING, "ratchet_chain_key_get_base_material failed");
+        signal_log(chain_key->global_context, SG_LOG_WARNING, "ratchet_chain_key_get_base_material failed");
         goto complete;
     }
     next_key_len = (size_t)result_size;
@@ -256,42 +256,42 @@ complete:
     return result;
 }
 
-void ratchet_chain_key_destroy(axolotl_type_base *type)
+void ratchet_chain_key_destroy(signal_type_base *type)
 {
     ratchet_chain_key *chain_key = (ratchet_chain_key *)type;
-    AXOLOTL_UNREF(chain_key->kdf);
+    SIGNAL_UNREF(chain_key->kdf);
     if(chain_key->key) {
-        axolotl_explicit_bzero(chain_key->key, chain_key->key_len);
+        signal_explicit_bzero(chain_key->key, chain_key->key_len);
         free(chain_key->key);
     }
     free(chain_key);
 }
 
-int ratchet_root_key_create(ratchet_root_key **root_key, hkdf_context *kdf, const uint8_t *key, size_t key_len, axolotl_context *global_context)
+int ratchet_root_key_create(ratchet_root_key **root_key, hkdf_context *kdf, const uint8_t *key, size_t key_len, signal_context *global_context)
 {
     ratchet_root_key *result = 0;
 
     if(!kdf || !key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = malloc(sizeof(ratchet_root_key));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
-    AXOLOTL_INIT(result, ratchet_root_key_destroy);
+    SIGNAL_INIT(result, ratchet_root_key_destroy);
     result->global_context = global_context;
     result->kdf = kdf;
 
     result->key = malloc(key_len);
     if(!result->key) {
         free(result);
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memcpy(result->key, key, key_len);
     result->key_len = key_len;
-    AXOLOTL_REF(result->kdf);
+    SIGNAL_REF(result->kdf);
     *root_key = result;
 
     return 0;
@@ -312,12 +312,12 @@ int ratchet_root_key_create_chain(ratchet_root_key *root_key,
     ratchet_chain_key *new_chain_key_result = 0;
 
     if(!their_ratchet_key || !our_ratchet_key_private) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = curve_calculate_agreement(&shared_secret, their_ratchet_key, our_ratchet_key_private);
     if(result < 0) {
-        axolotl_log(root_key->global_context, AX_LOG_WARNING, "curve_calculate_agreement failed");
+        signal_log(root_key->global_context, SG_LOG_WARNING, "curve_calculate_agreement failed");
         goto complete;
     }
     shared_secret_len = (size_t)result;
@@ -329,12 +329,12 @@ int ratchet_root_key_create_chain(ratchet_root_key *root_key,
             DERIVED_ROOT_SECRETS_SIZE);
     if(result_size < 0) {
         result = (int)result_size;
-        axolotl_log(root_key->global_context, AX_LOG_WARNING, "hkdf_derive_secrets failed");
+        signal_log(root_key->global_context, SG_LOG_WARNING, "hkdf_derive_secrets failed");
         goto complete;
     }
     else if(result_size != DERIVED_ROOT_SECRETS_SIZE) {
-        result = AX_ERR_UNKNOWN;
-        axolotl_log(root_key->global_context, AX_LOG_WARNING, "hkdf_derive_secrets size mismatch");
+        result = SG_ERR_UNKNOWN;
+        signal_log(root_key->global_context, SG_LOG_WARNING, "hkdf_derive_secrets size mismatch");
         goto complete;
     }
 
@@ -342,7 +342,7 @@ int ratchet_root_key_create_chain(ratchet_root_key *root_key,
             derived_secret, 32,
             root_key->global_context);
     if(result < 0) {
-        axolotl_log(root_key->global_context, AX_LOG_WARNING, "ratchet_root_key_create failed");
+        signal_log(root_key->global_context, SG_LOG_WARNING, "ratchet_root_key_create failed");
         goto complete;
     }
 
@@ -350,7 +350,7 @@ int ratchet_root_key_create_chain(ratchet_root_key *root_key,
             derived_secret + 32, 32, 0,
             root_key->global_context);
     if(result < 0) {
-        axolotl_log(root_key->global_context, AX_LOG_WARNING, "ratchet_chain_key_create failed");
+        signal_log(root_key->global_context, SG_LOG_WARNING, "ratchet_chain_key_create failed");
         goto complete;
     }
 
@@ -363,10 +363,10 @@ complete:
     }
     if(result < 0) {
         if(new_root_key_result) {
-            AXOLOTL_UNREF(new_root_key_result);
+            SIGNAL_UNREF(new_root_key_result);
         }
         if(new_chain_key_result) {
-            AXOLOTL_UNREF(new_chain_key_result);
+            SIGNAL_UNREF(new_chain_key_result);
         }
         return result;
     }
@@ -377,19 +377,19 @@ complete:
     }
 }
 
-int ratchet_root_key_get_key(ratchet_root_key *root_key, axolotl_buffer **buffer)
+int ratchet_root_key_get_key(ratchet_root_key *root_key, signal_buffer **buffer)
 {
-    axolotl_buffer *buf = 0;
+    signal_buffer *buf = 0;
     uint8_t *data = 0;
 
     assert(root_key);
     
-    buf = axolotl_buffer_alloc(root_key->key_len);
+    buf = signal_buffer_alloc(root_key->key_len);
     if(!buf) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
-    data = axolotl_buffer_data(buf);
+    data = signal_buffer_data(buf);
     memcpy(data, root_key->key, root_key->key_len);
 
     *buffer = buf;
@@ -406,7 +406,7 @@ int ratchet_root_key_get_key_protobuf(const ratchet_root_key *root_key, Protobuf
 
     data = malloc(root_key->key_len);
     if(!data) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memcpy(data, root_key->key, root_key->key_len);
@@ -439,17 +439,17 @@ int ratchet_root_key_compare(const ratchet_root_key *key1, const ratchet_root_ke
             return 1;
         }
         else {
-            return axolotl_constant_memcmp(key1->key, key2->key, key1->key_len);
+            return signal_constant_memcmp(key1->key, key2->key, key1->key_len);
         }
     }
 }
 
-void ratchet_root_key_destroy(axolotl_type_base *type)
+void ratchet_root_key_destroy(signal_type_base *type)
 {
     ratchet_root_key *root_key = (ratchet_root_key *)type;
-    AXOLOTL_UNREF(root_key->kdf);
+    SIGNAL_UNREF(root_key->kdf);
     if(root_key->key) {
-        axolotl_explicit_bzero(root_key->key, root_key->key_len);
+        signal_explicit_bzero(root_key->key, root_key->key_len);
         free(root_key->key);
     }
     free(root_key);
@@ -462,12 +462,12 @@ int ratchet_identity_key_pair_create(
 {
     ratchet_identity_key_pair *result = malloc(sizeof(ratchet_identity_key_pair));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
-    AXOLOTL_INIT(result, ratchet_identity_key_pair_destroy);
-    AXOLOTL_REF(public_key);
-    AXOLOTL_REF(private_key);
+    SIGNAL_INIT(result, ratchet_identity_key_pair_destroy);
+    SIGNAL_REF(public_key);
+    SIGNAL_REF(private_key);
     result->public_key = public_key;
     result->private_key = private_key;
 
@@ -476,11 +476,11 @@ int ratchet_identity_key_pair_create(
     return 0;
 }
 
-int ratchet_identity_key_pair_serialize(axolotl_buffer **buffer, const ratchet_identity_key_pair *key_pair)
+int ratchet_identity_key_pair_serialize(signal_buffer **buffer, const ratchet_identity_key_pair *key_pair)
 {
     int result = 0;
     size_t result_size = 0;
-    axolotl_buffer *result_buf = 0;
+    signal_buffer *result_buf = 0;
     Textsecure__IdentityKeyPairStructure key_structure = TEXTSECURE__IDENTITY_KEY_PAIR_STRUCTURE__INIT;
     size_t len = 0;
     uint8_t *data = 0;
@@ -498,17 +498,17 @@ int ratchet_identity_key_pair_serialize(axolotl_buffer **buffer, const ratchet_i
     key_structure.has_privatekey = 1;
 
     len = textsecure__identity_key_pair_structure__get_packed_size(&key_structure);
-    result_buf = axolotl_buffer_alloc(len);
+    result_buf = signal_buffer_alloc(len);
     if(!result_buf) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    data = axolotl_buffer_data(result_buf);
+    data = signal_buffer_data(result_buf);
     result_size = textsecure__identity_key_pair_structure__pack(&key_structure, data);
     if(result_size != len) {
-        axolotl_buffer_free(result_buf);
-        result = AX_ERR_INVALID_PROTO_BUF;
+        signal_buffer_free(result_buf);
+        result = SG_ERR_INVALID_PROTO_BUF;
         result_buf = 0;
         goto complete;
     }
@@ -527,7 +527,7 @@ complete:
     return result;
 }
 
-int ratchet_identity_key_pair_deserialize(ratchet_identity_key_pair **key_pair, const uint8_t *data, size_t len, axolotl_context *global_context)
+int ratchet_identity_key_pair_deserialize(ratchet_identity_key_pair **key_pair, const uint8_t *data, size_t len, signal_context *global_context)
 {
     int result = 0;
     ec_public_key *public_key = 0;
@@ -537,12 +537,12 @@ int ratchet_identity_key_pair_deserialize(ratchet_identity_key_pair **key_pair, 
 
     key_structure = textsecure__identity_key_pair_structure__unpack(0, len, data);
     if(!key_structure) {
-        result = AX_ERR_INVALID_PROTO_BUF;
+        result = SG_ERR_INVALID_PROTO_BUF;
         goto complete;
     }
 
     if(!key_structure->has_publickey || !key_structure->has_privatekey) {
-        result = AX_ERR_INVALID_KEY;
+        result = SG_ERR_INVALID_KEY;
         goto complete;
     }
 
@@ -568,8 +568,8 @@ int ratchet_identity_key_pair_deserialize(ratchet_identity_key_pair **key_pair, 
             public_key, private_key);
 
 complete:
-    AXOLOTL_UNREF(public_key);
-    AXOLOTL_UNREF(private_key);
+    SIGNAL_UNREF(public_key);
+    SIGNAL_UNREF(private_key);
     if(key_structure) {
         textsecure__identity_key_pair_structure__free_unpacked(key_structure, 0);
     }
@@ -593,17 +593,17 @@ ec_private_key *ratchet_identity_key_pair_get_private(const ratchet_identity_key
     return key_pair->private_key;
 }
 
-void ratchet_identity_key_pair_destroy(axolotl_type_base *type)
+void ratchet_identity_key_pair_destroy(signal_type_base *type)
 {
     ratchet_identity_key_pair *key_pair = (ratchet_identity_key_pair *)type;
-    AXOLOTL_UNREF(key_pair->public_key);
-    AXOLOTL_UNREF(key_pair->private_key);
+    SIGNAL_UNREF(key_pair->public_key);
+    SIGNAL_UNREF(key_pair->private_key);
     free(key_pair);
 }
 
 struct symmetric_axolotl_parameters
 {
-    axolotl_type_base base;
+    signal_type_base base;
     ratchet_identity_key_pair *our_identity_key;
     ec_key_pair *our_base_key;
     ec_key_pair *our_ratchet_key;
@@ -614,7 +614,7 @@ struct symmetric_axolotl_parameters
 
 struct alice_axolotl_parameters
 {
-    axolotl_type_base base;
+    signal_type_base base;
     ratchet_identity_key_pair *our_identity_key;
     ec_key_pair *our_base_key;
     ec_public_key *their_identity_key;
@@ -625,7 +625,7 @@ struct alice_axolotl_parameters
 
 struct bob_axolotl_parameters
 {
-    axolotl_type_base base;
+    signal_type_base base;
     ratchet_identity_key_pair *our_identity_key;
     ec_key_pair *our_signed_pre_key;
     ec_key_pair *our_one_time_pre_key; /* optional */
@@ -647,23 +647,23 @@ int symmetric_axolotl_parameters_create(
     
     if(!our_identity_key || !our_base_key || !our_ratchet_key
             || !their_base_key || !their_ratchet_key || !their_identity_key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = malloc(sizeof(symmetric_axolotl_parameters));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memset(result, 0, sizeof(symmetric_axolotl_parameters));
 
-    AXOLOTL_INIT(result, symmetric_axolotl_parameters_destroy);
-    AXOLOTL_REF(our_identity_key);
-    AXOLOTL_REF(our_base_key);
-    AXOLOTL_REF(our_ratchet_key);
-    AXOLOTL_REF(their_base_key);
-    AXOLOTL_REF(their_ratchet_key);
-    AXOLOTL_REF(their_identity_key);
+    SIGNAL_INIT(result, symmetric_axolotl_parameters_destroy);
+    SIGNAL_REF(our_identity_key);
+    SIGNAL_REF(our_base_key);
+    SIGNAL_REF(our_ratchet_key);
+    SIGNAL_REF(their_base_key);
+    SIGNAL_REF(their_ratchet_key);
+    SIGNAL_REF(their_identity_key);
     result->our_identity_key = our_identity_key;
     result->our_base_key = our_base_key;
     result->our_ratchet_key = our_ratchet_key;
@@ -711,16 +711,16 @@ ec_public_key *symmetric_axolotl_parameters_get_their_identity_key(const symmetr
     return parameters->their_identity_key;
 }
 
-void symmetric_axolotl_parameters_destroy(axolotl_type_base *type)
+void symmetric_axolotl_parameters_destroy(signal_type_base *type)
 {
     symmetric_axolotl_parameters *parameters = (symmetric_axolotl_parameters *)type;
 
-    AXOLOTL_UNREF(parameters->our_identity_key);
-    AXOLOTL_UNREF(parameters->our_base_key);
-    AXOLOTL_UNREF(parameters->our_ratchet_key);
-    AXOLOTL_UNREF(parameters->their_base_key);
-    AXOLOTL_UNREF(parameters->their_ratchet_key);
-    AXOLOTL_UNREF(parameters->their_identity_key);
+    SIGNAL_UNREF(parameters->our_identity_key);
+    SIGNAL_UNREF(parameters->our_base_key);
+    SIGNAL_UNREF(parameters->our_ratchet_key);
+    SIGNAL_UNREF(parameters->their_base_key);
+    SIGNAL_UNREF(parameters->their_ratchet_key);
+    SIGNAL_UNREF(parameters->their_identity_key);
 
     free(parameters);
 }
@@ -739,22 +739,22 @@ int alice_axolotl_parameters_create(
     /* Only "their_one_time_pre_key" is allowed to be null */
     if(!our_identity_key || !our_base_key || !their_identity_key
             || !their_signed_pre_key || !their_ratchet_key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = malloc(sizeof(alice_axolotl_parameters));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memset(result, 0, sizeof(alice_axolotl_parameters));
 
-    AXOLOTL_INIT(result, alice_axolotl_parameters_destroy);
-    AXOLOTL_REF(our_identity_key);
-    AXOLOTL_REF(our_base_key);
-    AXOLOTL_REF(their_identity_key);
-    AXOLOTL_REF(their_signed_pre_key);
-    AXOLOTL_REF(their_ratchet_key);
+    SIGNAL_INIT(result, alice_axolotl_parameters_destroy);
+    SIGNAL_REF(our_identity_key);
+    SIGNAL_REF(our_base_key);
+    SIGNAL_REF(their_identity_key);
+    SIGNAL_REF(their_signed_pre_key);
+    SIGNAL_REF(their_ratchet_key);
     result->our_identity_key = our_identity_key;
     result->our_base_key = our_base_key;
     result->their_identity_key = their_identity_key;
@@ -762,7 +762,7 @@ int alice_axolotl_parameters_create(
     result->their_ratchet_key = their_ratchet_key;
 
     if(their_one_time_pre_key) {
-        AXOLOTL_REF(their_one_time_pre_key);
+        SIGNAL_REF(their_one_time_pre_key);
         result->their_one_time_pre_key = their_one_time_pre_key;
     }
 
@@ -770,18 +770,18 @@ int alice_axolotl_parameters_create(
     return 0;
 }
 
-void alice_axolotl_parameters_destroy(axolotl_type_base *type)
+void alice_axolotl_parameters_destroy(signal_type_base *type)
 {
     alice_axolotl_parameters *parameters = (alice_axolotl_parameters *)type;
 
-    AXOLOTL_UNREF(parameters->our_identity_key);
-    AXOLOTL_UNREF(parameters->our_base_key);
-    AXOLOTL_UNREF(parameters->their_identity_key);
-    AXOLOTL_UNREF(parameters->their_signed_pre_key);
-    AXOLOTL_UNREF(parameters->their_ratchet_key);
+    SIGNAL_UNREF(parameters->our_identity_key);
+    SIGNAL_UNREF(parameters->our_base_key);
+    SIGNAL_UNREF(parameters->their_identity_key);
+    SIGNAL_UNREF(parameters->their_signed_pre_key);
+    SIGNAL_UNREF(parameters->their_ratchet_key);
 
     if(parameters->their_one_time_pre_key) {
-        AXOLOTL_UNREF(parameters->their_one_time_pre_key);
+        SIGNAL_UNREF(parameters->their_one_time_pre_key);
     }
 
     free(parameters);
@@ -801,22 +801,22 @@ int bob_axolotl_parameters_create(
     /* Only "our_one_time_pre_key" is allowed to be null */
     if(!our_identity_key || !our_signed_pre_key || !our_ratchet_key
             || !their_identity_key || !their_base_key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = malloc(sizeof(bob_axolotl_parameters));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memset(result, 0, sizeof(bob_axolotl_parameters));
 
-    AXOLOTL_INIT(result, bob_axolotl_parameters_destroy);
-    AXOLOTL_REF(our_identity_key);
-    AXOLOTL_REF(our_signed_pre_key);
-    AXOLOTL_REF(our_ratchet_key);
-    AXOLOTL_REF(their_identity_key);
-    AXOLOTL_REF(their_base_key);
+    SIGNAL_INIT(result, bob_axolotl_parameters_destroy);
+    SIGNAL_REF(our_identity_key);
+    SIGNAL_REF(our_signed_pre_key);
+    SIGNAL_REF(our_ratchet_key);
+    SIGNAL_REF(their_identity_key);
+    SIGNAL_REF(their_base_key);
     result->our_identity_key = our_identity_key;
     result->our_signed_pre_key = our_signed_pre_key;
     result->our_ratchet_key = our_ratchet_key;
@@ -824,7 +824,7 @@ int bob_axolotl_parameters_create(
     result->their_base_key = their_base_key;
 
     if(our_one_time_pre_key) {
-        AXOLOTL_REF(our_one_time_pre_key);
+        SIGNAL_REF(our_one_time_pre_key);
         result->our_one_time_pre_key = our_one_time_pre_key;
     }
 
@@ -832,25 +832,25 @@ int bob_axolotl_parameters_create(
     return 0;
 }
 
-void bob_axolotl_parameters_destroy(axolotl_type_base *type)
+void bob_axolotl_parameters_destroy(signal_type_base *type)
 {
     bob_axolotl_parameters *parameters = (bob_axolotl_parameters *)type;
 
-    AXOLOTL_UNREF(parameters->our_identity_key);
-    AXOLOTL_UNREF(parameters->our_signed_pre_key);
-    AXOLOTL_UNREF(parameters->our_ratchet_key);
-    AXOLOTL_UNREF(parameters->their_identity_key);
-    AXOLOTL_UNREF(parameters->their_base_key);
+    SIGNAL_UNREF(parameters->our_identity_key);
+    SIGNAL_UNREF(parameters->our_signed_pre_key);
+    SIGNAL_UNREF(parameters->our_ratchet_key);
+    SIGNAL_UNREF(parameters->their_identity_key);
+    SIGNAL_UNREF(parameters->their_base_key);
 
     if(parameters->our_one_time_pre_key) {
-        AXOLOTL_UNREF(parameters->our_one_time_pre_key);
+        SIGNAL_UNREF(parameters->our_one_time_pre_key);
     }
 
     free(parameters);
 }
 
 int ratcheting_session_calculate_derived_keys(ratchet_root_key **root_key, ratchet_chain_key **chain_key,
-        uint8_t *secret, size_t secret_len, axolotl_context *global_context)
+        uint8_t *secret, size_t secret_len, signal_context *global_context)
 {
     int result = 0;
     ssize_t result_size = 0;
@@ -873,7 +873,7 @@ int ratcheting_session_calculate_derived_keys(ratchet_root_key **root_key, ratch
             salt, sizeof(salt),
             (uint8_t *)key_info, sizeof(key_info) - 1, 64);
     if(result_size != 64) {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -889,7 +889,7 @@ int ratcheting_session_calculate_derived_keys(ratchet_root_key **root_key, ratch
 
 complete:
     if(kdf) {
-        AXOLOTL_UNREF(kdf);
+        SIGNAL_UNREF(kdf);
     }
     if(output) {
         free(output);
@@ -897,10 +897,10 @@ complete:
 
     if(result < 0) {
         if(root_key_result) {
-            AXOLOTL_UNREF(root_key_result);
+            SIGNAL_UNREF(root_key_result);
         }
         if(chain_key_result) {
-            AXOLOTL_UNREF(chain_key_result);
+            SIGNAL_UNREF(chain_key_result);
         }
     }
     else {
@@ -924,7 +924,7 @@ int ratcheting_session_symmetric_is_alice(symmetric_axolotl_parameters *paramete
 int ratcheting_session_symmetric_initialize(
         session_state *state,
         symmetric_axolotl_parameters *parameters,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
 
@@ -945,7 +945,7 @@ int ratcheting_session_symmetric_initialize(
             result = ratcheting_session_alice_initialize(state, alice_parameters, global_context);
         }
         if(alice_parameters) {
-            AXOLOTL_UNREF(alice_parameters);
+            SIGNAL_UNREF(alice_parameters);
         }
     }
     else {
@@ -961,7 +961,7 @@ int ratcheting_session_symmetric_initialize(
             result = ratcheting_session_bob_initialize(state, bob_parameters, global_context);
         }
         if(bob_parameters) {
-            AXOLOTL_UNREF(bob_parameters);
+            SIGNAL_UNREF(bob_parameters);
         }
     }
     return result;
@@ -970,7 +970,7 @@ int ratcheting_session_symmetric_initialize(
 int ratcheting_session_alice_initialize(
         session_state *state,
         alice_axolotl_parameters *parameters,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
     uint8_t *agreement = 0;
@@ -998,7 +998,7 @@ int ratcheting_session_alice_initialize(
 
     memset(discontinuity_data, 0xFF, sizeof(discontinuity_data));
     if(!vpool_insert(&vp, vpool_get_length(&vp), discontinuity_data, sizeof(discontinuity_data))) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1012,7 +1012,7 @@ int ratcheting_session_alice_initialize(
         free(agreement); agreement = 0; agreement_len = 0;
     }
     else {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1026,7 +1026,7 @@ int ratcheting_session_alice_initialize(
         free(agreement); agreement = 0; agreement_len = 0;
     }
     else {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1040,7 +1040,7 @@ int ratcheting_session_alice_initialize(
         free(agreement); agreement = 0; agreement_len = 0;
     }
     else {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1055,13 +1055,13 @@ int ratcheting_session_alice_initialize(
             free(agreement); agreement = 0; agreement_len = 0;
         }
         else {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
     }
 
     if(vpool_is_empty(&vp)) {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -1096,19 +1096,19 @@ complete:
         free(agreement);
     }
     if(sending_ratchet_key) {
-        AXOLOTL_UNREF(sending_ratchet_key);
+        SIGNAL_UNREF(sending_ratchet_key);
     }
     if(derived_root) {
-        AXOLOTL_UNREF(derived_root);
+        SIGNAL_UNREF(derived_root);
     }
     if(derived_chain) {
-        AXOLOTL_UNREF(derived_chain);
+        SIGNAL_UNREF(derived_chain);
     }
     if(sending_chain_root) {
-        AXOLOTL_UNREF(sending_chain_root);
+        SIGNAL_UNREF(sending_chain_root);
     }
     if(sending_chain_key) {
-        AXOLOTL_UNREF(sending_chain_key);
+        SIGNAL_UNREF(sending_chain_key);
     }
 
     return result;
@@ -1117,7 +1117,7 @@ complete:
 int ratcheting_session_bob_initialize(
         session_state *state,
         bob_axolotl_parameters *parameters,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
     uint8_t *agreement = 0;
@@ -1137,7 +1137,7 @@ int ratcheting_session_bob_initialize(
 
     memset(discontinuity_data, 0xFF, sizeof(discontinuity_data));
     if(!vpool_insert(&vp, vpool_get_length(&vp), discontinuity_data, sizeof(discontinuity_data))) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1151,7 +1151,7 @@ int ratcheting_session_bob_initialize(
         free(agreement); agreement = 0; agreement_len = 0;
     }
     else {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1165,7 +1165,7 @@ int ratcheting_session_bob_initialize(
         free(agreement); agreement = 0; agreement_len = 0;
     }
     else {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1179,7 +1179,7 @@ int ratcheting_session_bob_initialize(
         free(agreement); agreement = 0; agreement_len = 0;
     }
     else {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -1194,13 +1194,13 @@ int ratcheting_session_bob_initialize(
             free(agreement); agreement = 0; agreement_len = 0;
         }
         else {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
     }
 
     if(vpool_is_empty(&vp)) {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -1223,10 +1223,10 @@ complete:
         free(agreement);
     }
     if(derived_root) {
-        AXOLOTL_UNREF(derived_root);
+        SIGNAL_UNREF(derived_root);
     }
     if(derived_chain) {
-        AXOLOTL_UNREF(derived_chain);
+        SIGNAL_UNREF(derived_chain);
     }
 
     return result;

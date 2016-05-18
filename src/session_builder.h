@@ -40,7 +40,7 @@ extern "C" {
  */
 int session_builder_create(session_builder **builder,
         axolotl_store_context *store, const axolotl_address *remote_address,
-        axolotl_context *global_context);
+        signal_context *global_context);
 
 /**
  * Build a new session from a received pre_key_signal_message.
@@ -53,10 +53,10 @@ int session_builder_create(session_builder **builder,
  *     Return value indicates whether or not this value is available.
  * @retval 0 Success, no unsigned pre key value available
  * @retval 1 Success, an unsigned pre key is available
- * @retval AX_ERR_INVALID_KEY_ID when there is no local pre_key_record that
+ * @retval SG_ERR_INVALID_KEY_ID when there is no local pre_key_record that
  *                               corresponds to the PreKey ID in the message.
- * @retval AX_ERR_INVALID_KEY when the message is formatted incorrectly.
- * @retval AX_ERR_UNTRUSTED_IDENTITY when the identity key of the sender is untrusted.
+ * @retval SG_ERR_INVALID_KEY when the message is formatted incorrectly.
+ * @retval SG_ERR_UNTRUSTED_IDENTITY when the identity key of the sender is untrusted.
  */
 int session_builder_process_pre_key_signal_message(session_builder *builder,
         session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id);
@@ -65,9 +65,9 @@ int session_builder_process_pre_key_signal_message(session_builder *builder,
  * Build a new session from a session_pre_key_bundle retrieved from a server.
  *
  * @param bundle A pre key bundle for the destination recipient, retrieved from a server.
- * @retval AX_SUCCESS Success
- * @retval AX_ERR_INVALID_KEY when the session_pre_key_bundle is badly formatted.
- * @retval AX_ERR_UNTRUSTED_IDENTITY when the sender's identity key is not trusted.
+ * @retval SG_SUCCESS Success
+ * @retval SG_ERR_INVALID_KEY when the session_pre_key_bundle is badly formatted.
+ * @retval SG_ERR_UNTRUSTED_IDENTITY when the sender's identity key is not trusted.
  */
 int session_builder_process_pre_key_bundle(session_builder *builder, session_pre_key_bundle *bundle);
 
@@ -77,10 +77,10 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
  * @param message The received key_exchange_message.
  * @param response_message Set to the key_exchange_message to respond with,
  *     or set to 0 if no response is necessary.
- * @retval AX_SUCCESS Success
- * @retval AX_ERR_INVALID_KEY if the received key_exchange_message is badly formatted.
- * @retval AX_ERR_UNTRUSTED_IDENTITY
- * @retval AX_ERR_STALE_KEY_EXCHANGE
+ * @retval SG_SUCCESS Success
+ * @retval SG_ERR_INVALID_KEY if the received key_exchange_message is badly formatted.
+ * @retval SG_ERR_UNTRUSTED_IDENTITY
+ * @retval SG_ERR_STALE_KEY_EXCHANGE
  */
 int session_builder_process_key_exchange_message(session_builder *builder, key_exchange_message *message, key_exchange_message **response_message);
 
@@ -88,7 +88,7 @@ int session_builder_process_key_exchange_message(session_builder *builder, key_e
  * Initiate a new session by sending an initial key_exchange_message to the recipient.
  *
  * @param message Set to the key_exchange_message to deliver.
- * @return AX_SUCCESS on success, negative on error
+ * @return SG_SUCCESS on success, negative on error
  */
 int session_builder_process(session_builder *builder, key_exchange_message **message);
 

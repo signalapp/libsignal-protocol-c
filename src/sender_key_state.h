@@ -11,10 +11,10 @@ extern "C" {
 int sender_key_state_create(sender_key_state **state,
         uint32_t id, sender_chain_key *chain_key,
         ec_public_key *signature_public_key, ec_private_key *signature_private_key,
-        axolotl_context *global_context);
-int sender_key_state_serialize(axolotl_buffer **buffer, sender_key_state *state);
-int sender_key_state_deserialize(sender_key_state **state, const uint8_t *data, size_t len, axolotl_context *global_context);
-int sender_key_state_copy(sender_key_state **state, sender_key_state *other_state, axolotl_context *global_context);
+        signal_context *global_context);
+int sender_key_state_serialize(signal_buffer **buffer, sender_key_state *state);
+int sender_key_state_deserialize(sender_key_state **state, const uint8_t *data, size_t len, signal_context *global_context);
+int sender_key_state_copy(sender_key_state **state, sender_key_state *other_state, signal_context *global_context);
 
 uint32_t sender_key_state_get_key_id(sender_key_state *state);
 sender_chain_key *sender_key_state_get_chain_key(sender_key_state *state);
@@ -25,7 +25,7 @@ int sender_key_state_has_sender_message_key(sender_key_state *state, uint32_t it
 int sender_key_state_add_sender_message_key(sender_key_state *state, sender_message_key *message_key);
 sender_message_key *sender_key_state_remove_sender_message_key(sender_key_state *state, uint32_t iteration);
 
-void sender_key_state_destroy(axolotl_type_base *type);
+void sender_key_state_destroy(signal_type_base *type);
 
 #ifdef __cplusplus
 }

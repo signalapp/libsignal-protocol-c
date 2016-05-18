@@ -37,12 +37,12 @@ int64_t jenkins_hash(const char *key, size_t len)
 
 void print_public_key(const char *prefix, ec_public_key *key)
 {
-    axolotl_buffer *buffer;
+    signal_buffer *buffer;
     ec_public_key_serialize(&buffer, key);
 
     fprintf(stderr, "%s ", prefix);
-    uint8_t *data = axolotl_buffer_data(buffer);
-    int len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    int len = signal_buffer_len(buffer);
     int i;
     for(i = 0; i < len; i++) {
         if(i > 0 && (i % 40) == 0) {
@@ -51,14 +51,14 @@ void print_public_key(const char *prefix, ec_public_key *key)
         fprintf(stderr, "%02X", data[i]);
     }
     fprintf(stderr, "\n");
-    axolotl_buffer_free(buffer);
+    signal_buffer_free(buffer);
 }
 
-void print_buffer(const char *prefix, axolotl_buffer *buffer)
+void print_buffer(const char *prefix, signal_buffer *buffer)
 {
     fprintf(stderr, "%s ", prefix);
-    uint8_t *data = axolotl_buffer_data(buffer);
-    int len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    int len = signal_buffer_len(buffer);
     int i;
     for(i = 0; i < len; i++) {
         if(i > 0 && (i % 40) == 0) {
@@ -69,20 +69,20 @@ void print_buffer(const char *prefix, axolotl_buffer *buffer)
     fprintf(stderr, "\n");
 }
 
-void shuffle_buffers(axolotl_buffer **array, size_t n)
+void shuffle_buffers(signal_buffer **array, size_t n)
 {
     if (n > 1) {
         size_t i;
         for (i = 0; i < n - 1; i++) {
             size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
-            axolotl_buffer *t = array[j];
+            signal_buffer *t = array[j];
             array[j] = array[i];
             array[i] = t;
         }
     }
 }
 
-ec_public_key *create_test_ec_public_key(axolotl_context *context)
+ec_public_key *create_test_ec_public_key(signal_context *context)
 {
     int result = 0;
     ec_key_pair *key_pair;
@@ -90,12 +90,12 @@ ec_public_key *create_test_ec_public_key(axolotl_context *context)
     ck_assert_int_eq(result, 0);
 
     ec_public_key *public_key = ec_key_pair_get_public(key_pair);
-    AXOLOTL_REF(public_key);
-    AXOLOTL_UNREF(key_pair);
+    SIGNAL_REF(public_key);
+    SIGNAL_UNREF(key_pair);
     return public_key;
 }
 
-ec_private_key *create_test_ec_private_key(axolotl_context *context)
+ec_private_key *create_test_ec_private_key(signal_context *context)
 {
     int result = 0;
     ec_key_pair *key_pair;
@@ -103,27 +103,27 @@ ec_private_key *create_test_ec_private_key(axolotl_context *context)
     ck_assert_int_eq(result, 0);
 
     ec_private_key *private_key = ec_key_pair_get_private(key_pair);
-    AXOLOTL_REF(private_key);
-    AXOLOTL_UNREF(key_pair);
+    SIGNAL_REF(private_key);
+    SIGNAL_UNREF(key_pair);
     return private_key;
 }
 
 void test_log(int level, const char *message, size_t len, void *user_data)
 {
     switch(level) {
-    case AX_LOG_ERROR:
+    case SG_LOG_ERROR:
         fprintf(stderr, "[ERROR] %s\n", message);
         break;
-    case AX_LOG_WARNING:
+    case SG_LOG_WARNING:
         fprintf(stderr, "[WARNING] %s\n", message);
         break;
-    case AX_LOG_NOTICE:
+    case SG_LOG_NOTICE:
         fprintf(stderr, "[NOTICE] %s\n", message);
         break;
-    case AX_LOG_INFO:
+    case SG_LOG_INFO:
         fprintf(stderr, "[INFO] %s\n", message);
         break;
-    case AX_LOG_DEBUG:
+    case SG_LOG_DEBUG:
         fprintf(stderr, "[DEBUG] %s\n", message);
         break;
     default:
@@ -138,7 +138,7 @@ int test_random_generator(uint8_t *data, size_t len, void *user_data)
         return 0;
     }
     else {
-        return AX_ERR_UNKNOWN;
+        return SG_ERR_UNKNOWN;
     }
 }
 
@@ -146,13 +146,13 @@ int test_hmac_sha256_init(void **hmac_context, const uint8_t *key, size_t key_le
 {
     HMAC_CTX *ctx = malloc(sizeof(HMAC_CTX));
     if(!ctx) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     HMAC_CTX_init(ctx);
     *hmac_context = ctx;
 
     if(HMAC_Init_ex(ctx, key, key_len, EVP_sha256(), 0) != 1) {
-        return AX_ERR_UNKNOWN;
+        return SG_ERR_UNKNOWN;
     }
 
     return 0;
@@ -165,7 +165,7 @@ int test_hmac_sha256_update(void *hmac_context, const uint8_t *data, size_t data
     return (result == 1) ? 0 : -1;
 }
 
-int test_hmac_sha256_final(void *hmac_context, axolotl_buffer **output, void *user_data)
+int test_hmac_sha256_final(void *hmac_context, signal_buffer **output, void *user_data)
 {
     int result = 0;
     unsigned char md[EVP_MAX_MD_SIZE];
@@ -173,12 +173,12 @@ int test_hmac_sha256_final(void *hmac_context, axolotl_buffer **output, void *us
     HMAC_CTX *ctx = hmac_context;
 
     if(HMAC_Final(ctx, md, &len) != 1) {
-        return AX_ERR_UNKNOWN;
+        return SG_ERR_UNKNOWN;
     }
 
-    axolotl_buffer *output_buffer = axolotl_buffer_create(md, len);
+    signal_buffer *output_buffer = signal_buffer_create(md, len);
     if(!output_buffer) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -199,7 +199,7 @@ void test_hmac_sha256_cleanup(void *hmac_context, void *user_data)
 
 const EVP_CIPHER *aes_cipher(int cipher, size_t key_len)
 {
-    if(cipher == AX_CIPHER_AES_CBC_PKCS5) {
+    if(cipher == SG_CIPHER_AES_CBC_PKCS5) {
         if(key_len == 16) {
             return EVP_aes_128_cbc();
         }
@@ -210,7 +210,7 @@ const EVP_CIPHER *aes_cipher(int cipher, size_t key_len)
             return EVP_aes_256_cbc();
         }
     }
-    else if(cipher == AX_CIPHER_AES_CTR_NOPADDING) {
+    else if(cipher == SG_CIPHER_AES_CTR_NOPADDING) {
         if(key_len == 16) {
             return EVP_aes_128_ctr();
         }
@@ -224,40 +224,40 @@ const EVP_CIPHER *aes_cipher(int cipher, size_t key_len)
     return 0;
 }
 
-int test_sha512_digest_func(axolotl_buffer **output, const uint8_t *data, size_t data_len, void *user_data)
+int test_sha512_digest_func(signal_buffer **output, const uint8_t *data, size_t data_len, void *user_data)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     SHA512_CTX ctx;
 
-    buffer = axolotl_buffer_alloc(SHA512_DIGEST_LENGTH);
+    buffer = signal_buffer_alloc(SHA512_DIGEST_LENGTH);
     if(!buffer) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
     result = SHA512_Init(&ctx);
     if(!result) {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
     result = SHA512_Update(&ctx, data, data_len);
     if(!result) {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
 complete:
     if(buffer) {
-        result = SHA512_Final(axolotl_buffer_data(buffer), &ctx);
+        result = SHA512_Final(signal_buffer_data(buffer), &ctx);
         if(!result) {
-            result = AX_ERR_UNKNOWN;
+            result = SG_ERR_UNKNOWN;
         }
     }
 
     if(result < 0) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     else {
         *output = buffer;
@@ -265,7 +265,7 @@ complete:
     return result;
 }
 
-int test_encrypt(axolotl_buffer **output,
+int test_encrypt(signal_buffer **output,
         int cipher,
         const uint8_t *key, size_t key_len,
         const uint8_t *iv, size_t iv_len,
@@ -278,12 +278,12 @@ int test_encrypt(axolotl_buffer **output,
     const EVP_CIPHER *evp_cipher = aes_cipher(cipher, key_len);
     if(!evp_cipher) {
         fprintf(stderr, "invalid AES mode or key size: %zu\n", key_len);
-        return AX_ERR_UNKNOWN;
+        return SG_ERR_UNKNOWN;
     }
 
     if(iv_len != 16) {
         fprintf(stderr, "invalid AES IV size: %zu\n", iv_len);
-        return AX_ERR_UNKNOWN;
+        return SG_ERR_UNKNOWN;
     }
 
     EVP_CIPHER_CTX ctx;
@@ -292,15 +292,15 @@ int test_encrypt(axolotl_buffer **output,
     result = EVP_EncryptInit_ex(&ctx, evp_cipher, 0, key, iv);
     if(!result) {
         fprintf(stderr, "cannot initialize cipher\n");
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
-    if(cipher == AX_CIPHER_AES_CTR_NOPADDING) {
+    if(cipher == SG_CIPHER_AES_CTR_NOPADDING) {
         result = EVP_CIPHER_CTX_set_padding(&ctx, 0);
         if(!result) {
             fprintf(stderr, "cannot set padding\n");
-            result = AX_ERR_UNKNOWN;
+            result = SG_ERR_UNKNOWN;
             goto complete;
         }
     }
@@ -308,7 +308,7 @@ int test_encrypt(axolotl_buffer **output,
     out_buf = malloc(sizeof(uint8_t) * (plaintext_len + EVP_MAX_BLOCK_LENGTH));
     if(!out_buf) {
         fprintf(stderr, "cannot allocate output buffer\n");
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -317,7 +317,7 @@ int test_encrypt(axolotl_buffer **output,
         out_buf, &out_len, plaintext, plaintext_len);
     if(!result) {
         fprintf(stderr, "cannot encrypt plaintext\n");
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -325,11 +325,11 @@ int test_encrypt(axolotl_buffer **output,
     result = EVP_EncryptFinal_ex(&ctx, out_buf + out_len, &final_len);
     if(!result) {
         fprintf(stderr, "cannot finish encrypting plaintext\n");
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
-    *output = axolotl_buffer_create(out_buf, out_len + final_len);
+    *output = signal_buffer_create(out_buf, out_len + final_len);
 
 complete:
     EVP_CIPHER_CTX_cleanup(&ctx);
@@ -339,7 +339,7 @@ complete:
     return result;
 }
 
-int test_decrypt(axolotl_buffer **output,
+int test_decrypt(signal_buffer **output,
         int cipher,
         const uint8_t *key, size_t key_len,
         const uint8_t *iv, size_t iv_len,
@@ -352,12 +352,12 @@ int test_decrypt(axolotl_buffer **output,
     const EVP_CIPHER *evp_cipher = aes_cipher(cipher, key_len);
     if(!evp_cipher) {
         fprintf(stderr, "invalid AES mode or key size: %zu\n", key_len);
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     if(iv_len != 16) {
         fprintf(stderr, "invalid AES IV size: %zu\n", iv_len);
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     EVP_CIPHER_CTX ctx;
@@ -366,15 +366,15 @@ int test_decrypt(axolotl_buffer **output,
     result = EVP_DecryptInit_ex(&ctx, evp_cipher, 0, key, iv);
     if(!result) {
         fprintf(stderr, "cannot initialize cipher\n");
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
-    if(cipher == AX_CIPHER_AES_CTR_NOPADDING) {
+    if(cipher == SG_CIPHER_AES_CTR_NOPADDING) {
         result = EVP_CIPHER_CTX_set_padding(&ctx, 0);
         if(!result) {
             fprintf(stderr, "cannot set padding\n");
-            result = AX_ERR_UNKNOWN;
+            result = SG_ERR_UNKNOWN;
             goto complete;
         }
     }
@@ -382,7 +382,7 @@ int test_decrypt(axolotl_buffer **output,
     out_buf = malloc(sizeof(uint8_t) * (ciphertext_len + EVP_MAX_BLOCK_LENGTH));
     if(!out_buf) {
         fprintf(stderr, "cannot allocate output buffer\n");
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -391,7 +391,7 @@ int test_decrypt(axolotl_buffer **output,
         out_buf, &out_len, ciphertext, ciphertext_len);
     if(!result) {
         fprintf(stderr, "cannot decrypt ciphertext\n");
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
@@ -399,11 +399,11 @@ int test_decrypt(axolotl_buffer **output,
     result = EVP_DecryptFinal_ex(&ctx, out_buf + out_len, &final_len);
     if(!result) {
         fprintf(stderr, "cannot finish decrypting ciphertext\n");
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
-    *output = axolotl_buffer_create(out_buf, out_len + final_len);
+    *output = signal_buffer_create(out_buf, out_len + final_len);
 
 complete:
     EVP_CIPHER_CTX_cleanup(&ctx);
@@ -413,9 +413,9 @@ complete:
     return result;
 }
 
-void setup_test_crypto_provider(axolotl_context *context)
+void setup_test_crypto_provider(signal_context *context)
 {
-    axolotl_crypto_provider provider = {
+    signal_crypto_provider provider = {
             .random_func = test_random_generator,
             .hmac_sha256_init_func = test_hmac_sha256_init,
             .hmac_sha256_update_func = test_hmac_sha256_update,
@@ -427,12 +427,12 @@ void setup_test_crypto_provider(axolotl_context *context)
             .user_data = 0
     };
 
-    axolotl_context_set_crypto_provider(context, &provider);
+    signal_context_set_crypto_provider(context, &provider);
 }
 
 /*------------------------------------------------------------------------*/
 
-void setup_test_store_context(axolotl_store_context **context, axolotl_context *global_context)
+void setup_test_store_context(axolotl_store_context **context, signal_context *global_context)
 {
     int result = 0;
 
@@ -458,7 +458,7 @@ typedef struct {
 
 typedef struct {
     test_session_store_session_key key;
-    axolotl_buffer *record;
+    signal_buffer *record;
     UT_hash_handle hh;
 } test_session_store_session;
 
@@ -466,7 +466,7 @@ typedef struct {
     test_session_store_session *sessions;
 } test_session_store_data;
 
-int test_session_store_load_session(axolotl_buffer **record, const axolotl_address *address, void *user_data)
+int test_session_store_load_session(signal_buffer **record, const axolotl_address *address, void *user_data)
 {
     test_session_store_data *data = user_data;
 
@@ -481,21 +481,21 @@ int test_session_store_load_session(axolotl_buffer **record, const axolotl_addre
     if(!s) {
         return 0;
     }
-    axolotl_buffer *result = axolotl_buffer_copy(s->record);
+    signal_buffer *result = signal_buffer_copy(s->record);
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     *record = result;
     return 1;
 }
 
-int test_session_store_get_sub_device_sessions(axolotl_int_list **sessions, const char *name, size_t name_len, void *user_data)
+int test_session_store_get_sub_device_sessions(signal_int_list **sessions, const char *name, size_t name_len, void *user_data)
 {
     test_session_store_data *data = user_data;
 
-    axolotl_int_list *result = axolotl_int_list_alloc();
+    signal_int_list *result = signal_int_list_alloc();
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     int64_t recipient_hash = jenkins_hash(name, name_len);
@@ -503,7 +503,7 @@ int test_session_store_get_sub_device_sessions(axolotl_int_list **sessions, cons
     test_session_store_session *tmp_node;
     HASH_ITER(hh, data->sessions, cur_node, tmp_node) {
         if(cur_node->key.recipient_id == recipient_hash) {
-            axolotl_int_list_push_back(result, cur_node->key.device_id);
+            signal_int_list_push_back(result, cur_node->key.device_id);
         }
     }
 
@@ -522,22 +522,22 @@ int test_session_store_store_session(const axolotl_address *address, uint8_t *re
     l.key.recipient_id = jenkins_hash(address->name, address->name_len);
     l.key.device_id = address->device_id;
 
-    axolotl_buffer *record_buf = axolotl_buffer_create(record, record_len);
+    signal_buffer *record_buf = signal_buffer_create(record, record_len);
     if(!record_buf) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     HASH_FIND(hh, data->sessions, &l.key, sizeof(test_session_store_session_key), s);
 
     if(s) {
-        axolotl_buffer_free(s->record);
+        signal_buffer_free(s->record);
         s->record = record_buf;
     }
     else {
         s = malloc(sizeof(test_session_store_session));
         if(!s) {
-            axolotl_buffer_free(record_buf);
-            return AX_ERR_NOMEM;
+            signal_buffer_free(record_buf);
+            return SG_ERR_NOMEM;
         }
         memset(s, 0, sizeof(test_session_store_session));
         s->key.recipient_id = jenkins_hash(address->name, address->name_len);
@@ -579,7 +579,7 @@ int test_session_store_delete_session(const axolotl_address *address, void *user
 
     if(s) {
         HASH_DEL(data->sessions, s);
-        axolotl_buffer_free(s->record);
+        signal_buffer_free(s->record);
         free(s);
         result = 1;
     }
@@ -597,7 +597,7 @@ int test_session_store_delete_all_sessions(const char *name, size_t name_len, vo
     HASH_ITER(hh, data->sessions, cur_node, tmp_node) {
         if(cur_node->key.recipient_id == recipient_hash) {
             HASH_DEL(data->sessions, cur_node);
-            axolotl_buffer_free(cur_node->record);
+            signal_buffer_free(cur_node->record);
             free(cur_node);
             result++;
         }
@@ -614,7 +614,7 @@ void test_session_store_destroy(void *user_data)
     test_session_store_session *tmp_node;
     HASH_ITER(hh, data->sessions, cur_node, tmp_node) {
         HASH_DEL(data->sessions, cur_node);
-        axolotl_buffer_free(cur_node->record);
+        signal_buffer_free(cur_node->record);
         free(cur_node);
     }
 
@@ -644,7 +644,7 @@ void setup_test_session_store(axolotl_store_context *context)
 
 typedef struct {
     uint32_t key_id;
-    axolotl_buffer *key_record;
+    signal_buffer *key_record;
     UT_hash_handle hh;
 } test_pre_key_store_key;
 
@@ -652,7 +652,7 @@ typedef struct {
     test_pre_key_store_key *keys;
 } test_pre_key_store_data;
 
-int test_pre_key_store_load_pre_key(axolotl_buffer **record, uint32_t pre_key_id, void *user_data)
+int test_pre_key_store_load_pre_key(signal_buffer **record, uint32_t pre_key_id, void *user_data)
 {
     test_pre_key_store_data *data = user_data;
 
@@ -660,11 +660,11 @@ int test_pre_key_store_load_pre_key(axolotl_buffer **record, uint32_t pre_key_id
 
     HASH_FIND(hh, data->keys, &pre_key_id, sizeof(uint32_t), s);
     if(s) {
-        *record = axolotl_buffer_copy(s->key_record);
-        return AX_SUCCESS;
+        *record = signal_buffer_copy(s->key_record);
+        return SG_SUCCESS;
     }
     else {
-        return AX_ERR_INVALID_KEY_ID;
+        return SG_ERR_INVALID_KEY_ID;
     }
 }
 
@@ -674,21 +674,21 @@ int test_pre_key_store_store_pre_key(uint32_t pre_key_id, uint8_t *record, size_
 
     test_pre_key_store_key *s;
 
-    axolotl_buffer *key_buf = axolotl_buffer_create(record, record_len);
+    signal_buffer *key_buf = signal_buffer_create(record, record_len);
     if(!key_buf) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     HASH_FIND(hh, data->keys, &pre_key_id, sizeof(uint32_t), s);
     if(s) {
-        axolotl_buffer_free(s->key_record);
+        signal_buffer_free(s->key_record);
         s->key_record = key_buf;
     }
     else {
         s = malloc(sizeof(test_pre_key_store_key));
         if(!s) {
-            axolotl_buffer_free(key_buf);
-            return AX_ERR_NOMEM;
+            signal_buffer_free(key_buf);
+            return SG_ERR_NOMEM;
         }
         memset(s, 0, sizeof(test_pre_key_store_key));
         s->key_id = pre_key_id;
@@ -717,7 +717,7 @@ int test_pre_key_store_remove_pre_key(uint32_t pre_key_id, void *user_data)
     HASH_FIND(hh, data->keys, &pre_key_id, sizeof(uint32_t), s);
     if(s) {
         HASH_DEL(data->keys, s);
-        axolotl_buffer_free(s->key_record);
+        signal_buffer_free(s->key_record);
         free(s);
     }
 
@@ -732,7 +732,7 @@ void test_pre_key_store_destroy(void *user_data)
     test_pre_key_store_key *tmp_node;
     HASH_ITER(hh, data->keys, cur_node, tmp_node) {
         HASH_DEL(data->keys, cur_node);
-        axolotl_buffer_free(cur_node->key_record);
+        signal_buffer_free(cur_node->key_record);
         free(cur_node);
     }
     free(data);
@@ -759,7 +759,7 @@ void setup_test_pre_key_store(axolotl_store_context *context)
 
 typedef struct {
     uint32_t key_id;
-    axolotl_buffer *key_record;
+    signal_buffer *key_record;
     UT_hash_handle hh;
 } test_signed_pre_key_store_key;
 
@@ -768,18 +768,18 @@ typedef struct {
 } test_signed_pre_key_store_data;
 
 
-int test_signed_pre_key_store_load_signed_pre_key(axolotl_buffer **record, uint32_t signed_pre_key_id, void *user_data)
+int test_signed_pre_key_store_load_signed_pre_key(signal_buffer **record, uint32_t signed_pre_key_id, void *user_data)
 {
     test_signed_pre_key_store_data *data = user_data;
     test_signed_pre_key_store_key *s;
 
     HASH_FIND(hh, data->keys, &signed_pre_key_id, sizeof(uint32_t), s);
     if(s) {
-        *record = axolotl_buffer_copy(s->key_record);
-        return AX_SUCCESS;
+        *record = signal_buffer_copy(s->key_record);
+        return SG_SUCCESS;
     }
     else {
-        return AX_ERR_INVALID_KEY_ID;
+        return SG_ERR_INVALID_KEY_ID;
     }
 }
 
@@ -788,21 +788,21 @@ int test_signed_pre_key_store_store_signed_pre_key(uint32_t signed_pre_key_id, u
     test_signed_pre_key_store_data *data = user_data;
     test_signed_pre_key_store_key *s;
 
-    axolotl_buffer *key_buf = axolotl_buffer_create(record, record_len);
+    signal_buffer *key_buf = signal_buffer_create(record, record_len);
     if(!key_buf) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     HASH_FIND(hh, data->keys, &signed_pre_key_id, sizeof(uint32_t), s);
     if(s) {
-        axolotl_buffer_free(s->key_record);
+        signal_buffer_free(s->key_record);
         s->key_record = key_buf;
     }
     else {
         s = malloc(sizeof(test_signed_pre_key_store_key));
         if(!s) {
-            axolotl_buffer_free(key_buf);
-            return AX_ERR_NOMEM;
+            signal_buffer_free(key_buf);
+            return SG_ERR_NOMEM;
         }
         memset(s, 0, sizeof(test_signed_pre_key_store_key));
         s->key_id = signed_pre_key_id;
@@ -831,7 +831,7 @@ int test_signed_pre_key_store_remove_signed_pre_key(uint32_t signed_pre_key_id, 
     HASH_FIND(hh, data->keys, &signed_pre_key_id, sizeof(uint32_t), s);
     if(s) {
         HASH_DEL(data->keys, s);
-        axolotl_buffer_free(s->key_record);
+        signal_buffer_free(s->key_record);
         free(s);
     }
 
@@ -846,7 +846,7 @@ void test_signed_pre_key_store_destroy(void *user_data)
     test_signed_pre_key_store_key *tmp_node;
     HASH_ITER(hh, data->keys, cur_node, tmp_node) {
         HASH_DEL(data->keys, cur_node);
-        axolotl_buffer_free(cur_node->key_record);
+        signal_buffer_free(cur_node->key_record);
         free(cur_node);
     }
     free(data);
@@ -873,22 +873,22 @@ void setup_test_signed_pre_key_store(axolotl_store_context *context)
 
 typedef struct {
     int64_t recipient_id;
-    axolotl_buffer *identity_key;
+    signal_buffer *identity_key;
     UT_hash_handle hh;
 } test_identity_store_key;
 
 typedef struct {
     test_identity_store_key *keys;
-    axolotl_buffer *identity_key_public;
-    axolotl_buffer *identity_key_private;
+    signal_buffer *identity_key_public;
+    signal_buffer *identity_key_private;
     uint32_t local_registration_id;
 } test_identity_store_data;
 
-int test_identity_key_store_get_identity_key_pair(axolotl_buffer **public_data, axolotl_buffer **private_data, void *user_data)
+int test_identity_key_store_get_identity_key_pair(signal_buffer **public_data, signal_buffer **private_data, void *user_data)
 {
     test_identity_store_data *data = user_data;
-    *public_data = axolotl_buffer_copy(data->identity_key_public);
-    *private_data = axolotl_buffer_copy(data->identity_key_private);
+    *public_data = signal_buffer_copy(data->identity_key_public);
+    *private_data = signal_buffer_copy(data->identity_key_private);
     return 0;
 }
 
@@ -905,23 +905,23 @@ int test_identity_key_store_save_identity(const char *name, size_t name_len, uin
 
     test_identity_store_key *s;
 
-    axolotl_buffer *key_buf = axolotl_buffer_create(key_data, key_len);
+    signal_buffer *key_buf = signal_buffer_create(key_data, key_len);
     if(!key_buf) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     int64_t recipient_hash = jenkins_hash(name, name_len);
 
     HASH_FIND(hh, data->keys, &recipient_hash, sizeof(int64_t), s);
     if(s) {
-        axolotl_buffer_free(s->identity_key);
+        signal_buffer_free(s->identity_key);
         s->identity_key = key_buf;
     }
     else {
         s = malloc(sizeof(test_identity_store_key));
         if(!s) {
-            axolotl_buffer_free(key_buf);
-            return AX_ERR_NOMEM;
+            signal_buffer_free(key_buf);
+            return SG_ERR_NOMEM;
         }
         memset(s, 0, sizeof(test_identity_store_key));
         s->recipient_id = recipient_hash;
@@ -942,8 +942,8 @@ int test_identity_key_store_is_trusted_identity(const char *name, size_t name_le
     HASH_FIND(hh, data->keys, &recipient_hash, sizeof(int64_t), s);
 
     if(s) {
-        uint8_t *store_data = axolotl_buffer_data(s->identity_key);
-        size_t store_len = axolotl_buffer_len(s->identity_key);
+        uint8_t *store_data = signal_buffer_data(s->identity_key);
+        size_t store_len = signal_buffer_len(s->identity_key);
         if(store_len != key_len) {
             return 0;
         }
@@ -967,15 +967,15 @@ void test_identity_key_store_destroy(void *user_data)
     test_identity_store_key *tmp_node;
     HASH_ITER(hh, data->keys, cur_node, tmp_node) {
         HASH_DEL(data->keys, cur_node);
-        axolotl_buffer_free(cur_node->identity_key);
+        signal_buffer_free(cur_node->identity_key);
         free(cur_node);
     }
-    axolotl_buffer_free(data->identity_key_public);
-    axolotl_buffer_free(data->identity_key_private);
+    signal_buffer_free(data->identity_key_public);
+    signal_buffer_free(data->identity_key_private);
     free(data);
 }
 
-void setup_test_identity_key_store(axolotl_store_context *context, axolotl_context *global_context)
+void setup_test_identity_key_store(axolotl_store_context *context, signal_context *global_context)
 {
     test_identity_store_data *data = malloc(sizeof(test_identity_store_data));
     memset(data, 0, sizeof(test_identity_store_data));
@@ -988,7 +988,7 @@ void setup_test_identity_key_store(axolotl_store_context *context, axolotl_conte
 
     ec_public_key_serialize(&data->identity_key_public, identity_key_public);
     ec_private_key_serialize(&data->identity_key_private, identity_key_private);
-    AXOLOTL_UNREF(identity_key_pair_keys);
+    SIGNAL_UNREF(identity_key_pair_keys);
 
     data->local_registration_id = (rand() % 16380) + 1;
 
@@ -1014,7 +1014,7 @@ typedef struct {
 
 typedef struct {
     test_sender_key_store_key key;
-    axolotl_buffer *record;
+    signal_buffer *record;
     UT_hash_handle hh;
 } test_sender_key_store_record;
 
@@ -1034,22 +1034,22 @@ int test_sender_key_store_store_sender_key(const axolotl_sender_key_name *sender
     l.key.recipient_id = jenkins_hash(sender_key_name->sender.name, sender_key_name->sender.name_len);
     l.key.device_id = sender_key_name->sender.device_id;
 
-    axolotl_buffer *record_buf = axolotl_buffer_create(record, record_len);
+    signal_buffer *record_buf = signal_buffer_create(record, record_len);
     if(!record_buf) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     HASH_FIND(hh, data->records, &l.key, sizeof(test_sender_key_store_key), s);
 
     if(s) {
-        axolotl_buffer_free(s->record);
+        signal_buffer_free(s->record);
         s->record = record_buf;
     }
     else {
         s = malloc(sizeof(test_sender_key_store_record));
         if(!s) {
-            axolotl_buffer_free(record_buf);
-            return AX_ERR_NOMEM;
+            signal_buffer_free(record_buf);
+            return SG_ERR_NOMEM;
         }
         memset(s, 0, sizeof(test_sender_key_store_record));
         s->key.group_id = jenkins_hash(sender_key_name->group_id, sender_key_name->group_id_len);
@@ -1062,7 +1062,7 @@ int test_sender_key_store_store_sender_key(const axolotl_sender_key_name *sender
     return 0;
 }
 
-int test_sender_key_store_load_sender_key(axolotl_buffer **record, const axolotl_sender_key_name *sender_key_name, void *user_data)
+int test_sender_key_store_load_sender_key(signal_buffer **record, const axolotl_sender_key_name *sender_key_name, void *user_data)
 {
     test_sender_key_store_data *data = user_data;
 
@@ -1078,9 +1078,9 @@ int test_sender_key_store_load_sender_key(axolotl_buffer **record, const axolotl
     if(!s) {
         return 0;
     }
-    axolotl_buffer *result = axolotl_buffer_copy(s->record);
+    signal_buffer *result = signal_buffer_copy(s->record);
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     *record = result;
     return 1;
@@ -1094,13 +1094,13 @@ void test_sender_key_store_destroy(void *user_data)
     test_sender_key_store_record *tmp_node;
     HASH_ITER(hh, data->records, cur_node, tmp_node) {
         HASH_DEL(data->records, cur_node);
-        axolotl_buffer_free(cur_node->record);
+        signal_buffer_free(cur_node->record);
         free(cur_node);
     }
     free(data);
 }
 
-void setup_test_sender_key_store(axolotl_store_context *context, axolotl_context *global_context)
+void setup_test_sender_key_store(axolotl_store_context *context, signal_context *global_context)
 {
     test_sender_key_store_data *data = malloc(sizeof(test_sender_key_store_data));
     memset(data, 0, sizeof(test_sender_key_store_data));

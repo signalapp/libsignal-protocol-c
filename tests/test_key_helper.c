@@ -13,7 +13,7 @@
  * functions in the Java version with a similarly fake random number generator.
  */
 
-axolotl_context *global_context;
+signal_context *global_context;
 uint8_t test_next_random;
 
 int fake_random_generator(uint8_t *data, size_t len, void *user_data)
@@ -28,11 +28,11 @@ int fake_random_generator(uint8_t *data, size_t len, void *user_data)
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
-    axolotl_crypto_provider provider = {
+    signal_crypto_provider provider = {
             .random_func = fake_random_generator,
             .hmac_sha256_init_func = test_hmac_sha256_init,
             .hmac_sha256_update_func = test_hmac_sha256_update,
@@ -41,13 +41,13 @@ void test_setup()
             .user_data = 0
     };
 
-    axolotl_context_set_crypto_provider(global_context, &provider);
+    signal_context_set_crypto_provider(global_context, &provider);
     test_next_random = 0;
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 START_TEST(test_generate_identity_key_pair)
@@ -67,7 +67,7 @@ START_TEST(test_generate_identity_key_pair)
     };
 
     ratchet_identity_key_pair *key_pair = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     result = axolotl_key_helper_generate_identity_key_pair(&key_pair, global_context);
     ck_assert_int_eq(result, 0);
@@ -75,15 +75,15 @@ START_TEST(test_generate_identity_key_pair)
     result = ratchet_identity_key_pair_serialize(&buffer, key_pair);
     ck_assert_int_ge(result, 0);
 
-    uint8_t *data = axolotl_buffer_data(buffer);
-    size_t len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    size_t len = signal_buffer_len(buffer);
 
     ck_assert_int_eq(len, sizeof(identityKeyPair));
     ck_assert_int_eq(memcmp(identityKeyPair, data, len), 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(key_pair);
-    axolotl_buffer_free(buffer);
+    SIGNAL_UNREF(key_pair);
+    signal_buffer_free(buffer);
 }
 END_TEST
 
@@ -141,10 +141,10 @@ START_TEST(test_generate_pre_keys)
     session_pre_key *pre_key2 = 0;
     session_pre_key *pre_key3 = 0;
     session_pre_key *pre_key4 = 0;
-    axolotl_buffer *pre_key_buf1 = 0;
-    axolotl_buffer *pre_key_buf2 = 0;
-    axolotl_buffer *pre_key_buf3 = 0;
-    axolotl_buffer *pre_key_buf4 = 0;
+    signal_buffer *pre_key_buf1 = 0;
+    signal_buffer *pre_key_buf2 = 0;
+    signal_buffer *pre_key_buf3 = 0;
+    signal_buffer *pre_key_buf4 = 0;
 
     /* Generate a list of 4 pre-keys */
     result = axolotl_key_helper_generate_pre_keys(&head,
@@ -182,21 +182,21 @@ START_TEST(test_generate_pre_keys)
     ck_assert_int_ge(result, 0);
 
     /* Compare to the expected values */
-    ck_assert_int_eq(axolotl_buffer_len(pre_key_buf1), sizeof(preKey1));
-    ck_assert_int_eq(memcmp(preKey1, axolotl_buffer_data(pre_key_buf1), sizeof(preKey1)), 0);
-    ck_assert_int_eq(axolotl_buffer_len(pre_key_buf2), sizeof(preKey2));
-    ck_assert_int_eq(memcmp(preKey2, axolotl_buffer_data(pre_key_buf2), sizeof(preKey2)), 0);
-    ck_assert_int_eq(axolotl_buffer_len(pre_key_buf3), sizeof(preKey3));
-    ck_assert_int_eq(memcmp(preKey3, axolotl_buffer_data(pre_key_buf3), sizeof(preKey3)), 0);
-    ck_assert_int_eq(axolotl_buffer_len(pre_key_buf4), sizeof(preKey4));
-    ck_assert_int_eq(memcmp(preKey4, axolotl_buffer_data(pre_key_buf4), sizeof(preKey4)), 0);
+    ck_assert_int_eq(signal_buffer_len(pre_key_buf1), sizeof(preKey1));
+    ck_assert_int_eq(memcmp(preKey1, signal_buffer_data(pre_key_buf1), sizeof(preKey1)), 0);
+    ck_assert_int_eq(signal_buffer_len(pre_key_buf2), sizeof(preKey2));
+    ck_assert_int_eq(memcmp(preKey2, signal_buffer_data(pre_key_buf2), sizeof(preKey2)), 0);
+    ck_assert_int_eq(signal_buffer_len(pre_key_buf3), sizeof(preKey3));
+    ck_assert_int_eq(memcmp(preKey3, signal_buffer_data(pre_key_buf3), sizeof(preKey3)), 0);
+    ck_assert_int_eq(signal_buffer_len(pre_key_buf4), sizeof(preKey4));
+    ck_assert_int_eq(memcmp(preKey4, signal_buffer_data(pre_key_buf4), sizeof(preKey4)), 0);
 
     /* Cleanup */
     axolotl_key_helper_key_list_free(head);
-    axolotl_buffer_free(pre_key_buf1);
-    axolotl_buffer_free(pre_key_buf2);
-    axolotl_buffer_free(pre_key_buf3);
-    axolotl_buffer_free(pre_key_buf4);
+    signal_buffer_free(pre_key_buf1);
+    signal_buffer_free(pre_key_buf2);
+    signal_buffer_free(pre_key_buf3);
+    signal_buffer_free(pre_key_buf4);
 }
 END_TEST
 
@@ -217,7 +217,7 @@ START_TEST(test_generate_last_resort_pre_key)
 
     int result = 0;
     session_pre_key *pre_key = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     result = axolotl_key_helper_generate_last_resort_pre_key(&pre_key, global_context);
     ck_assert_int_eq(result, 0);
@@ -225,15 +225,15 @@ START_TEST(test_generate_last_resort_pre_key)
     result = session_pre_key_serialize(&buffer, pre_key);
     ck_assert_int_ge(result, 0);
 
-    uint8_t *data = axolotl_buffer_data(buffer);
-    size_t len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    size_t len = signal_buffer_len(buffer);
 
     ck_assert_int_eq(len, sizeof(lastResortPreKey));
     ck_assert_int_eq(memcmp(lastResortPreKey, data, len), 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(pre_key);
-    axolotl_buffer_free(buffer);
+    SIGNAL_UNREF(pre_key);
+    signal_buffer_free(buffer);
 }
 END_TEST
 
@@ -266,7 +266,7 @@ START_TEST(test_generate_signed_pre_key)
     int result = 0;
     ratchet_identity_key_pair *identity_key_pair = 0;
     session_signed_pre_key *signed_pre_key = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     result = axolotl_key_helper_generate_identity_key_pair(&identity_key_pair, global_context);
     ck_assert_int_eq(result, 0);
@@ -278,16 +278,16 @@ START_TEST(test_generate_signed_pre_key)
     result = session_signed_pre_key_serialize(&buffer, signed_pre_key);
     ck_assert_int_ge(result, 0);
 
-    uint8_t *data = axolotl_buffer_data(buffer);
-    size_t len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    size_t len = signal_buffer_len(buffer);
 
     ck_assert_int_eq(len, sizeof(signedPreKey));
     ck_assert_int_eq(memcmp(signedPreKey, data, len), 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(identity_key_pair);
-    AXOLOTL_UNREF(signed_pre_key);
-    axolotl_buffer_free(buffer);
+    SIGNAL_UNREF(identity_key_pair);
+    SIGNAL_UNREF(signed_pre_key);
+    signal_buffer_free(buffer);
 }
 END_TEST
 

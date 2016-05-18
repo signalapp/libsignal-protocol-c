@@ -13,14 +13,14 @@
 
 struct fingerprint
 {
-    axolotl_type_base base;
+    signal_type_base base;
     displayable_fingerprint *displayable;
     scannable_fingerprint *scannable;
 };
 
 struct displayable_fingerprint
 {
-    axolotl_type_base base;
+    signal_type_base base;
     char *local_fingerprint;
     char *remote_fingerprint;
     char *display_text;
@@ -28,7 +28,7 @@ struct displayable_fingerprint
 
 struct scannable_fingerprint
 {
-    axolotl_type_base base;
+    signal_type_base base;
     uint32_t version;
     char *local_stable_identifier;
     ec_public_key *local_identity_key;
@@ -39,13 +39,13 @@ struct scannable_fingerprint
 struct fingerprint_generator
 {
     int iterations;
-    axolotl_context *global_context;
+    signal_context *global_context;
 };
 
 static int fingerprint_generator_create_display_string(fingerprint_generator *generator, char **display_string,
         const char *local_stable_identifier, ec_public_key *identity_key);
 
-int fingerprint_generator_create(fingerprint_generator **generator, int iterations, axolotl_context *global_context)
+int fingerprint_generator_create(fingerprint_generator **generator, int iterations, signal_context *global_context)
 {
     fingerprint_generator *result_generator;
 
@@ -53,7 +53,7 @@ int fingerprint_generator_create(fingerprint_generator **generator, int iteratio
 
     result_generator = malloc(sizeof(fingerprint_generator));
     if(!result_generator) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result_generator, 0, sizeof(fingerprint_generator));
 
@@ -109,8 +109,8 @@ complete:
     if(displayable_remote) {
         free(displayable_remote);
     }
-    AXOLOTL_UNREF(displayable);
-    AXOLOTL_UNREF(scannable);
+    SIGNAL_UNREF(displayable);
+    SIGNAL_UNREF(scannable);
     if(result >= 0) {
         *fingerprint_val = result_fingerprint;
     }
@@ -122,10 +122,10 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
 {
     int result = 0;
     char *result_string = 0;
-    axolotl_buffer *identity_buffer = 0;
-    axolotl_buffer *hash_buffer = 0;
-    axolotl_buffer *hash_in_buffer = 0;
-    axolotl_buffer *hash_out_buffer = 0;
+    signal_buffer *identity_buffer = 0;
+    signal_buffer *hash_buffer = 0;
+    signal_buffer *hash_in_buffer = 0;
+    signal_buffer *hash_out_buffer = 0;
     uint8_t *data = 0;
     size_t len = 0;
     uint8_t *in_data = 0;
@@ -142,67 +142,67 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
         goto complete;
     }
 
-    len = 2 + axolotl_buffer_len(identity_buffer) + strlen(stable_identifier);
+    len = 2 + signal_buffer_len(identity_buffer) + strlen(stable_identifier);
 
-    hash_buffer = axolotl_buffer_alloc(len);
+    hash_buffer = signal_buffer_alloc(len);
     if(!hash_buffer) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    data = axolotl_buffer_data(hash_buffer);
+    data = signal_buffer_data(hash_buffer);
 
     memset(data, 0, len);
 
     data[0] = 0;
     data[1] = (uint8_t)VERSION;
-    memcpy(data + 2, axolotl_buffer_data(identity_buffer), axolotl_buffer_len(identity_buffer));
-    memcpy(data + 2 + axolotl_buffer_len(identity_buffer), stable_identifier, strlen(stable_identifier));
+    memcpy(data + 2, signal_buffer_data(identity_buffer), signal_buffer_len(identity_buffer));
+    memcpy(data + 2 + signal_buffer_len(identity_buffer), stable_identifier, strlen(stable_identifier));
 
-    hash_in_buffer = axolotl_buffer_alloc(MAX(len, SHA512_DIGEST_LENGTH) + axolotl_buffer_len(identity_buffer));
+    hash_in_buffer = signal_buffer_alloc(MAX(len, SHA512_DIGEST_LENGTH) + signal_buffer_len(identity_buffer));
     if(!hash_in_buffer) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    in_data = axolotl_buffer_data(hash_in_buffer);
-    in_len = len + axolotl_buffer_len(identity_buffer);
+    in_data = signal_buffer_data(hash_in_buffer);
+    in_len = len + signal_buffer_len(identity_buffer);
 
     for(i = 0; i < generator->iterations; i++) {
-        data = axolotl_buffer_data(hash_buffer);
-        len = axolotl_buffer_len(hash_buffer);
-        in_len = axolotl_buffer_len(hash_buffer) + axolotl_buffer_len(identity_buffer);
+        data = signal_buffer_data(hash_buffer);
+        len = signal_buffer_len(hash_buffer);
+        in_len = signal_buffer_len(hash_buffer) + signal_buffer_len(identity_buffer);
         memcpy(in_data, data, len);
         memcpy(in_data + len,
-                axolotl_buffer_data(identity_buffer),
-                axolotl_buffer_len(identity_buffer));
+                signal_buffer_data(identity_buffer),
+                signal_buffer_len(identity_buffer));
 
-        result = axolotl_sha512_digest(generator->global_context,
+        result = signal_sha512_digest(generator->global_context,
                 &hash_out_buffer, in_data, in_len);
         if(result < 0) {
             goto complete;
         }
-        if(axolotl_buffer_len(hash_out_buffer) != SHA512_DIGEST_LENGTH) {
-            result = AX_ERR_INVAL;
+        if(signal_buffer_len(hash_out_buffer) != SHA512_DIGEST_LENGTH) {
+            result = SG_ERR_INVAL;
             goto complete;
         }
 
-        axolotl_buffer_free(hash_buffer);
+        signal_buffer_free(hash_buffer);
         hash_buffer = hash_out_buffer;
         hash_out_buffer = 0;
     }
 
-    data = axolotl_buffer_data(hash_buffer);
-    len = axolotl_buffer_len(hash_buffer);
+    data = signal_buffer_data(hash_buffer);
+    len = signal_buffer_len(hash_buffer);
 
     if(len < 30) {
-        result = AX_ERR_UNKNOWN;
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
     result_string = malloc(31);
     if(!result_string) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -220,10 +220,10 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
     }
 
 complete:
-    axolotl_buffer_free(identity_buffer);
-    axolotl_buffer_free(hash_buffer);
-    axolotl_buffer_free(hash_in_buffer);
-    axolotl_buffer_free(hash_out_buffer);
+    signal_buffer_free(identity_buffer);
+    signal_buffer_free(hash_buffer);
+    signal_buffer_free(hash_in_buffer);
+    signal_buffer_free(hash_out_buffer);
     if(result >= 0) {
         *display_string = result_string;
     }
@@ -241,18 +241,18 @@ int fingerprint_create(fingerprint **fingerprint_val, displayable_fingerprint *d
 {
     fingerprint *result = malloc(sizeof(fingerprint));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memset(result, 0, sizeof(fingerprint));
-    AXOLOTL_INIT(result, fingerprint_destroy);
+    SIGNAL_INIT(result, fingerprint_destroy);
     if(displayable) {
         result->displayable = displayable;
-        AXOLOTL_REF(displayable);
+        SIGNAL_REF(displayable);
     }
     if(scannable) {
         result->scannable = scannable;
-        AXOLOTL_REF(scannable);
+        SIGNAL_REF(scannable);
     }
 
     *fingerprint_val = result;
@@ -272,11 +272,11 @@ scannable_fingerprint *fingerprint_get_scannable(fingerprint *fingerprint_val)
     return fingerprint_val->scannable;
 }
 
-void fingerprint_destroy(axolotl_type_base *type)
+void fingerprint_destroy(signal_type_base *type)
 {
     fingerprint *fingerprint_val = (fingerprint *)type;
-    AXOLOTL_UNREF(fingerprint_val->displayable);
-    AXOLOTL_UNREF(fingerprint_val->scannable);
+    SIGNAL_UNREF(fingerprint_val->displayable);
+    SIGNAL_UNREF(fingerprint_val->scannable);
     free(fingerprint_val);
 }
 
@@ -289,26 +289,26 @@ int displayable_fingerprint_create(displayable_fingerprint **displayable, const 
     char *display_text = 0;
 
     if(!local_fingerprint || !remote_fingerprint) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result_displayable = malloc(sizeof(displayable_fingerprint));
     if(!result_displayable) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memset(result_displayable, 0, sizeof(displayable_fingerprint));
-    AXOLOTL_INIT(result_displayable, displayable_fingerprint_destroy);
+    SIGNAL_INIT(result_displayable, displayable_fingerprint_destroy);
 
     result_displayable->local_fingerprint = strdup(local_fingerprint);
     if(!result_displayable->local_fingerprint) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
     result_displayable->remote_fingerprint = strdup(remote_fingerprint);
     if(!result_displayable->remote_fingerprint) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -317,7 +317,7 @@ int displayable_fingerprint_create(displayable_fingerprint **displayable, const 
 
     display_text = malloc(local_len + remote_len + 1);
     if(!display_text) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -334,7 +334,7 @@ int displayable_fingerprint_create(displayable_fingerprint **displayable, const 
 
 complete:
     if(result < 0) {
-        AXOLOTL_UNREF(result_displayable);
+        SIGNAL_UNREF(result_displayable);
     }
     else {
         *displayable = result_displayable;
@@ -361,7 +361,7 @@ const char *displayable_fingerprint_text(displayable_fingerprint *displayable)
     return displayable->display_text;
 }
 
-void displayable_fingerprint_destroy(axolotl_type_base *type)
+void displayable_fingerprint_destroy(signal_type_base *type)
 {
     displayable_fingerprint *displayable = (displayable_fingerprint *)type;
     if(displayable->local_fingerprint) {
@@ -386,40 +386,40 @@ int scannable_fingerprint_create(scannable_fingerprint **scannable,
 
     if(!local_stable_identifier || !local_identity_key ||
             !remote_stable_identifier || !remote_identity_key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result_scannable = malloc(sizeof(scannable_fingerprint));
     if(!result_scannable) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
     memset(result_scannable, 0, sizeof(scannable_fingerprint));
-    AXOLOTL_INIT(result_scannable, scannable_fingerprint_destroy);
+    SIGNAL_INIT(result_scannable, scannable_fingerprint_destroy);
 
     result_scannable->version = version;
 
     result_scannable->local_stable_identifier = strdup(local_stable_identifier);
     if(!result_scannable->local_stable_identifier) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
     result_scannable->local_identity_key = local_identity_key;
-    AXOLOTL_REF(local_identity_key);
+    SIGNAL_REF(local_identity_key);
 
     result_scannable->remote_stable_identifier = strdup(remote_stable_identifier);
     if(!result_scannable->remote_stable_identifier) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
     result_scannable->remote_identity_key = remote_identity_key;
-    AXOLOTL_REF(remote_identity_key);
+    SIGNAL_REF(remote_identity_key);
 
 complete:
     if(result < 0) {
-        AXOLOTL_UNREF(result_scannable);
+        SIGNAL_UNREF(result_scannable);
     }
     else {
         *scannable = result_scannable;
@@ -428,11 +428,11 @@ complete:
     return result;
 }
 
-int scannable_fingerprint_serialize(axolotl_buffer **buffer, const scannable_fingerprint *scannable)
+int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fingerprint *scannable)
 {
     int result = 0;
     size_t result_size = 0;
-    axolotl_buffer *result_buf = 0;
+    signal_buffer *result_buf = 0;
     Textsecure__CombinedFingerprint combined_fingerprint = TEXTSECURE__COMBINED_FINGERPRINT__INIT;
     Textsecure__FingerprintData local_fingerprint = TEXTSECURE__FINGERPRINT_DATA__INIT;
     Textsecure__FingerprintData remote_fingerprint = TEXTSECURE__FINGERPRINT_DATA__INIT;
@@ -470,17 +470,17 @@ int scannable_fingerprint_serialize(axolotl_buffer **buffer, const scannable_fin
 
     len = textsecure__combined_fingerprint__get_packed_size(&combined_fingerprint);
 
-    result_buf = axolotl_buffer_alloc(len);
+    result_buf = signal_buffer_alloc(len);
     if(!result_buf) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    data = axolotl_buffer_data(result_buf);
+    data = signal_buffer_data(result_buf);
     result_size = textsecure__combined_fingerprint__pack(&combined_fingerprint, data);
     if(result_size != len) {
-        axolotl_buffer_free(result_buf);
-        result = AX_ERR_INVALID_PROTO_BUF;
+        signal_buffer_free(result_buf);
+        result = SG_ERR_INVALID_PROTO_BUF;
         result_buf = 0;
         goto complete;
     }
@@ -498,7 +498,7 @@ complete:
     return result;
 }
 
-int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const uint8_t *data, size_t len, axolotl_context *global_context)
+int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const uint8_t *data, size_t len, signal_context *global_context)
 {
     int result = 0;
     Textsecure__CombinedFingerprint *combined_fingerprint = 0;
@@ -510,7 +510,7 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
 
     combined_fingerprint = textsecure__combined_fingerprint__unpack(0, len, data);
     if(!combined_fingerprint) {
-        result = AX_ERR_INVALID_PROTO_BUF;
+        result = SG_ERR_INVALID_PROTO_BUF;
         goto complete;
     }
 
@@ -522,7 +522,7 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
         if(combined_fingerprint->localfingerprint->has_identifier) {
             local_stable_identifier = axolotl_str_deserialize_protobuf(&combined_fingerprint->localfingerprint->identifier);
             if(!local_stable_identifier) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
         }
@@ -541,7 +541,7 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
         if(combined_fingerprint->remotefingerprint->has_identifier) {
             remote_stable_identifier = axolotl_str_deserialize_protobuf(&combined_fingerprint->remotefingerprint->identifier);
             if(!remote_stable_identifier) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
         }
@@ -568,13 +568,13 @@ complete:
         free(local_stable_identifier);
     }
     if(local_identity_key) {
-        AXOLOTL_UNREF(local_identity_key);
+        SIGNAL_UNREF(local_identity_key);
     }
     if(remote_stable_identifier) {
         free(remote_stable_identifier);
     }
     if(remote_identity_key) {
-        AXOLOTL_UNREF(remote_identity_key);
+        SIGNAL_UNREF(remote_identity_key);
     }
     return result;
 }
@@ -613,15 +613,15 @@ int scannable_fingerprint_compare(scannable_fingerprint *scannable, const scanna
 {
     if(!other_scannable->remote_identity_key || !other_scannable->local_identity_key ||
             other_scannable->version != scannable->version) {
-        return AX_ERR_FP_VERSION_MISMATCH;
+        return SG_ERR_FP_VERSION_MISMATCH;
     }
 
     if(strcmp(scannable->local_stable_identifier, other_scannable->remote_stable_identifier) != 0) {
-        return AX_ERR_FP_IDENT_MISMATCH;
+        return SG_ERR_FP_IDENT_MISMATCH;
     }
 
     if(strcmp(scannable->remote_stable_identifier, other_scannable->local_stable_identifier) != 0) {
-        return AX_ERR_FP_IDENT_MISMATCH;
+        return SG_ERR_FP_IDENT_MISMATCH;
     }
 
     if(ec_public_key_compare(scannable->local_identity_key, other_scannable->remote_identity_key) != 0) {
@@ -635,7 +635,7 @@ int scannable_fingerprint_compare(scannable_fingerprint *scannable, const scanna
     return 1;
 }
 
-void scannable_fingerprint_destroy(axolotl_type_base *type)
+void scannable_fingerprint_destroy(signal_type_base *type)
 {
     scannable_fingerprint *scannable = (scannable_fingerprint *)type;
 
@@ -643,13 +643,13 @@ void scannable_fingerprint_destroy(axolotl_type_base *type)
         free(scannable->local_stable_identifier);
     }
 
-    AXOLOTL_UNREF(scannable->local_identity_key);
+    SIGNAL_UNREF(scannable->local_identity_key);
 
     if(scannable->remote_stable_identifier) {
         free(scannable->remote_stable_identifier);
     }
 
-    AXOLOTL_UNREF(scannable->remote_identity_key);
+    SIGNAL_UNREF(scannable->remote_identity_key);
 
     free(scannable);
 }

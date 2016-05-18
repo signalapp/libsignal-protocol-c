@@ -18,7 +18,7 @@ typedef struct sender_message_key_node {
 
 struct sender_key_state
 {
-    axolotl_type_base base;
+    signal_type_base base;
 
     uint32_t key_id;
     sender_chain_key *chain_key;
@@ -26,37 +26,37 @@ struct sender_key_state
     ec_private_key *signature_private_key;
     sender_message_key_node *message_keys_head;
 
-    axolotl_context *global_context;
+    signal_context *global_context;
 };
 
 int sender_key_state_create(sender_key_state **state,
         uint32_t id, sender_chain_key *chain_key,
         ec_public_key *signature_public_key, ec_private_key *signature_private_key,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     sender_key_state *result = 0;
 
     if(!chain_key || !signature_public_key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = malloc(sizeof(sender_key_state));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result, 0, sizeof(sender_key_state));
-    AXOLOTL_INIT(result, sender_key_state_destroy);
+    SIGNAL_INIT(result, sender_key_state_destroy);
 
     result->key_id = id;
 
-    AXOLOTL_REF(chain_key);
+    SIGNAL_REF(chain_key);
     result->chain_key = chain_key;
 
-    AXOLOTL_REF(signature_public_key);
+    SIGNAL_REF(signature_public_key);
     result->signature_public_key = signature_public_key;
 
     if(signature_private_key) {
-        AXOLOTL_REF(signature_private_key);
+        SIGNAL_REF(signature_private_key);
         result->signature_private_key = signature_private_key;
     }
 
@@ -66,18 +66,18 @@ int sender_key_state_create(sender_key_state **state,
     return 0;
 }
 
-int sender_key_state_serialize(axolotl_buffer **buffer, sender_key_state *state)
+int sender_key_state_serialize(signal_buffer **buffer, sender_key_state *state)
 {
     int result = 0;
     size_t result_size = 0;
     uint8_t *data;
     size_t len;
     Textsecure__SenderKeyStateStructure *state_structure = 0;
-    axolotl_buffer *result_buf = 0;
+    signal_buffer *result_buf = 0;
 
     state_structure = malloc(sizeof(Textsecure__SenderKeyStateStructure));
     if(!state_structure) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     textsecure__sender_key_state_structure__init(state_structure);
@@ -89,17 +89,17 @@ int sender_key_state_serialize(axolotl_buffer **buffer, sender_key_state *state)
 
     len = textsecure__sender_key_state_structure__get_packed_size(state_structure);
 
-    result_buf = axolotl_buffer_alloc(len);
+    result_buf = signal_buffer_alloc(len);
     if(!result_buf) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    data = axolotl_buffer_data(result_buf);
+    data = signal_buffer_data(result_buf);
     result_size = textsecure__sender_key_state_structure__pack(state_structure, data);
     if(result_size != len) {
-        axolotl_buffer_free(result_buf);
-        result = AX_ERR_INVALID_PROTO_BUF;
+        signal_buffer_free(result_buf);
+        result = SG_ERR_INVALID_PROTO_BUF;
         result_buf = 0;
         goto complete;
     }
@@ -114,7 +114,7 @@ complete:
     return result;
 }
 
-int sender_key_state_deserialize(sender_key_state **state, const uint8_t *data, size_t len, axolotl_context *global_context)
+int sender_key_state_deserialize(sender_key_state **state, const uint8_t *data, size_t len, signal_context *global_context)
 {
     int result = 0;
     Textsecure__SenderKeyStateStructure *state_structure = 0;
@@ -122,7 +122,7 @@ int sender_key_state_deserialize(sender_key_state **state, const uint8_t *data, 
 
     state_structure = textsecure__sender_key_state_structure__unpack(0, len, data);
     if(!state_structure) {
-        result = AX_ERR_INVALID_PROTO_BUF;
+        result = SG_ERR_INVALID_PROTO_BUF;
         goto complete;
     }
 
@@ -137,7 +137,7 @@ complete:
     }
     if(result_state) {
         if(result < 0) {
-            AXOLOTL_UNREF(result_state);
+            SIGNAL_UNREF(result_state);
         }
         else {
             *state = result_state;
@@ -154,7 +154,7 @@ int sender_key_state_serialize_prepare(sender_key_state *state, Textsecure__Send
     Textsecure__SenderKeyStateStructure__SenderChainKey *chain_key_structure = 0;
     Textsecure__SenderKeyStateStructure__SenderSigningKey *signing_key_structure = 0;
     sender_message_key_node *cur_node = 0;
-    axolotl_buffer *chain_key_seed = 0;
+    signal_buffer *chain_key_seed = 0;
 
     assert(state);
     assert(state_structure);
@@ -166,7 +166,7 @@ int sender_key_state_serialize_prepare(sender_key_state *state, Textsecure__Send
     /* Sender chain key */
     chain_key_structure = malloc(sizeof(Textsecure__SenderKeyStateStructure__SenderChainKey));
     if(!chain_key_structure) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     textsecure__sender_key_state_structure__sender_chain_key__init(chain_key_structure);
@@ -176,14 +176,14 @@ int sender_key_state_serialize_prepare(sender_key_state *state, Textsecure__Send
     chain_key_structure->has_iteration = 1;
 
     chain_key_seed = sender_chain_key_get_seed(state->chain_key);
-    chain_key_structure->seed.data = axolotl_buffer_data(chain_key_seed);
-    chain_key_structure->seed.len = axolotl_buffer_len(chain_key_seed);
+    chain_key_structure->seed.data = signal_buffer_data(chain_key_seed);
+    chain_key_structure->seed.len = signal_buffer_len(chain_key_seed);
     chain_key_structure->has_seed = 1;
 
     /* Sender signing key */
     signing_key_structure = malloc(sizeof(Textsecure__SenderKeyStateStructure__SenderSigningKey));
     if(!signing_key_structure) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     textsecure__sender_key_state_structure__sender_signing_key__init(signing_key_structure);
@@ -211,22 +211,22 @@ int sender_key_state_serialize_prepare(sender_key_state *state, Textsecure__Send
         DL_COUNT(state->message_keys_head, cur_node, count);
 
         if(count > SIZE_MAX / sizeof(Textsecure__SenderKeyStateStructure__SenderMessageKey *)) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
         state_structure->sendermessagekeys = malloc(sizeof(Textsecure__SenderKeyStateStructure__SenderMessageKey *) * count);
         if(!state_structure->sendermessagekeys) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
         i = 0;
         DL_FOREACH(state->message_keys_head, cur_node) {
-            axolotl_buffer *seed = 0;
+            signal_buffer *seed = 0;
             state_structure->sendermessagekeys[i] = malloc(sizeof(Textsecure__SenderKeyStateStructure__SenderMessageKey));
             if(!state_structure->sendermessagekeys[i]) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 break;
             }
             textsecure__sender_key_state_structure__sender_message_key__init(state_structure->sendermessagekeys[i]);
@@ -235,8 +235,8 @@ int sender_key_state_serialize_prepare(sender_key_state *state, Textsecure__Send
             state_structure->sendermessagekeys[i]->has_iteration = 1;
 
             seed = sender_message_key_get_seed(cur_node->key);
-            state_structure->sendermessagekeys[i]->seed.data = axolotl_buffer_data(seed);
-            state_structure->sendermessagekeys[i]->seed.len = axolotl_buffer_len(seed);
+            state_structure->sendermessagekeys[i]->seed.data = signal_buffer_data(seed);
+            state_structure->sendermessagekeys[i]->seed.len = signal_buffer_len(seed);
             state_structure->sendermessagekeys[i]->has_seed = 1;
 
             if(result < 0) {
@@ -281,7 +281,7 @@ void sender_key_state_serialize_prepare_free(Textsecure__SenderKeyStateStructure
     free(state_structure);
 }
 
-int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__SenderKeyStateStructure *state_structure, axolotl_context *global_context)
+int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__SenderKeyStateStructure *state_structure, signal_context *global_context)
 {
     int result = 0;
     sender_key_state *result_state = 0;
@@ -292,11 +292,11 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
     if(state_structure->senderchainkey
             && state_structure->senderchainkey->has_iteration
             && state_structure->senderchainkey->has_seed) {
-        axolotl_buffer *seed_buffer = axolotl_buffer_create(
+        signal_buffer *seed_buffer = signal_buffer_create(
                 state_structure->senderchainkey->seed.data,
                 state_structure->senderchainkey->seed.len);
         if(!seed_buffer) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
@@ -304,7 +304,7 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
                 state_structure->senderchainkey->iteration,
                 seed_buffer,
                 global_context);
-        axolotl_buffer_free(seed_buffer);
+        signal_buffer_free(seed_buffer);
         if(result < 0) {
             goto complete;
         }
@@ -343,7 +343,7 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
 
         if(state_structure->n_sendermessagekeys > 0) {
             for(i = 0; i < state_structure->n_sendermessagekeys; i++) {
-                axolotl_buffer *seed_buffer;
+                signal_buffer *seed_buffer;
                 sender_message_key *message_key;
                 Textsecure__SenderKeyStateStructure__SenderMessageKey *message_key_structure =
                         state_structure->sendermessagekeys[i];
@@ -352,18 +352,18 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
                     continue;
                 }
 
-                seed_buffer = axolotl_buffer_create(
+                seed_buffer = signal_buffer_create(
                         message_key_structure->seed.data,
                         message_key_structure->seed.len);
                 if(!seed_buffer) {
-                    result = AX_ERR_NOMEM;
+                    result = SG_ERR_NOMEM;
                     goto complete;
                 }
 
                 result = sender_message_key_create(&message_key,
                         message_key_structure->iteration, seed_buffer,
                         global_context);
-                axolotl_buffer_free(seed_buffer);
+                signal_buffer_free(seed_buffer);
                 if(result < 0) {
                     goto complete;
                 }
@@ -372,39 +372,39 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
                 if(result < 0) {
                     goto complete;
                 }
-                AXOLOTL_UNREF(message_key);
+                SIGNAL_UNREF(message_key);
             }
         }
     }
     else {
-        result = AX_ERR_INVALID_PROTO_BUF;
+        result = SG_ERR_INVALID_PROTO_BUF;
     }
 
 complete:
     if(chain_key) {
-        AXOLOTL_UNREF(chain_key);
+        SIGNAL_UNREF(chain_key);
     }
     if(signature_public_key) {
-        AXOLOTL_UNREF(signature_public_key);
+        SIGNAL_UNREF(signature_public_key);
     }
     if(signature_private_key) {
-        AXOLOTL_UNREF(signature_private_key);
+        SIGNAL_UNREF(signature_private_key);
     }
     if(result >= 0) {
         *state = result_state;
     }
     else {
         if(result_state) {
-            AXOLOTL_UNREF(result_state);
+            SIGNAL_UNREF(result_state);
         }
     }
     return result;
 }
 
-int sender_key_state_copy(sender_key_state **state, sender_key_state *other_state, axolotl_context *global_context)
+int sender_key_state_copy(sender_key_state **state, sender_key_state *other_state, signal_context *global_context)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     uint8_t *data;
     size_t len;
 
@@ -416,8 +416,8 @@ int sender_key_state_copy(sender_key_state **state, sender_key_state *other_stat
         goto complete;
     }
 
-    data = axolotl_buffer_data(buffer);
-    len = axolotl_buffer_len(buffer);
+    data = signal_buffer_data(buffer);
+    len = signal_buffer_len(buffer);
 
     result = sender_key_state_deserialize(state, data, len, global_context);
     if(result < 0) {
@@ -426,7 +426,7 @@ int sender_key_state_copy(sender_key_state **state, sender_key_state *other_stat
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     return result;
 }
@@ -449,9 +449,9 @@ void sender_key_state_set_chain_key(sender_key_state *state, sender_chain_key *c
     assert(chain_key);
 
     if(state->chain_key) {
-        AXOLOTL_UNREF(state->chain_key);
+        SIGNAL_UNREF(state->chain_key);
     }
-    AXOLOTL_REF(chain_key);
+    SIGNAL_REF(chain_key);
     state->chain_key = chain_key;
 }
 
@@ -491,11 +491,11 @@ int sender_key_state_add_sender_message_key(sender_key_state *state, sender_mess
 
     node = malloc(sizeof(sender_message_key_node));
     if(!node) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    AXOLOTL_REF(message_key);
+    SIGNAL_REF(message_key);
     node->key = message_key;
     DL_APPEND(state->message_keys_head, node);
 
@@ -504,7 +504,7 @@ int sender_key_state_add_sender_message_key(sender_key_state *state, sender_mess
         node = state->message_keys_head;
         DL_DELETE(state->message_keys_head, node);
         if(node->key) {
-            AXOLOTL_UNREF(node->key);
+            SIGNAL_UNREF(node->key);
         }
         free(node);
         --count;
@@ -533,20 +533,20 @@ sender_message_key *sender_key_state_remove_sender_message_key(sender_key_state 
     return result;
 }
 
-void sender_key_state_destroy(axolotl_type_base *type)
+void sender_key_state_destroy(signal_type_base *type)
 {
     sender_key_state *state = (sender_key_state *)type;
     sender_message_key_node *cur_node;
     sender_message_key_node *tmp_node;
 
-    AXOLOTL_UNREF(state->chain_key);
-    AXOLOTL_UNREF(state->signature_public_key);
-    AXOLOTL_UNREF(state->signature_private_key);
+    SIGNAL_UNREF(state->chain_key);
+    SIGNAL_UNREF(state->signature_public_key);
+    SIGNAL_UNREF(state->signature_private_key);
 
     DL_FOREACH_SAFE(state->message_keys_head, cur_node, tmp_node) {
         DL_DELETE(state->message_keys_head, cur_node);
         if(cur_node->key) {
-            AXOLOTL_UNREF(cur_node->key);
+            SIGNAL_UNREF(cur_node->key);
         }
         free(cur_node);
     }

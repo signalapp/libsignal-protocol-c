@@ -20,7 +20,7 @@ static axolotl_address bob_address = {
         "+14151231234", 12, 1
 };
 
-axolotl_context *global_context;
+signal_context *global_context;
 pthread_mutex_t global_mutex;
 pthread_mutexattr_t global_mutex_attr;
 
@@ -52,13 +52,13 @@ void test_setup()
     pthread_mutexattr_settype(&global_mutex_attr, PTHREAD_MUTEX_RECURSIVE);
     pthread_mutex_init(&global_mutex, &global_mutex_attr);
 
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
     setup_test_crypto_provider(global_context);
 
-    result = axolotl_context_set_locking_functions(global_context, test_lock, test_unlock);
+    result = signal_context_set_locking_functions(global_context, test_lock, test_unlock);
     ck_assert_int_eq(result, 0);
 
     result = curve_generate_key_pair(global_context, &alice_signed_pre_key);
@@ -73,9 +73,9 @@ void test_setup()
 
 void test_teardown()
 {
-    AXOLOTL_UNREF(alice_signed_pre_key);
-    AXOLOTL_UNREF(bob_signed_pre_key);
-    axolotl_context_destroy(global_context);
+    SIGNAL_UNREF(alice_signed_pre_key);
+    SIGNAL_UNREF(bob_signed_pre_key);
+    signal_context_destroy(global_context);
 
     pthread_mutex_destroy(&global_mutex);
     pthread_mutexattr_destroy(&global_mutex_attr);
@@ -158,22 +158,22 @@ START_TEST(test_basic_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the messages */
-    axolotl_buffer *alice_plaintext = 0;
+    signal_buffer *alice_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *bob_plaintext = 0;
+    signal_buffer *bob_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the messages decrypted correctly */
-    uint8_t *alice_plaintext_data = axolotl_buffer_data(alice_plaintext);
-    size_t alice_plaintext_len = axolotl_buffer_len(alice_plaintext);
+    uint8_t *alice_plaintext_data = signal_buffer_data(alice_plaintext);
+    size_t alice_plaintext_len = signal_buffer_len(alice_plaintext);
     ck_assert_int_eq(message_for_alice_len, alice_plaintext_len);
     ck_assert_int_eq(memcmp(message_for_alice_data, alice_plaintext_data, alice_plaintext_len), 0);
 
-    uint8_t *bob_plaintext_data = axolotl_buffer_data(bob_plaintext);
-    size_t bob_plaintext_len = axolotl_buffer_len(bob_plaintext);
+    uint8_t *bob_plaintext_data = signal_buffer_data(bob_plaintext);
+    size_t bob_plaintext_len = signal_buffer_len(bob_plaintext);
     ck_assert_int_eq(message_for_bob_len, bob_plaintext_len);
     ck_assert_int_eq(memcmp(message_for_bob_data, bob_plaintext_data, bob_plaintext_len), 0);
 
@@ -201,13 +201,13 @@ START_TEST(test_basic_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
-    axolotl_buffer *response_plaintext = 0;
+    signal_buffer *response_plaintext = 0;
     result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
-    uint8_t *response_plaintext_data = axolotl_buffer_data(response_plaintext);
-    size_t response_plaintext_len = axolotl_buffer_len(response_plaintext);
+    uint8_t *response_plaintext_data = signal_buffer_data(response_plaintext);
+    size_t response_plaintext_len = signal_buffer_len(response_plaintext);
     ck_assert_int_eq(alice_response_len, response_plaintext_len);
     ck_assert_int_eq(memcmp(alice_response_data, response_plaintext_data, response_plaintext_len), 0);
 
@@ -233,13 +233,13 @@ START_TEST(test_basic_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
-    axolotl_buffer *final_plaintext = 0;
+    signal_buffer *final_plaintext = 0;
     result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
-    uint8_t *final_plaintext_data = axolotl_buffer_data(final_plaintext);
-    size_t final_plaintext_len = axolotl_buffer_len(final_plaintext);
+    uint8_t *final_plaintext_data = signal_buffer_data(final_plaintext);
+    size_t final_plaintext_len = signal_buffer_len(final_plaintext);
     ck_assert_int_eq(final_message_len, final_plaintext_len);
     ck_assert_int_eq(memcmp(final_message_data, final_plaintext_data, final_plaintext_len), 0);
 
@@ -247,24 +247,24 @@ START_TEST(test_basic_simultaneous_initiate)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 1);
 
     /* Cleanup */
-    axolotl_buffer_free(final_plaintext);
-    AXOLOTL_UNREF(final_message_copy);
-    AXOLOTL_UNREF(final_message);
-    axolotl_buffer_free(response_plaintext);
-    AXOLOTL_UNREF(alice_response_copy);
-    AXOLOTL_UNREF(alice_response);
-    axolotl_buffer_free(alice_plaintext);
-    axolotl_buffer_free(bob_plaintext);
-    AXOLOTL_UNREF(message_for_alice_copy);
-    AXOLOTL_UNREF(message_for_bob_copy);
-    AXOLOTL_UNREF(message_for_alice);
-    AXOLOTL_UNREF(message_for_bob);
+    signal_buffer_free(final_plaintext);
+    SIGNAL_UNREF(final_message_copy);
+    SIGNAL_UNREF(final_message);
+    signal_buffer_free(response_plaintext);
+    SIGNAL_UNREF(alice_response_copy);
+    SIGNAL_UNREF(alice_response);
+    signal_buffer_free(alice_plaintext);
+    signal_buffer_free(bob_plaintext);
+    SIGNAL_UNREF(message_for_alice_copy);
+    SIGNAL_UNREF(message_for_bob_copy);
+    SIGNAL_UNREF(message_for_alice);
+    SIGNAL_UNREF(message_for_bob);
     session_cipher_free(alice_session_cipher);
     session_cipher_free(bob_session_cipher);
     session_builder_free(alice_session_builder);
     session_builder_free(bob_session_builder);
-    AXOLOTL_UNREF(alice_pre_key_bundle);
-    AXOLOTL_UNREF(bob_pre_key_bundle);
+    SIGNAL_UNREF(alice_pre_key_bundle);
+    SIGNAL_UNREF(bob_pre_key_bundle);
     axolotl_store_context_destroy(alice_store);
     axolotl_store_context_destroy(bob_store);
 }
@@ -342,13 +342,13 @@ START_TEST(test_lost_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the message */
-    axolotl_buffer *bob_plaintext = 0;
+    signal_buffer *bob_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
-    uint8_t *bob_plaintext_data = axolotl_buffer_data(bob_plaintext);
-    size_t bob_plaintext_len = axolotl_buffer_len(bob_plaintext);
+    uint8_t *bob_plaintext_data = signal_buffer_data(bob_plaintext);
+    size_t bob_plaintext_len = signal_buffer_len(bob_plaintext);
     ck_assert_int_eq(message_for_bob_len, bob_plaintext_len);
     ck_assert_int_eq(memcmp(message_for_bob_data, bob_plaintext_data, bob_plaintext_len), 0);
 
@@ -374,13 +374,13 @@ START_TEST(test_lost_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
-    axolotl_buffer *response_plaintext = 0;
+    signal_buffer *response_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
-    uint8_t *response_plaintext_data = axolotl_buffer_data(response_plaintext);
-    size_t response_plaintext_len = axolotl_buffer_len(response_plaintext);
+    uint8_t *response_plaintext_data = signal_buffer_data(response_plaintext);
+    size_t response_plaintext_len = signal_buffer_len(response_plaintext);
     ck_assert_int_eq(alice_response_len, response_plaintext_len);
     ck_assert_int_eq(memcmp(alice_response_data, response_plaintext_data, response_plaintext_len), 0);
 
@@ -406,13 +406,13 @@ START_TEST(test_lost_simultaneous_initiate)
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
-    axolotl_buffer *final_plaintext = 0;
+    signal_buffer *final_plaintext = 0;
     result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
-    uint8_t *final_plaintext_data = axolotl_buffer_data(final_plaintext);
-    size_t final_plaintext_len = axolotl_buffer_len(final_plaintext);
+    uint8_t *final_plaintext_data = signal_buffer_data(final_plaintext);
+    size_t final_plaintext_len = signal_buffer_len(final_plaintext);
     ck_assert_int_eq(final_message_len, final_plaintext_len);
     ck_assert_int_eq(memcmp(final_message_data, final_plaintext_data, final_plaintext_len), 0);
 
@@ -420,22 +420,22 @@ START_TEST(test_lost_simultaneous_initiate)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 1);
 
     /* Cleanup */
-    axolotl_buffer_free(final_plaintext);
-    AXOLOTL_UNREF(final_message_copy);
-    AXOLOTL_UNREF(final_message);
-    axolotl_buffer_free(response_plaintext);
-    AXOLOTL_UNREF(alice_response_copy);
-    AXOLOTL_UNREF(alice_response);
-    axolotl_buffer_free(bob_plaintext);
-    AXOLOTL_UNREF(message_for_bob_copy);
-    AXOLOTL_UNREF(message_for_alice);
-    AXOLOTL_UNREF(message_for_bob);
+    signal_buffer_free(final_plaintext);
+    SIGNAL_UNREF(final_message_copy);
+    SIGNAL_UNREF(final_message);
+    signal_buffer_free(response_plaintext);
+    SIGNAL_UNREF(alice_response_copy);
+    SIGNAL_UNREF(alice_response);
+    signal_buffer_free(bob_plaintext);
+    SIGNAL_UNREF(message_for_bob_copy);
+    SIGNAL_UNREF(message_for_alice);
+    SIGNAL_UNREF(message_for_bob);
     session_cipher_free(alice_session_cipher);
     session_cipher_free(bob_session_cipher);
     session_builder_free(alice_session_builder);
     session_builder_free(bob_session_builder);
-    AXOLOTL_UNREF(alice_pre_key_bundle);
-    AXOLOTL_UNREF(bob_pre_key_bundle);
+    SIGNAL_UNREF(alice_pre_key_bundle);
+    SIGNAL_UNREF(bob_pre_key_bundle);
     axolotl_store_context_destroy(alice_store);
     axolotl_store_context_destroy(bob_store);
 }
@@ -518,22 +518,22 @@ START_TEST(test_simultaneous_initiate_lost_message)
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the messages */
-    axolotl_buffer *alice_plaintext = 0;
+    signal_buffer *alice_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *bob_plaintext = 0;
+    signal_buffer *bob_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the messages decrypted correctly */
-    uint8_t *alice_plaintext_data = axolotl_buffer_data(alice_plaintext);
-    size_t alice_plaintext_len = axolotl_buffer_len(alice_plaintext);
+    uint8_t *alice_plaintext_data = signal_buffer_data(alice_plaintext);
+    size_t alice_plaintext_len = signal_buffer_len(alice_plaintext);
     ck_assert_int_eq(message_for_alice_len, alice_plaintext_len);
     ck_assert_int_eq(memcmp(message_for_alice_data, alice_plaintext_data, alice_plaintext_len), 0);
 
-    uint8_t *bob_plaintext_data = axolotl_buffer_data(bob_plaintext);
-    size_t bob_plaintext_len = axolotl_buffer_len(bob_plaintext);
+    uint8_t *bob_plaintext_data = signal_buffer_data(bob_plaintext);
+    size_t bob_plaintext_len = signal_buffer_len(bob_plaintext);
     ck_assert_int_eq(message_for_bob_len, bob_plaintext_len);
     ck_assert_int_eq(memcmp(message_for_bob_data, bob_plaintext_data, bob_plaintext_len), 0);
 
@@ -587,13 +587,13 @@ START_TEST(test_simultaneous_initiate_lost_message)
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
-    axolotl_buffer *final_plaintext = 0;
+    signal_buffer *final_plaintext = 0;
     result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
-    uint8_t *final_plaintext_data = axolotl_buffer_data(final_plaintext);
-    size_t final_plaintext_len = axolotl_buffer_len(final_plaintext);
+    uint8_t *final_plaintext_data = signal_buffer_data(final_plaintext);
+    size_t final_plaintext_len = signal_buffer_len(final_plaintext);
     ck_assert_int_eq(final_message_len, final_plaintext_len);
     ck_assert_int_eq(memcmp(final_message_data, final_plaintext_data, final_plaintext_len), 0);
 
@@ -601,23 +601,23 @@ START_TEST(test_simultaneous_initiate_lost_message)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 1);
 
     /* Cleanup */
-    axolotl_buffer_free(final_plaintext);
-    AXOLOTL_UNREF(final_message_copy);
-    AXOLOTL_UNREF(final_message);
-    AXOLOTL_UNREF(alice_response_copy);
-    AXOLOTL_UNREF(alice_response);
-    axolotl_buffer_free(alice_plaintext);
-    axolotl_buffer_free(bob_plaintext);
-    AXOLOTL_UNREF(message_for_alice_copy);
-    AXOLOTL_UNREF(message_for_bob_copy);
-    AXOLOTL_UNREF(message_for_alice);
-    AXOLOTL_UNREF(message_for_bob);
+    signal_buffer_free(final_plaintext);
+    SIGNAL_UNREF(final_message_copy);
+    SIGNAL_UNREF(final_message);
+    SIGNAL_UNREF(alice_response_copy);
+    SIGNAL_UNREF(alice_response);
+    signal_buffer_free(alice_plaintext);
+    signal_buffer_free(bob_plaintext);
+    SIGNAL_UNREF(message_for_alice_copy);
+    SIGNAL_UNREF(message_for_bob_copy);
+    SIGNAL_UNREF(message_for_alice);
+    SIGNAL_UNREF(message_for_bob);
     session_cipher_free(alice_session_cipher);
     session_cipher_free(bob_session_cipher);
     session_builder_free(alice_session_builder);
     session_builder_free(bob_session_builder);
-    AXOLOTL_UNREF(alice_pre_key_bundle);
-    AXOLOTL_UNREF(bob_pre_key_bundle);
+    SIGNAL_UNREF(alice_pre_key_bundle);
+    SIGNAL_UNREF(bob_pre_key_bundle);
     axolotl_store_context_destroy(alice_store);
     axolotl_store_context_destroy(bob_store);
 }
@@ -700,22 +700,22 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the messages */
-    axolotl_buffer *alice_plaintext = 0;
+    signal_buffer *alice_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *bob_plaintext = 0;
+    signal_buffer *bob_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the messages decrypted correctly */
-    uint8_t *alice_plaintext_data = axolotl_buffer_data(alice_plaintext);
-    size_t alice_plaintext_len = axolotl_buffer_len(alice_plaintext);
+    uint8_t *alice_plaintext_data = signal_buffer_data(alice_plaintext);
+    size_t alice_plaintext_len = signal_buffer_len(alice_plaintext);
     ck_assert_int_eq(message_for_alice_len, alice_plaintext_len);
     ck_assert_int_eq(memcmp(message_for_alice_data, alice_plaintext_data, alice_plaintext_len), 0);
 
-    uint8_t *bob_plaintext_data = axolotl_buffer_data(bob_plaintext);
-    size_t bob_plaintext_len = axolotl_buffer_len(bob_plaintext);
+    uint8_t *bob_plaintext_data = signal_buffer_data(bob_plaintext);
+    size_t bob_plaintext_len = signal_buffer_len(bob_plaintext);
     ck_assert_int_eq(message_for_bob_len, bob_plaintext_len);
     ck_assert_int_eq(memcmp(message_for_bob_data, bob_plaintext_data, bob_plaintext_len), 0);
 
@@ -764,22 +764,22 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
-        axolotl_buffer *alice_repeat_plaintext = 0;
+        signal_buffer *alice_repeat_plaintext = 0;
         result = session_cipher_decrypt_signal_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
-        axolotl_buffer *bob_repeat_plaintext = 0;
+        signal_buffer *bob_repeat_plaintext = 0;
         result = session_cipher_decrypt_signal_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
-        uint8_t *alice_repeat_plaintext_data = axolotl_buffer_data(alice_repeat_plaintext);
-        size_t alice_repeat_plaintext_len = axolotl_buffer_len(alice_repeat_plaintext);
+        uint8_t *alice_repeat_plaintext_data = signal_buffer_data(alice_repeat_plaintext);
+        size_t alice_repeat_plaintext_len = signal_buffer_len(alice_repeat_plaintext);
         ck_assert_int_eq(message_for_alice_repeat_len, alice_repeat_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_alice_repeat_data, alice_repeat_plaintext_data, alice_repeat_plaintext_len), 0);
 
-        uint8_t *bob_repeat_plaintext_data = axolotl_buffer_data(bob_repeat_plaintext);
-        size_t bob_repeat_plaintext_len = axolotl_buffer_len(bob_repeat_plaintext);
+        uint8_t *bob_repeat_plaintext_data = signal_buffer_data(bob_repeat_plaintext);
+        size_t bob_repeat_plaintext_len = signal_buffer_len(bob_repeat_plaintext);
         ck_assert_int_eq(message_for_bob_repeat_len, bob_repeat_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_bob_repeat_data, bob_repeat_plaintext_data, bob_repeat_plaintext_len), 0);
 
@@ -787,12 +787,12 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Cleanup */
-        axolotl_buffer_free(bob_repeat_plaintext);
-        axolotl_buffer_free(alice_repeat_plaintext);
-        AXOLOTL_UNREF(message_for_bob_repeat_copy);
-        AXOLOTL_UNREF(message_for_alice_repeat_copy);
-        AXOLOTL_UNREF(message_for_bob_repeat);
-        AXOLOTL_UNREF(message_for_alice_repeat);
+        signal_buffer_free(bob_repeat_plaintext);
+        signal_buffer_free(alice_repeat_plaintext);
+        SIGNAL_UNREF(message_for_bob_repeat_copy);
+        SIGNAL_UNREF(message_for_alice_repeat_copy);
+        SIGNAL_UNREF(message_for_bob_repeat);
+        SIGNAL_UNREF(message_for_alice_repeat);
     }
 
     /* Prepare Alice's response */
@@ -814,13 +814,13 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
-    axolotl_buffer *response_plaintext = 0;
+    signal_buffer *response_plaintext = 0;
     result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
-    uint8_t *response_plaintext_data = axolotl_buffer_data(response_plaintext);
-    size_t response_plaintext_len = axolotl_buffer_len(response_plaintext);
+    uint8_t *response_plaintext_data = signal_buffer_data(response_plaintext);
+    size_t response_plaintext_len = signal_buffer_len(response_plaintext);
     ck_assert_int_eq(alice_response_len, response_plaintext_len);
     ck_assert_int_eq(memcmp(alice_response_data, response_plaintext_data, response_plaintext_len), 0);
 
@@ -846,13 +846,13 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
-    axolotl_buffer *final_plaintext = 0;
+    signal_buffer *final_plaintext = 0;
     result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
-    uint8_t *final_plaintext_data = axolotl_buffer_data(final_plaintext);
-    size_t final_plaintext_len = axolotl_buffer_len(final_plaintext);
+    uint8_t *final_plaintext_data = signal_buffer_data(final_plaintext);
+    size_t final_plaintext_len = signal_buffer_len(final_plaintext);
     ck_assert_int_eq(final_message_len, final_plaintext_len);
     ck_assert_int_eq(memcmp(final_message_data, final_plaintext_data, final_plaintext_len), 0);
 
@@ -860,24 +860,24 @@ START_TEST(test_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 1);
 
     /* Cleanup */
-    axolotl_buffer_free(final_plaintext);
-    AXOLOTL_UNREF(final_message_copy);
-    AXOLOTL_UNREF(final_message);
-    axolotl_buffer_free(response_plaintext);
-    AXOLOTL_UNREF(alice_response_copy);
-    AXOLOTL_UNREF(alice_response);
-    axolotl_buffer_free(alice_plaintext);
-    axolotl_buffer_free(bob_plaintext);
-    AXOLOTL_UNREF(message_for_alice_copy);
-    AXOLOTL_UNREF(message_for_bob_copy);
-    AXOLOTL_UNREF(message_for_alice);
-    AXOLOTL_UNREF(message_for_bob);
+    signal_buffer_free(final_plaintext);
+    SIGNAL_UNREF(final_message_copy);
+    SIGNAL_UNREF(final_message);
+    signal_buffer_free(response_plaintext);
+    SIGNAL_UNREF(alice_response_copy);
+    SIGNAL_UNREF(alice_response);
+    signal_buffer_free(alice_plaintext);
+    signal_buffer_free(bob_plaintext);
+    SIGNAL_UNREF(message_for_alice_copy);
+    SIGNAL_UNREF(message_for_bob_copy);
+    SIGNAL_UNREF(message_for_alice);
+    SIGNAL_UNREF(message_for_bob);
     session_cipher_free(alice_session_cipher);
     session_cipher_free(bob_session_cipher);
     session_builder_free(alice_session_builder);
     session_builder_free(bob_session_builder);
-    AXOLOTL_UNREF(alice_pre_key_bundle);
-    AXOLOTL_UNREF(bob_pre_key_bundle);
+    SIGNAL_UNREF(alice_pre_key_bundle);
+    SIGNAL_UNREF(bob_pre_key_bundle);
     axolotl_store_context_destroy(alice_store);
     axolotl_store_context_destroy(bob_store);
 }
@@ -962,22 +962,22 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
-        axolotl_buffer *alice_plaintext = 0;
+        signal_buffer *alice_plaintext = 0;
         result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
         ck_assert_int_eq(result, 0);
 
-        axolotl_buffer *bob_plaintext = 0;
+        signal_buffer *bob_plaintext = 0;
         result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
-        uint8_t *alice_plaintext_data = axolotl_buffer_data(alice_plaintext);
-        size_t alice_plaintext_len = axolotl_buffer_len(alice_plaintext);
+        uint8_t *alice_plaintext_data = signal_buffer_data(alice_plaintext);
+        size_t alice_plaintext_len = signal_buffer_len(alice_plaintext);
         ck_assert_int_eq(message_for_alice_len, alice_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_alice_data, alice_plaintext_data, alice_plaintext_len), 0);
 
-        uint8_t *bob_plaintext_data = axolotl_buffer_data(bob_plaintext);
-        size_t bob_plaintext_len = axolotl_buffer_len(bob_plaintext);
+        uint8_t *bob_plaintext_data = signal_buffer_data(bob_plaintext);
+        size_t bob_plaintext_len = signal_buffer_len(bob_plaintext);
         ck_assert_int_eq(message_for_bob_len, bob_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_bob_data, bob_plaintext_data, bob_plaintext_len), 0);
 
@@ -987,14 +987,14 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Cleanup */
-        axolotl_buffer_free(alice_plaintext);
-        axolotl_buffer_free(bob_plaintext);
-        AXOLOTL_UNREF(message_for_alice_copy);
-        AXOLOTL_UNREF(message_for_bob_copy);
-        AXOLOTL_UNREF(message_for_alice);
-        AXOLOTL_UNREF(message_for_bob);
-        AXOLOTL_UNREF(alice_pre_key_bundle);
-        AXOLOTL_UNREF(bob_pre_key_bundle);
+        signal_buffer_free(alice_plaintext);
+        signal_buffer_free(bob_plaintext);
+        SIGNAL_UNREF(message_for_alice_copy);
+        SIGNAL_UNREF(message_for_bob_copy);
+        SIGNAL_UNREF(message_for_alice);
+        SIGNAL_UNREF(message_for_bob);
+        SIGNAL_UNREF(alice_pre_key_bundle);
+        SIGNAL_UNREF(bob_pre_key_bundle);
     }
 
     for(i = 0; i < 50; i++) {
@@ -1036,22 +1036,22 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
-        axolotl_buffer *alice_repeat_plaintext = 0;
+        signal_buffer *alice_repeat_plaintext = 0;
         result = session_cipher_decrypt_signal_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
-        axolotl_buffer *bob_repeat_plaintext = 0;
+        signal_buffer *bob_repeat_plaintext = 0;
         result = session_cipher_decrypt_signal_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
-        uint8_t *alice_repeat_plaintext_data = axolotl_buffer_data(alice_repeat_plaintext);
-        size_t alice_repeat_plaintext_len = axolotl_buffer_len(alice_repeat_plaintext);
+        uint8_t *alice_repeat_plaintext_data = signal_buffer_data(alice_repeat_plaintext);
+        size_t alice_repeat_plaintext_len = signal_buffer_len(alice_repeat_plaintext);
         ck_assert_int_eq(message_for_alice_repeat_len, alice_repeat_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_alice_repeat_data, alice_repeat_plaintext_data, alice_repeat_plaintext_len), 0);
 
-        uint8_t *bob_repeat_plaintext_data = axolotl_buffer_data(bob_repeat_plaintext);
-        size_t bob_repeat_plaintext_len = axolotl_buffer_len(bob_repeat_plaintext);
+        uint8_t *bob_repeat_plaintext_data = signal_buffer_data(bob_repeat_plaintext);
+        size_t bob_repeat_plaintext_len = signal_buffer_len(bob_repeat_plaintext);
         ck_assert_int_eq(message_for_bob_repeat_len, bob_repeat_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_bob_repeat_data, bob_repeat_plaintext_data, bob_repeat_plaintext_len), 0);
 
@@ -1059,12 +1059,12 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Cleanup */
-        axolotl_buffer_free(bob_repeat_plaintext);
-        axolotl_buffer_free(alice_repeat_plaintext);
-        AXOLOTL_UNREF(message_for_bob_repeat_copy);
-        AXOLOTL_UNREF(message_for_alice_repeat_copy);
-        AXOLOTL_UNREF(message_for_bob_repeat);
-        AXOLOTL_UNREF(message_for_alice_repeat);
+        signal_buffer_free(bob_repeat_plaintext);
+        signal_buffer_free(alice_repeat_plaintext);
+        SIGNAL_UNREF(message_for_bob_repeat_copy);
+        SIGNAL_UNREF(message_for_alice_repeat_copy);
+        SIGNAL_UNREF(message_for_bob_repeat);
+        SIGNAL_UNREF(message_for_alice_repeat);
     }
 
     /* Prepare Alice's response */
@@ -1086,13 +1086,13 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
-    axolotl_buffer *response_plaintext = 0;
+    signal_buffer *response_plaintext = 0;
     result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
-    uint8_t *response_plaintext_data = axolotl_buffer_data(response_plaintext);
-    size_t response_plaintext_len = axolotl_buffer_len(response_plaintext);
+    uint8_t *response_plaintext_data = signal_buffer_data(response_plaintext);
+    size_t response_plaintext_len = signal_buffer_len(response_plaintext);
     ck_assert_int_eq(alice_response_len, response_plaintext_len);
     ck_assert_int_eq(memcmp(alice_response_data, response_plaintext_data, response_plaintext_len), 0);
 
@@ -1118,13 +1118,13 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
-    axolotl_buffer *final_plaintext = 0;
+    signal_buffer *final_plaintext = 0;
     result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
-    uint8_t *final_plaintext_data = axolotl_buffer_data(final_plaintext);
-    size_t final_plaintext_len = axolotl_buffer_len(final_plaintext);
+    uint8_t *final_plaintext_data = signal_buffer_data(final_plaintext);
+    size_t final_plaintext_len = signal_buffer_len(final_plaintext);
     ck_assert_int_eq(final_message_len, final_plaintext_len);
     ck_assert_int_eq(memcmp(final_message_data, final_plaintext_data, final_plaintext_len), 0);
 
@@ -1132,12 +1132,12 @@ START_TEST(test_repeated_simultaneous_initiate_repeated_messages)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 1);
 
     /* Cleanup */
-    axolotl_buffer_free(final_plaintext);
-    AXOLOTL_UNREF(final_message_copy);
-    AXOLOTL_UNREF(final_message);
-    axolotl_buffer_free(response_plaintext);
-    AXOLOTL_UNREF(alice_response_copy);
-    AXOLOTL_UNREF(alice_response);
+    signal_buffer_free(final_plaintext);
+    SIGNAL_UNREF(final_message_copy);
+    SIGNAL_UNREF(final_message);
+    signal_buffer_free(response_plaintext);
+    SIGNAL_UNREF(alice_response_copy);
+    SIGNAL_UNREF(alice_response);
     session_cipher_free(alice_session_cipher);
     session_cipher_free(bob_session_cipher);
     session_builder_free(alice_session_builder);
@@ -1243,22 +1243,22 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
-        axolotl_buffer *alice_plaintext = 0;
+        signal_buffer *alice_plaintext = 0;
         result = session_cipher_decrypt_pre_key_signal_message(alice_session_cipher, message_for_alice_copy, 0, &alice_plaintext);
         ck_assert_int_eq(result, 0);
 
-        axolotl_buffer *bob_plaintext = 0;
+        signal_buffer *bob_plaintext = 0;
         result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher, message_for_bob_copy, 0, &bob_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
-        uint8_t *alice_plaintext_data = axolotl_buffer_data(alice_plaintext);
-        size_t alice_plaintext_len = axolotl_buffer_len(alice_plaintext);
+        uint8_t *alice_plaintext_data = signal_buffer_data(alice_plaintext);
+        size_t alice_plaintext_len = signal_buffer_len(alice_plaintext);
         ck_assert_int_eq(message_for_alice_len, alice_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_alice_data, alice_plaintext_data, alice_plaintext_len), 0);
 
-        uint8_t *bob_plaintext_data = axolotl_buffer_data(bob_plaintext);
-        size_t bob_plaintext_len = axolotl_buffer_len(bob_plaintext);
+        uint8_t *bob_plaintext_data = signal_buffer_data(bob_plaintext);
+        size_t bob_plaintext_len = signal_buffer_len(bob_plaintext);
         ck_assert_int_eq(message_for_bob_len, bob_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_bob_data, bob_plaintext_data, bob_plaintext_len), 0);
 
@@ -1268,14 +1268,14 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Cleanup */
-        axolotl_buffer_free(alice_plaintext);
-        axolotl_buffer_free(bob_plaintext);
-        AXOLOTL_UNREF(message_for_alice_copy);
-        AXOLOTL_UNREF(message_for_bob_copy);
-        AXOLOTL_UNREF(message_for_alice);
-        AXOLOTL_UNREF(message_for_bob);
-        AXOLOTL_UNREF(alice_pre_key_bundle);
-        AXOLOTL_UNREF(bob_pre_key_bundle);
+        signal_buffer_free(alice_plaintext);
+        signal_buffer_free(bob_plaintext);
+        SIGNAL_UNREF(message_for_alice_copy);
+        SIGNAL_UNREF(message_for_bob_copy);
+        SIGNAL_UNREF(message_for_alice);
+        SIGNAL_UNREF(message_for_bob);
+        SIGNAL_UNREF(alice_pre_key_bundle);
+        SIGNAL_UNREF(bob_pre_key_bundle);
     }
 
     for(i = 0; i < 50; i++) {
@@ -1317,22 +1317,22 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
         ck_assert_int_eq(result, 0);
 
         /* Decrypt the messages */
-        axolotl_buffer *alice_repeat_plaintext = 0;
+        signal_buffer *alice_repeat_plaintext = 0;
         result = session_cipher_decrypt_signal_message(alice_session_cipher, message_for_alice_repeat_copy, 0, &alice_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
-        axolotl_buffer *bob_repeat_plaintext = 0;
+        signal_buffer *bob_repeat_plaintext = 0;
         result = session_cipher_decrypt_signal_message(bob_session_cipher, message_for_bob_repeat_copy, 0, &bob_repeat_plaintext);
         ck_assert_int_eq(result, 0);
 
         /* Verify that the messages decrypted correctly */
-        uint8_t *alice_repeat_plaintext_data = axolotl_buffer_data(alice_repeat_plaintext);
-        size_t alice_repeat_plaintext_len = axolotl_buffer_len(alice_repeat_plaintext);
+        uint8_t *alice_repeat_plaintext_data = signal_buffer_data(alice_repeat_plaintext);
+        size_t alice_repeat_plaintext_len = signal_buffer_len(alice_repeat_plaintext);
         ck_assert_int_eq(message_for_alice_repeat_len, alice_repeat_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_alice_repeat_data, alice_repeat_plaintext_data, alice_repeat_plaintext_len), 0);
 
-        uint8_t *bob_repeat_plaintext_data = axolotl_buffer_data(bob_repeat_plaintext);
-        size_t bob_repeat_plaintext_len = axolotl_buffer_len(bob_repeat_plaintext);
+        uint8_t *bob_repeat_plaintext_data = signal_buffer_data(bob_repeat_plaintext);
+        size_t bob_repeat_plaintext_len = signal_buffer_len(bob_repeat_plaintext);
         ck_assert_int_eq(message_for_bob_repeat_len, bob_repeat_plaintext_len);
         ck_assert_int_eq(memcmp(message_for_bob_repeat_data, bob_repeat_plaintext_data, bob_repeat_plaintext_len), 0);
 
@@ -1340,12 +1340,12 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
         ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 0);
 
         /* Cleanup */
-        axolotl_buffer_free(bob_repeat_plaintext);
-        axolotl_buffer_free(alice_repeat_plaintext);
-        AXOLOTL_UNREF(message_for_bob_repeat_copy);
-        AXOLOTL_UNREF(message_for_alice_repeat_copy);
-        AXOLOTL_UNREF(message_for_bob_repeat);
-        AXOLOTL_UNREF(message_for_alice_repeat);
+        signal_buffer_free(bob_repeat_plaintext);
+        signal_buffer_free(alice_repeat_plaintext);
+        SIGNAL_UNREF(message_for_bob_repeat_copy);
+        SIGNAL_UNREF(message_for_alice_repeat_copy);
+        SIGNAL_UNREF(message_for_bob_repeat);
+        SIGNAL_UNREF(message_for_alice_repeat);
     }
 
     /* Prepare Alice's response */
@@ -1367,13 +1367,13 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the response */
-    axolotl_buffer *response_plaintext = 0;
+    signal_buffer *response_plaintext = 0;
     result = session_cipher_decrypt_signal_message(bob_session_cipher, alice_response_copy, 0, &response_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the message decrypted correctly */
-    uint8_t *response_plaintext_data = axolotl_buffer_data(response_plaintext);
-    size_t response_plaintext_len = axolotl_buffer_len(response_plaintext);
+    uint8_t *response_plaintext_data = signal_buffer_data(response_plaintext);
+    size_t response_plaintext_len = signal_buffer_len(response_plaintext);
     ck_assert_int_eq(alice_response_len, response_plaintext_len);
     ck_assert_int_eq(memcmp(alice_response_data, response_plaintext_data, response_plaintext_len), 0);
 
@@ -1399,13 +1399,13 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Have Alice decrypt the final message */
-    axolotl_buffer *final_plaintext = 0;
+    signal_buffer *final_plaintext = 0;
     result = session_cipher_decrypt_signal_message(alice_session_cipher, final_message_copy, 0, &final_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the final message decrypted correctly */
-    uint8_t *final_plaintext_data = axolotl_buffer_data(final_plaintext);
-    size_t final_plaintext_len = axolotl_buffer_len(final_plaintext);
+    uint8_t *final_plaintext_data = signal_buffer_data(final_plaintext);
+    size_t final_plaintext_len = signal_buffer_len(final_plaintext);
     ck_assert_int_eq(final_message_len, final_plaintext_len);
     ck_assert_int_eq(memcmp(final_message_data, final_plaintext_data, final_plaintext_len), 0);
 
@@ -1419,14 +1419,14 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the lost message */
-    axolotl_buffer *lost_message_for_bob_plaintext = 0;
+    signal_buffer *lost_message_for_bob_plaintext = 0;
     result = session_cipher_decrypt_pre_key_signal_message(bob_session_cipher,
             lost_message_for_bob_copy, 0, &lost_message_for_bob_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the lost message decrypted correctly */
-    uint8_t *lost_bob_plaintext_data = axolotl_buffer_data(lost_message_for_bob_plaintext);
-    size_t lost_bob_plaintext_len = axolotl_buffer_len(lost_message_for_bob_plaintext);
+    uint8_t *lost_bob_plaintext_data = signal_buffer_data(lost_message_for_bob_plaintext);
+    size_t lost_bob_plaintext_len = signal_buffer_len(lost_message_for_bob_plaintext);
     ck_assert_int_eq(lost_message_for_bob_len, lost_bob_plaintext_len);
     ck_assert_int_eq(memcmp(lost_message_for_bob_data, lost_bob_plaintext_data, lost_bob_plaintext_len), 0);
 
@@ -1449,14 +1449,14 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(result, 0);
 
     /* Decrypt the unexpected message */
-    axolotl_buffer *blast_from_the_past_plaintext = 0;
+    signal_buffer *blast_from_the_past_plaintext = 0;
     result = session_cipher_decrypt_signal_message(alice_session_cipher,
             blast_from_the_past_copy, 0, &blast_from_the_past_plaintext);
     ck_assert_int_eq(result, 0);
 
     /* Verify that the unexpected message decrypted correctly */
-    uint8_t *blast_from_the_past_decrypted_data = axolotl_buffer_data(blast_from_the_past_plaintext);
-    size_t blast_from_the_past_decrypted_len = axolotl_buffer_len(blast_from_the_past_plaintext);
+    uint8_t *blast_from_the_past_decrypted_data = signal_buffer_data(blast_from_the_past_plaintext);
+    size_t blast_from_the_past_decrypted_len = signal_buffer_len(blast_from_the_past_plaintext);
     ck_assert_int_eq(blast_from_the_past_len, blast_from_the_past_decrypted_len);
     ck_assert_int_eq(memcmp(blast_from_the_past_data, blast_from_the_past_decrypted_data, blast_from_the_past_decrypted_len), 0);
 
@@ -1464,19 +1464,19 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
     ck_assert_int_eq(is_session_id_equal(alice_store, bob_store), 1);
 
     /* Cleanup */
-    axolotl_buffer_free(blast_from_the_past_plaintext);
-    AXOLOTL_UNREF(blast_from_the_past_copy);
-    AXOLOTL_UNREF(blast_from_the_past);
-    axolotl_buffer_free(lost_message_for_bob_plaintext);
-    AXOLOTL_UNREF(lost_message_for_bob_copy);
-    axolotl_buffer_free(final_plaintext);
-    AXOLOTL_UNREF(final_message_copy);
-    AXOLOTL_UNREF(final_message);
-    axolotl_buffer_free(response_plaintext);
-    AXOLOTL_UNREF(alice_response_copy);
-    AXOLOTL_UNREF(alice_response);
-    AXOLOTL_UNREF(bob_lost_pre_key_bundle);
-    AXOLOTL_UNREF(lost_message_for_bob);
+    signal_buffer_free(blast_from_the_past_plaintext);
+    SIGNAL_UNREF(blast_from_the_past_copy);
+    SIGNAL_UNREF(blast_from_the_past);
+    signal_buffer_free(lost_message_for_bob_plaintext);
+    SIGNAL_UNREF(lost_message_for_bob_copy);
+    signal_buffer_free(final_plaintext);
+    SIGNAL_UNREF(final_message_copy);
+    SIGNAL_UNREF(final_message);
+    signal_buffer_free(response_plaintext);
+    SIGNAL_UNREF(alice_response_copy);
+    SIGNAL_UNREF(alice_response);
+    SIGNAL_UNREF(bob_lost_pre_key_bundle);
+    SIGNAL_UNREF(lost_message_for_bob);
     session_cipher_free(alice_session_cipher);
     session_cipher_free(bob_session_cipher);
     session_builder_free(alice_session_builder);
@@ -1512,8 +1512,8 @@ int is_session_id_equal(axolotl_store_context *alice_store, axolotl_store_contex
         result = 0;
     }
 
-    AXOLOTL_UNREF(alice_store_record);
-    AXOLOTL_UNREF(bob_store_record);
+    SIGNAL_UNREF(alice_store_record);
+    SIGNAL_UNREF(bob_store_record);
     return result;
 }
 
@@ -1530,7 +1530,7 @@ int current_session_version(axolotl_store_context *store, const axolotl_address 
 
     result = session_state_get_session_version(state);
 
-    AXOLOTL_UNREF(record);
+    SIGNAL_UNREF(record);
 
     return result;
 }
@@ -1551,15 +1551,15 @@ session_pre_key_bundle *create_alice_pre_key_bundle(axolotl_store_context *store
 
     ec_public_key *alice_signed_pre_key_public = ec_key_pair_get_public(alice_signed_pre_key);
 
-    axolotl_buffer *alice_signed_pre_key_public_serialized = 0;
+    signal_buffer *alice_signed_pre_key_public_serialized = 0;
     result = ec_public_key_serialize(&alice_signed_pre_key_public_serialized, alice_signed_pre_key_public);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *signature = 0;
+    signal_buffer *signature = 0;
     result = curve_calculate_signature(global_context, &signature,
             ratchet_identity_key_pair_get_private(alice_identity_key_pair),
-            axolotl_buffer_data(alice_signed_pre_key_public_serialized),
-            axolotl_buffer_len(alice_signed_pre_key_public_serialized));
+            signal_buffer_data(alice_signed_pre_key_public_serialized),
+            signal_buffer_len(alice_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
     session_pre_key_bundle *alice_pre_key_bundle = 0;
@@ -1568,14 +1568,14 @@ session_pre_key_bundle *create_alice_pre_key_bundle(axolotl_store_context *store
             alice_unsigned_pre_key_id,
             ec_key_pair_get_public(alice_unsigned_pre_key),
             alice_signed_pre_key_id, alice_signed_pre_key_public,
-            axolotl_buffer_data(signature), axolotl_buffer_len(signature),
+            signal_buffer_data(signature), signal_buffer_len(signature),
             ratchet_identity_key_pair_get_public(alice_identity_key_pair));
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *signed_pre_key_record = 0;
     result = session_signed_pre_key_create(&signed_pre_key_record,
             alice_signed_pre_key_id, time(0), alice_signed_pre_key,
-            axolotl_buffer_data(signature), axolotl_buffer_len(signature));
+            signal_buffer_data(signature), signal_buffer_len(signature));
     ck_assert_int_eq(result, 0);
 
     result = axolotl_signed_pre_key_store_key(store, signed_pre_key_record);
@@ -1588,12 +1588,12 @@ session_pre_key_bundle *create_alice_pre_key_bundle(axolotl_store_context *store
     result = axolotl_pre_key_store_key(store, pre_key_record);
     ck_assert_int_eq(result, 0);
 
-    AXOLOTL_UNREF(pre_key_record);
-    AXOLOTL_UNREF(signed_pre_key_record);
-    AXOLOTL_UNREF(alice_identity_key_pair);
-    AXOLOTL_UNREF(alice_unsigned_pre_key);
-    axolotl_buffer_free(alice_signed_pre_key_public_serialized);
-    axolotl_buffer_free(signature);
+    SIGNAL_UNREF(pre_key_record);
+    SIGNAL_UNREF(signed_pre_key_record);
+    SIGNAL_UNREF(alice_identity_key_pair);
+    SIGNAL_UNREF(alice_unsigned_pre_key);
+    signal_buffer_free(alice_signed_pre_key_public_serialized);
+    signal_buffer_free(signature);
 
     return alice_pre_key_bundle;
 }
@@ -1614,15 +1614,15 @@ session_pre_key_bundle *create_bob_pre_key_bundle(axolotl_store_context *store)
 
     ec_public_key *bob_signed_pre_key_public = ec_key_pair_get_public(bob_signed_pre_key);
 
-    axolotl_buffer *bob_signed_pre_key_public_serialized = 0;
+    signal_buffer *bob_signed_pre_key_public_serialized = 0;
     result = ec_public_key_serialize(&bob_signed_pre_key_public_serialized, bob_signed_pre_key_public);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *signature = 0;
+    signal_buffer *signature = 0;
     result = curve_calculate_signature(global_context, &signature,
             ratchet_identity_key_pair_get_private(bob_identity_key_pair),
-            axolotl_buffer_data(bob_signed_pre_key_public_serialized),
-            axolotl_buffer_len(bob_signed_pre_key_public_serialized));
+            signal_buffer_data(bob_signed_pre_key_public_serialized),
+            signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
     session_pre_key_bundle *bob_pre_key_bundle = 0;
@@ -1631,14 +1631,14 @@ session_pre_key_bundle *create_bob_pre_key_bundle(axolotl_store_context *store)
             bob_unsigned_pre_key_id,
             ec_key_pair_get_public(bob_unsigned_pre_key),
             bob_signed_pre_key_id, bob_signed_pre_key_public,
-            axolotl_buffer_data(signature), axolotl_buffer_len(signature),
+            signal_buffer_data(signature), signal_buffer_len(signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair));
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *signed_pre_key_record = 0;
     result = session_signed_pre_key_create(&signed_pre_key_record,
             bob_signed_pre_key_id, time(0), bob_signed_pre_key,
-            axolotl_buffer_data(signature), axolotl_buffer_len(signature));
+            signal_buffer_data(signature), signal_buffer_len(signature));
     ck_assert_int_eq(result, 0);
 
     result = axolotl_signed_pre_key_store_key(store, signed_pre_key_record);
@@ -1651,12 +1651,12 @@ session_pre_key_bundle *create_bob_pre_key_bundle(axolotl_store_context *store)
     result = axolotl_pre_key_store_key(store, pre_key_record);
     ck_assert_int_eq(result, 0);
 
-    AXOLOTL_UNREF(pre_key_record);
-    AXOLOTL_UNREF(signed_pre_key_record);
-    AXOLOTL_UNREF(bob_identity_key_pair);
-    AXOLOTL_UNREF(bob_unsigned_pre_key);
-    axolotl_buffer_free(bob_signed_pre_key_public_serialized);
-    axolotl_buffer_free(signature);
+    SIGNAL_UNREF(pre_key_record);
+    SIGNAL_UNREF(signed_pre_key_record);
+    SIGNAL_UNREF(bob_identity_key_pair);
+    SIGNAL_UNREF(bob_unsigned_pre_key);
+    signal_buffer_free(bob_signed_pre_key_public_serialized);
+    signal_buffer_free(signature);
 
     return bob_pre_key_bundle;
 }

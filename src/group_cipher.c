@@ -12,18 +12,18 @@ struct group_cipher
 {
     axolotl_store_context *store;
     const axolotl_sender_key_name *sender_key_id;
-    axolotl_context *global_context;
-    int (*decrypt_callback)(group_cipher *cipher, axolotl_buffer *plaintext, void *decrypt_context);
+    signal_context *global_context;
+    int (*decrypt_callback)(group_cipher *cipher, signal_buffer *plaintext, void *decrypt_context);
     int inside_callback;
     void *user_data;
 };
 
 static int group_cipher_get_sender_key(group_cipher *cipher, sender_message_key **sender_key, sender_key_state *state, uint32_t iteration);
-static int group_cipher_decrypt_callback(group_cipher *cipher, axolotl_buffer *plaintext, void *decrypt_context);
+static int group_cipher_decrypt_callback(group_cipher *cipher, signal_buffer *plaintext, void *decrypt_context);
 
 int group_cipher_create(group_cipher **cipher,
         axolotl_store_context *store, const axolotl_sender_key_name *sender_key_id,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     group_cipher *result_cipher;
 
@@ -32,7 +32,7 @@ int group_cipher_create(group_cipher **cipher,
 
     result_cipher = malloc(sizeof(group_cipher));
     if(!result_cipher) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result_cipher, 0, sizeof(group_cipher));
 
@@ -57,7 +57,7 @@ void *group_cipher_get_user_data(group_cipher *cipher)
 }
 
 void group_cipher_set_decryption_callback(group_cipher *cipher,
-        int (*callback)(group_cipher *cipher, axolotl_buffer *plaintext, void *decrypt_context))
+        int (*callback)(group_cipher *cipher, signal_buffer *plaintext, void *decrypt_context))
 {
     assert(cipher);
     cipher->decrypt_callback = callback;
@@ -74,15 +74,15 @@ int group_cipher_encrypt(group_cipher *cipher,
     ec_private_key *signing_key_private = 0;
     sender_message_key *sender_key = 0;
     sender_chain_key *next_chain_key = 0;
-    axolotl_buffer *sender_cipher_key = 0;
-    axolotl_buffer *sender_cipher_iv = 0;
-    axolotl_buffer *ciphertext = 0;
+    signal_buffer *sender_cipher_key = 0;
+    signal_buffer *sender_cipher_iv = 0;
+    signal_buffer *ciphertext = 0;
 
     assert(cipher);
-    axolotl_lock(cipher->global_context);
+    signal_lock(cipher->global_context);
 
     if(cipher->inside_callback == 1) {
-        result = AX_ERR_INVAL;
+        result = SG_ERR_INVAL;
         goto complete;
     }
 
@@ -98,7 +98,7 @@ int group_cipher_encrypt(group_cipher *cipher,
 
     signing_key_private = sender_key_state_get_signing_key_private(state);
     if(!signing_key_private) {
-        result = AX_ERR_NO_SESSION;
+        result = SG_ERR_NO_SESSION;
         goto complete;
     }
 
@@ -110,9 +110,9 @@ int group_cipher_encrypt(group_cipher *cipher,
     sender_cipher_key = sender_message_key_get_cipher_key(sender_key);
     sender_cipher_iv = sender_message_key_get_iv(sender_key);
 
-    result = axolotl_encrypt(cipher->global_context, &ciphertext, AX_CIPHER_AES_CBC_PKCS5,
-            axolotl_buffer_data(sender_cipher_key), axolotl_buffer_len(sender_cipher_key),
-            axolotl_buffer_data(sender_cipher_iv), axolotl_buffer_len(sender_cipher_iv),
+    result = signal_encrypt(cipher->global_context, &ciphertext, SG_CIPHER_AES_CBC_PKCS5,
+            signal_buffer_data(sender_cipher_key), signal_buffer_len(sender_cipher_key),
+            signal_buffer_data(sender_cipher_iv), signal_buffer_len(sender_cipher_iv),
             padded_plaintext, padded_plaintext_len);
     if(result < 0) {
         goto complete;
@@ -121,7 +121,7 @@ int group_cipher_encrypt(group_cipher *cipher,
     result = sender_key_message_create(&result_message,
             sender_key_state_get_key_id(state),
             sender_message_key_get_iteration(sender_key),
-            axolotl_buffer_data(ciphertext), axolotl_buffer_len(ciphertext),
+            signal_buffer_data(ciphertext), signal_buffer_len(ciphertext),
             signing_key_private,
             cipher->global_context);
     if(result < 0) {
@@ -142,37 +142,37 @@ complete:
         *encrypted_message = (ciphertext_message *)result_message;
     }
     else {
-        if(result == AX_ERR_INVALID_KEY_ID) {
-            result = AX_ERR_NO_SESSION;
+        if(result == SG_ERR_INVALID_KEY_ID) {
+            result = SG_ERR_NO_SESSION;
         }
-        AXOLOTL_UNREF(result_message);
+        SIGNAL_UNREF(result_message);
     }
-    axolotl_buffer_free(ciphertext);
-    AXOLOTL_UNREF(next_chain_key);
-    AXOLOTL_UNREF(sender_key);
-    AXOLOTL_UNREF(record);
-    axolotl_unlock(cipher->global_context);
+    signal_buffer_free(ciphertext);
+    SIGNAL_UNREF(next_chain_key);
+    SIGNAL_UNREF(sender_key);
+    SIGNAL_UNREF(record);
+    signal_unlock(cipher->global_context);
     return result;
 }
 
 int group_cipher_decrypt(group_cipher *cipher,
         sender_key_message *ciphertext, void *decrypt_context,
-        axolotl_buffer **plaintext)
+        signal_buffer **plaintext)
 {
     int result = 0;
-    axolotl_buffer *result_buf = 0;
+    signal_buffer *result_buf = 0;
     sender_key_record *record = 0;
     sender_key_state *state = 0;
     sender_message_key *sender_key = 0;
-    axolotl_buffer *sender_cipher_key = 0;
-    axolotl_buffer *sender_cipher_iv = 0;
-    axolotl_buffer *ciphertext_body = 0;
+    signal_buffer *sender_cipher_key = 0;
+    signal_buffer *sender_cipher_iv = 0;
+    signal_buffer *ciphertext_body = 0;
 
     assert(cipher);
-    axolotl_lock(cipher->global_context);
+    signal_lock(cipher->global_context);
 
     if(cipher->inside_callback == 1) {
-        result = AX_ERR_INVAL;
+        result = SG_ERR_INVAL;
         goto complete;
     }
 
@@ -182,8 +182,8 @@ int group_cipher_decrypt(group_cipher *cipher,
     }
 
     if(sender_key_record_is_empty(record)) {
-        result = AX_ERR_NO_SESSION;
-        axolotl_log(cipher->global_context, AX_LOG_WARNING, "No sender key for: %s::%s::%d",
+        result = SG_ERR_NO_SESSION;
+        signal_log(cipher->global_context, SG_LOG_WARNING, "No sender key for: %s::%s::%d",
                 cipher->sender_key_id->group_id,
                 cipher->sender_key_id->sender.name,
                 cipher->sender_key_id->sender.device_id);
@@ -209,10 +209,10 @@ int group_cipher_decrypt(group_cipher *cipher,
     sender_cipher_iv = sender_message_key_get_iv(sender_key);
     ciphertext_body = sender_key_message_get_ciphertext(ciphertext);
 
-    result = axolotl_decrypt(cipher->global_context, &result_buf, AX_CIPHER_AES_CBC_PKCS5,
-            axolotl_buffer_data(sender_cipher_key), axolotl_buffer_len(sender_cipher_key),
-            axolotl_buffer_data(sender_cipher_iv), axolotl_buffer_len(sender_cipher_iv),
-            axolotl_buffer_data(ciphertext_body), axolotl_buffer_len(ciphertext_body));
+    result = signal_decrypt(cipher->global_context, &result_buf, SG_CIPHER_AES_CBC_PKCS5,
+            signal_buffer_data(sender_cipher_key), signal_buffer_len(sender_cipher_key),
+            signal_buffer_data(sender_cipher_iv), signal_buffer_len(sender_cipher_iv),
+            signal_buffer_data(ciphertext_body), signal_buffer_len(ciphertext_body));
     if(result < 0) {
         goto complete;
     }
@@ -225,18 +225,18 @@ int group_cipher_decrypt(group_cipher *cipher,
     result = axolotl_sender_key_store_key(cipher->store, cipher->sender_key_id, record);
 
 complete:
-    AXOLOTL_UNREF(sender_key);
-    AXOLOTL_UNREF(record);
+    SIGNAL_UNREF(sender_key);
+    SIGNAL_UNREF(record);
     if(result >= 0) {
         *plaintext = result_buf;
     }
     else {
-        if(result == AX_ERR_INVALID_KEY || result == AX_ERR_INVALID_KEY_ID) {
-            result = AX_ERR_INVALID_MESSAGE;
+        if(result == SG_ERR_INVALID_KEY || result == SG_ERR_INVALID_KEY_ID) {
+            result = SG_ERR_INVALID_MESSAGE;
         }
-        axolotl_buffer_free(result_buf);
+        signal_buffer_free(result_buf);
     }
-    axolotl_unlock(cipher->global_context);
+    signal_unlock(cipher->global_context);
     return result;
 }
 
@@ -249,19 +249,19 @@ int group_cipher_get_sender_key(group_cipher *cipher, sender_message_key **sende
     sender_message_key *message_key = 0;
 
     chain_key = sender_key_state_get_chain_key(state);
-    AXOLOTL_REF(chain_key);
+    SIGNAL_REF(chain_key);
 
     if(sender_chain_key_get_iteration(chain_key) > iteration) {
         if(sender_key_state_has_sender_message_key(state, iteration)) {
             result_key = sender_key_state_remove_sender_message_key(state, iteration);
             if(!result_key) {
-                result = AX_ERR_UNKNOWN;
+                result = SG_ERR_UNKNOWN;
             }
             goto complete;
         }
         else {
-            result = AX_ERR_DUPLICATE_MESSAGE;
-            axolotl_log(cipher->global_context, AX_LOG_WARNING,
+            result = SG_ERR_DUPLICATE_MESSAGE;
+            signal_log(cipher->global_context, SG_LOG_WARNING,
                     "Received message with old counter: %d, %d",
                     sender_chain_key_get_iteration(chain_key), iteration);
             goto complete;
@@ -269,8 +269,8 @@ int group_cipher_get_sender_key(group_cipher *cipher, sender_message_key **sende
     }
 
     if(iteration - sender_chain_key_get_iteration(chain_key) > 2000) {
-        result = AX_ERR_INVALID_MESSAGE;
-        axolotl_log(cipher->global_context, AX_LOG_WARNING, "Over 2000 messages into the future!");
+        result = SG_ERR_INVALID_MESSAGE;
+        signal_log(cipher->global_context, SG_LOG_WARNING, "Over 2000 messages into the future!");
         goto complete;
     }
 
@@ -284,14 +284,14 @@ int group_cipher_get_sender_key(group_cipher *cipher, sender_message_key **sende
         if(result < 0) {
             goto complete;
         }
-        AXOLOTL_UNREF(message_key);
+        SIGNAL_UNREF(message_key);
 
         result = sender_chain_key_create_next(chain_key, &next_chain_key);
         if(result < 0) {
             goto complete;
         }
 
-        AXOLOTL_UNREF(chain_key);
+        SIGNAL_UNREF(chain_key);
         chain_key = next_chain_key;
         next_chain_key = 0;
     }
@@ -305,16 +305,16 @@ int group_cipher_get_sender_key(group_cipher *cipher, sender_message_key **sende
     result = sender_chain_key_create_message_key(chain_key, &result_key);
 
 complete:
-    AXOLOTL_UNREF(message_key);
-    AXOLOTL_UNREF(chain_key);
-    AXOLOTL_UNREF(next_chain_key);
+    SIGNAL_UNREF(message_key);
+    SIGNAL_UNREF(chain_key);
+    SIGNAL_UNREF(next_chain_key);
     if(result >= 0) {
         *sender_key = result_key;
     }
     return result;
 }
 
-static int group_cipher_decrypt_callback(group_cipher *cipher, axolotl_buffer *plaintext, void *decrypt_context)
+static int group_cipher_decrypt_callback(group_cipher *cipher, signal_buffer *plaintext, void *decrypt_context)
 {
     int result = 0;
     if(cipher->decrypt_callback) {

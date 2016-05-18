@@ -9,27 +9,27 @@
 #define HASH_OUTPUT_SIZE 32
 
 struct sender_message_key {
-    axolotl_type_base base;
+    signal_type_base base;
     uint32_t iteration;
-    axolotl_buffer *iv;
-    axolotl_buffer *cipher_key;
-    axolotl_buffer *seed;
-    axolotl_context *global_context;
+    signal_buffer *iv;
+    signal_buffer *cipher_key;
+    signal_buffer *seed;
+    signal_context *global_context;
 };
 
 struct sender_chain_key {
-    axolotl_type_base base;
+    signal_type_base base;
     uint32_t iteration;
-    axolotl_buffer *chain_key;
-    axolotl_context *global_context;
+    signal_buffer *chain_key;
+    signal_context *global_context;
 };
 
-static int sender_chain_key_get_derivative(axolotl_buffer **derivative, uint8_t seed, axolotl_buffer *key,
-        axolotl_context *global_context);
+static int sender_chain_key_get_derivative(signal_buffer **derivative, uint8_t seed, signal_buffer *key,
+        signal_context *global_context);
 
 int sender_message_key_create(sender_message_key **key,
-        uint32_t iteration, axolotl_buffer *seed,
-        axolotl_context *global_context)
+        uint32_t iteration, signal_buffer *seed,
+        signal_context *global_context)
 {
     sender_message_key *result = 0;
     int ret = 0;
@@ -42,17 +42,17 @@ int sender_message_key_create(sender_message_key **key,
     assert(global_context);
 
     if(!seed) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     memset(salt, 0, sizeof(salt));
 
     result = malloc(sizeof(sender_message_key));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
-    AXOLOTL_INIT(result, sender_message_key_destroy);
+    SIGNAL_INIT(result, sender_message_key_destroy);
 
     ret = hkdf_create(&kdf, 3, global_context);
     if(ret < 0) {
@@ -60,44 +60,44 @@ int sender_message_key_create(sender_message_key **key,
     }
 
     ret_size = hkdf_derive_secrets(kdf, &derivative,
-            axolotl_buffer_data(seed), axolotl_buffer_len(seed),
+            signal_buffer_data(seed), signal_buffer_len(seed),
             salt, sizeof(salt),
             (uint8_t *)info_material, sizeof(info_material) - 1, 48);
     if(ret_size != 48) {
-        ret = (ret_size < 0) ? (int)ret_size : AX_ERR_UNKNOWN;
-        axolotl_log(global_context, AX_LOG_WARNING, "hkdf_derive_secrets failed");
+        ret = (ret_size < 0) ? (int)ret_size : SG_ERR_UNKNOWN;
+        signal_log(global_context, SG_LOG_WARNING, "hkdf_derive_secrets failed");
         goto complete;
     }
 
     result->iteration = iteration;
 
-    result->seed = axolotl_buffer_copy(seed);
+    result->seed = signal_buffer_copy(seed);
     if(!result->seed) {
-        ret = AX_ERR_NOMEM;
+        ret = SG_ERR_NOMEM;
         goto complete;
     }
 
-    result->iv = axolotl_buffer_create(derivative, 16);
+    result->iv = signal_buffer_create(derivative, 16);
     if(!result->iv) {
-        ret = AX_ERR_NOMEM;
+        ret = SG_ERR_NOMEM;
         goto complete;
     }
 
-    result->cipher_key = axolotl_buffer_create(derivative + 16, 32);
+    result->cipher_key = signal_buffer_create(derivative + 16, 32);
     if(!result->cipher_key) {
-        ret = AX_ERR_NOMEM;
+        ret = SG_ERR_NOMEM;
         goto complete;
     }
 
     result->global_context = global_context;
 
 complete:
-    AXOLOTL_UNREF(kdf);
+    SIGNAL_UNREF(kdf);
     if(derivative) {
         free(derivative);
     }
     if(ret < 0) {
-        AXOLOTL_UNREF(result);
+        SIGNAL_UNREF(result);
     }
     else {
         ret = 0;
@@ -112,36 +112,36 @@ uint32_t sender_message_key_get_iteration(sender_message_key *key)
     return key->iteration;
 }
 
-axolotl_buffer *sender_message_key_get_iv(sender_message_key *key)
+signal_buffer *sender_message_key_get_iv(sender_message_key *key)
 {
     assert(key);
     return key->iv;
 }
 
-axolotl_buffer *sender_message_key_get_cipher_key(sender_message_key *key)
+signal_buffer *sender_message_key_get_cipher_key(sender_message_key *key)
 {
     assert(key);
     return key->cipher_key;
 }
 
-axolotl_buffer *sender_message_key_get_seed(sender_message_key *key)
+signal_buffer *sender_message_key_get_seed(sender_message_key *key)
 {
     assert(key);
     return key->seed;
 }
 
-void sender_message_key_destroy(axolotl_type_base *type)
+void sender_message_key_destroy(signal_type_base *type)
 {
     sender_message_key *key = (sender_message_key *)type;
-    axolotl_buffer_bzero_free(key->iv);
-    axolotl_buffer_bzero_free(key->cipher_key);
-    axolotl_buffer_bzero_free(key->seed);
+    signal_buffer_bzero_free(key->iv);
+    signal_buffer_bzero_free(key->cipher_key);
+    signal_buffer_bzero_free(key->seed);
     free(key);
 }
 
 int sender_chain_key_create(sender_chain_key **key,
-        uint32_t iteration, axolotl_buffer *chain_key,
-        axolotl_context *global_context)
+        uint32_t iteration, signal_buffer *chain_key,
+        signal_context *global_context)
 {
     sender_chain_key *result = 0;
     int ret = 0;
@@ -149,21 +149,21 @@ int sender_chain_key_create(sender_chain_key **key,
     assert(global_context);
 
     if(!chain_key) {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = malloc(sizeof(sender_chain_key));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
 
-    AXOLOTL_INIT(result, sender_chain_key_destroy);
+    SIGNAL_INIT(result, sender_chain_key_destroy);
 
     result->iteration = iteration;
 
-    result->chain_key = axolotl_buffer_copy(chain_key);
+    result->chain_key = signal_buffer_copy(chain_key);
     if(!result->chain_key) {
-        ret = AX_ERR_NOMEM;
+        ret = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -171,7 +171,7 @@ int sender_chain_key_create(sender_chain_key **key,
 
 complete:
     if(ret < 0) {
-        AXOLOTL_UNREF(result);
+        SIGNAL_UNREF(result);
     }
     else {
         ret = 0;
@@ -190,7 +190,7 @@ int sender_chain_key_create_message_key(sender_chain_key *key, sender_message_ke
 {
     static const uint8_t MESSAGE_KEY_SEED = 0x01;
     int ret = 0;
-    axolotl_buffer *derivative = 0;
+    signal_buffer *derivative = 0;
     sender_message_key *result = 0;
 
     assert(key);
@@ -203,7 +203,7 @@ int sender_chain_key_create_message_key(sender_chain_key *key, sender_message_ke
     ret = sender_message_key_create(&result, key->iteration, derivative, key->global_context);
 
 complete:
-    axolotl_buffer_free(derivative);
+    signal_buffer_free(derivative);
     if(ret >= 0) {
         ret = 0;
         *message_key = result;
@@ -215,7 +215,7 @@ int sender_chain_key_create_next(sender_chain_key *key, sender_chain_key **next_
 {
     static const uint8_t CHAIN_KEY_SEED = 0x02;
     int ret = 0;
-    axolotl_buffer *derivative = 0;
+    signal_buffer *derivative = 0;
     sender_chain_key *result = 0;
 
     assert(key);
@@ -228,7 +228,7 @@ int sender_chain_key_create_next(sender_chain_key *key, sender_chain_key **next_
     ret = sender_chain_key_create(&result, key->iteration + 1, derivative, key->global_context);
 
 complete:
-    axolotl_buffer_free(derivative);
+    signal_buffer_free(derivative);
     if(ret >= 0) {
         ret = 0;
         *next_key = result;
@@ -236,47 +236,47 @@ complete:
     return ret;
 }
 
-axolotl_buffer *sender_chain_key_get_seed(sender_chain_key *key)
+signal_buffer *sender_chain_key_get_seed(sender_chain_key *key)
 {
     assert(key);
     return key->chain_key;
 }
 
-void sender_chain_key_destroy(axolotl_type_base *type)
+void sender_chain_key_destroy(signal_type_base *type)
 {
     sender_chain_key *key = (sender_chain_key *)type;
-    axolotl_buffer_bzero_free(key->chain_key);
+    signal_buffer_bzero_free(key->chain_key);
     free(key);
 }
 
-int sender_chain_key_get_derivative(axolotl_buffer **derivative, uint8_t seed, axolotl_buffer *key,
-        axolotl_context *global_context)
+int sender_chain_key_get_derivative(signal_buffer **derivative, uint8_t seed, signal_buffer *key,
+        signal_context *global_context)
 {
     int result = 0;
-    axolotl_buffer *output_buffer = 0;
+    signal_buffer *output_buffer = 0;
     void *hmac_context = 0;
 
-    result = axolotl_hmac_sha256_init(global_context, &hmac_context,
-            axolotl_buffer_data(key), axolotl_buffer_len(key));
+    result = signal_hmac_sha256_init(global_context, &hmac_context,
+            signal_buffer_data(key), signal_buffer_len(key));
     if(result < 0) {
         goto complete;
     }
 
-    result = axolotl_hmac_sha256_update(global_context, hmac_context, &seed, sizeof(seed));
+    result = signal_hmac_sha256_update(global_context, hmac_context, &seed, sizeof(seed));
     if(result < 0) {
         goto complete;
     }
 
-    result = axolotl_hmac_sha256_final(global_context, hmac_context, &output_buffer);
+    result = signal_hmac_sha256_final(global_context, hmac_context, &output_buffer);
     if(result < 0) {
         goto complete;
     }
 
 complete:
-    axolotl_hmac_sha256_cleanup(global_context, hmac_context);
+    signal_hmac_sha256_cleanup(global_context, hmac_context);
 
     if(result < 0) {
-        axolotl_buffer_free(output_buffer);
+        signal_buffer_free(output_buffer);
     }
     else {
         *derivative = output_buffer;

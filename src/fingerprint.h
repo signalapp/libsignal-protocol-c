@@ -23,7 +23,7 @@ extern "C" {
  * @param global_context the global library context
  * @return 0 on success, or negative on failure
  */
-int fingerprint_generator_create(fingerprint_generator **generator, int iterations, axolotl_context *global_context);
+int fingerprint_generator_create(fingerprint_generator **generator, int iterations, signal_context *global_context);
 
 /**
  * Generate a scannable and displayble fingerprint.
@@ -45,21 +45,21 @@ void fingerprint_generator_free(fingerprint_generator *generator);
 int fingerprint_create(fingerprint **fingerprint_val, displayable_fingerprint *displayable, scannable_fingerprint *scannable);
 displayable_fingerprint *fingerprint_get_displayable(fingerprint *fingerprint_val);
 scannable_fingerprint *fingerprint_get_scannable(fingerprint *fingerprint_val);
-void fingerprint_destroy(axolotl_type_base *type);
+void fingerprint_destroy(signal_type_base *type);
 
 int displayable_fingerprint_create(displayable_fingerprint **displayable, const char *local_fingerprint, const char *remote_fingerprint);
 const char *displayable_fingerprint_local(displayable_fingerprint *displayable);
 const char *displayable_fingerprint_remote(displayable_fingerprint *displayable);
 const char *displayable_fingerprint_text(displayable_fingerprint *displayable);
-void displayable_fingerprint_destroy(axolotl_type_base *type);
+void displayable_fingerprint_destroy(signal_type_base *type);
 
 int scannable_fingerprint_create(scannable_fingerprint **scannable,
         uint32_t version,
         const char *local_stable_identifier, ec_public_key *local_identity_key,
         const char *remote_stable_identifier, ec_public_key *remote_identity_key);
 
-int scannable_fingerprint_serialize(axolotl_buffer **buffer, const scannable_fingerprint *scannable);
-int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const uint8_t *data, size_t len, axolotl_context *global_context);
+int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fingerprint *scannable);
+int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const uint8_t *data, size_t len, signal_context *global_context);
 uint32_t scannable_fingerprint_get_version(scannable_fingerprint *scannable);
 const char *scannable_fingerprint_get_local_stable_identifier(scannable_fingerprint *scannable);
 ec_public_key *scannable_fingerprint_get_local_identity_key(scannable_fingerprint *scannable);
@@ -72,12 +72,12 @@ ec_public_key *scannable_fingerprint_get_remote_identity_key(scannable_fingerpri
  * @param other_scannable The data from the scanned code
  * @retval 1 if the scannable codes match
  * @retval 0 if the scannable codes do not match
- * @retval AX_ERR_FP_VERSION_MISMATCH if the scanned fingerprint is the wrong version
- * @retval AX_ERR_FP_IDENT_MISMATCH if the scanned fingerprint is for the wrong stable identifier
+ * @retval SG_ERR_FP_VERSION_MISMATCH if the scanned fingerprint is the wrong version
+ * @retval SG_ERR_FP_IDENT_MISMATCH if the scanned fingerprint is for the wrong stable identifier
  */
 int scannable_fingerprint_compare(scannable_fingerprint *scannable, const scannable_fingerprint *other_scannable);
 
-void scannable_fingerprint_destroy(axolotl_type_base *type);
+void scannable_fingerprint_destroy(signal_type_base *type);
 
 #ifdef __cplusplus
 }

@@ -8,21 +8,21 @@
 #include "session_state.h"
 #include "test_common.h"
 
-axolotl_context *global_context;
+signal_context *global_context;
 
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
     setup_test_crypto_provider(global_context);
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 void fill_test_session_state(session_state *state, ec_public_key *receiver_chain_ratchet_key1, ec_public_key *receiver_chain_ratchet_key2)
@@ -44,8 +44,8 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
     ec_public_key *remote_identity_key = create_test_ec_public_key(global_context);
     session_state_set_local_identity_key(state, local_identity_key);
     session_state_set_remote_identity_key(state, remote_identity_key);
-    AXOLOTL_UNREF(local_identity_key);
-    AXOLOTL_UNREF(remote_identity_key);
+    SIGNAL_UNREF(local_identity_key);
+    SIGNAL_UNREF(remote_identity_key);
 
     /* Set the root key */
     ratchet_root_key *root_key;
@@ -53,7 +53,7 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
     ck_assert_int_eq(result, 0);
 
     session_state_set_root_key(state, root_key);
-    AXOLOTL_UNREF(root_key);
+    SIGNAL_UNREF(root_key);
 
     /* Set the previous counter */
     session_state_set_previous_counter(state, 4);
@@ -68,8 +68,8 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
     ck_assert_int_eq(result, 0);
 
     session_state_set_sender_chain(state, sender_ratchet_key_pair, sender_chain_key);
-    AXOLOTL_UNREF(sender_ratchet_key_pair);
-    AXOLOTL_UNREF(sender_chain_key);
+    SIGNAL_UNREF(sender_ratchet_key_pair);
+    SIGNAL_UNREF(sender_chain_key);
 
     /* Set the receiver chains */
     if(receiver_chain_ratchet_key1) {
@@ -86,7 +86,7 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
         ck_assert_int_eq(result, 0);
         result = session_state_set_message_keys(state, receiver_chain_ratchet_key1, &message_keys);
         ck_assert_int_eq(result, 0);
-        AXOLOTL_UNREF(receiver_chain_chain_key1);
+        SIGNAL_UNREF(receiver_chain_chain_key1);
     }
 
     if(receiver_chain_ratchet_key2) {
@@ -103,7 +103,7 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
         ck_assert_int_eq(result, 0);
         result = session_state_set_message_keys(state, receiver_chain_ratchet_key2, &message_keys);
         ck_assert_int_eq(result, 0);
-        AXOLOTL_UNREF(receiver_chain_chain_key2);
+        SIGNAL_UNREF(receiver_chain_chain_key2);
     }
 
     /* Set pending key exchange */
@@ -124,20 +124,20 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
             ec_key_pair_get_public(our_identity_key_pair),
             ec_key_pair_get_private(our_identity_key_pair));
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(our_identity_key_pair);
+    SIGNAL_UNREF(our_identity_key_pair);
 
     session_state_set_pending_key_exchange(state, 42,
             our_base_key, our_ratchet_key, our_identity_key);
-    AXOLOTL_UNREF(our_base_key);
-    AXOLOTL_UNREF(our_ratchet_key);
-    AXOLOTL_UNREF(our_identity_key);
+    SIGNAL_UNREF(our_base_key);
+    SIGNAL_UNREF(our_ratchet_key);
+    SIGNAL_UNREF(our_identity_key);
 
     /* Set pending pre-key */
     ec_public_key *pending_pre_key_base_key = create_test_ec_public_key(global_context);
     uint32_t pre_key_id = 1234;
     session_state_set_unacknowledged_pre_key_message(state,
             &pre_key_id, 5678, pending_pre_key_base_key);
-    AXOLOTL_UNREF(pending_pre_key_base_key);
+    SIGNAL_UNREF(pending_pre_key_base_key);
 
     session_state_set_remote_registration_id(state, 0xDEADBEEF);
     session_state_set_local_registration_id(state, 0xBAADF00D);
@@ -146,9 +146,9 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
 
     ec_public_key *alice_base_key = create_test_ec_public_key(global_context);
     session_state_set_alice_base_key(state, alice_base_key);
-    AXOLOTL_UNREF(alice_base_key);
+    SIGNAL_UNREF(alice_base_key);
 
-    AXOLOTL_UNREF(kdf);
+    SIGNAL_UNREF(kdf);
 }
 
 session_state *create_test_session_state(ec_public_key *receiver_chain_ratchet_key1, ec_public_key *receiver_chain_ratchet_key2)
@@ -218,16 +218,16 @@ void compare_session_states(session_state *state1, session_state *state2,
         ratchet_chain_key *sender_chain_key1 = session_state_get_sender_chain_key(state1);
         ratchet_chain_key *sender_chain_key2 = session_state_get_sender_chain_key(state2);
 
-        axolotl_buffer *sender_chain_key_buf1;
-        axolotl_buffer *sender_chain_key_buf2;
+        signal_buffer *sender_chain_key_buf1;
+        signal_buffer *sender_chain_key_buf2;
         result = ratchet_chain_key_get_key(sender_chain_key1, &sender_chain_key_buf1);
         ck_assert_int_eq(result, 0);
         result = ratchet_chain_key_get_key(sender_chain_key2, &sender_chain_key_buf2);
         ck_assert_int_eq(result, 0);
 
-        ck_assert_int_eq(axolotl_buffer_compare(sender_chain_key_buf1, sender_chain_key_buf2), 0);
-        axolotl_buffer_free(sender_chain_key_buf1);
-        axolotl_buffer_free(sender_chain_key_buf2);
+        ck_assert_int_eq(signal_buffer_compare(sender_chain_key_buf1, sender_chain_key_buf2), 0);
+        signal_buffer_free(sender_chain_key_buf1);
+        signal_buffer_free(sender_chain_key_buf2);
 
         int sender_chain_key_index1 = ratchet_chain_key_get_index(sender_chain_key1);
         int sender_chain_key_index2 = ratchet_chain_key_get_index(sender_chain_key2);
@@ -349,16 +349,16 @@ void compare_session_states_receiver_chain(session_state *state1, session_state 
 
     ck_assert_ptr_ne(receiver_chain_key1, receiver_chain_key2);
 
-    axolotl_buffer *receiver_chain_key_buf1;
-    axolotl_buffer *receiver_chain_key_buf2;
+    signal_buffer *receiver_chain_key_buf1;
+    signal_buffer *receiver_chain_key_buf2;
     result = ratchet_chain_key_get_key(receiver_chain_key1, &receiver_chain_key_buf1);
     ck_assert_int_eq(result, 0);
     result = ratchet_chain_key_get_key(receiver_chain_key2, &receiver_chain_key_buf2);
     ck_assert_int_eq(result, 0);
 
-    ck_assert_int_eq(axolotl_buffer_compare(receiver_chain_key_buf1, receiver_chain_key_buf2), 0);
-    axolotl_buffer_free(receiver_chain_key_buf1);
-    axolotl_buffer_free(receiver_chain_key_buf2);
+    ck_assert_int_eq(signal_buffer_compare(receiver_chain_key_buf1, receiver_chain_key_buf2), 0);
+    signal_buffer_free(receiver_chain_key_buf1);
+    signal_buffer_free(receiver_chain_key_buf2);
 
     int receiver_chain_key_index1 = ratchet_chain_key_get_index(receiver_chain_key1);
     int receiver_chain_key_index2 = ratchet_chain_key_get_index(receiver_chain_key2);
@@ -391,12 +391,12 @@ START_TEST(test_serialize_single_session)
     result = session_record_create(&record, state, global_context);
     ck_assert_int_eq(result, 0);
 
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     result = session_record_serialize(&buffer, record);
     ck_assert_int_ge(result, 0);
 
-    uint8_t *data = axolotl_buffer_data(buffer);
-    int len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    int len = signal_buffer_len(buffer);
 
     /* Deserialize the record */
     session_record *record_deserialized = 0;
@@ -415,12 +415,12 @@ START_TEST(test_serialize_single_session)
     ck_assert_ptr_eq(previous_node, 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(state);
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key1);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key2);
-    AXOLOTL_UNREF(record);
-    AXOLOTL_UNREF(record_deserialized);
+    SIGNAL_UNREF(state);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(receiver_chain_ratchet_key1);
+    SIGNAL_UNREF(receiver_chain_ratchet_key2);
+    SIGNAL_UNREF(record);
+    SIGNAL_UNREF(record_deserialized);
 }
 END_TEST
 
@@ -456,12 +456,12 @@ START_TEST(test_serialize_multiple_sessions)
     ck_assert_ptr_ne(state1, state3);
     fill_test_session_state(state3, receiver_chain_ratchet_key3a, receiver_chain_ratchet_key3b);
 
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     result = session_record_serialize(&buffer, record);
     ck_assert_int_ge(result, 0);
 
-    uint8_t *data = axolotl_buffer_data(buffer);
-    int len = axolotl_buffer_len(buffer);
+    uint8_t *data = signal_buffer_data(buffer);
+    int len = signal_buffer_len(buffer);
 
     /* Deserialize the record */
     session_record *record_deserialized = 0;
@@ -496,16 +496,16 @@ START_TEST(test_serialize_multiple_sessions)
     compare_session_states(state1, state_deserialized1, receiver_chain_ratchet_key1a, receiver_chain_ratchet_key1b);
 
     /* Cleanup */
-    AXOLOTL_UNREF(state1);
-    axolotl_buffer_free(buffer);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key1a);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key1b);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key2a);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key2b);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key3a);
-    AXOLOTL_UNREF(receiver_chain_ratchet_key3b);
-    AXOLOTL_UNREF(record);
-    AXOLOTL_UNREF(record_deserialized);
+    SIGNAL_UNREF(state1);
+    signal_buffer_free(buffer);
+    SIGNAL_UNREF(receiver_chain_ratchet_key1a);
+    SIGNAL_UNREF(receiver_chain_ratchet_key1b);
+    SIGNAL_UNREF(receiver_chain_ratchet_key2a);
+    SIGNAL_UNREF(receiver_chain_ratchet_key2b);
+    SIGNAL_UNREF(receiver_chain_ratchet_key3a);
+    SIGNAL_UNREF(receiver_chain_ratchet_key3b);
+    SIGNAL_UNREF(record);
+    SIGNAL_UNREF(record_deserialized);
 }
 END_TEST
 
@@ -547,8 +547,8 @@ START_TEST(test_session_receiver_chain_count)
     /* Verify that only the latter 5 are actually there */
     for(i = 0; i < 7; i++) {
     	ratchet_chain_key *cur_chain_key;
-    	axolotl_buffer *chain_key_buf;
-    	axolotl_buffer *cur_chain_key_buf;
+    	signal_buffer *chain_key_buf;
+    	signal_buffer *cur_chain_key_buf;
 
     	cur_chain_key = session_state_get_receiver_chain_key(state, ratchet_key[i]);
 
@@ -563,19 +563,19 @@ START_TEST(test_session_receiver_chain_count)
     		result = ratchet_chain_key_get_key(cur_chain_key, &cur_chain_key_buf);
     		ck_assert_int_eq(result, 0);
 
-    		ck_assert_int_eq(axolotl_buffer_compare(chain_key_buf, cur_chain_key_buf), 0);
-    		axolotl_buffer_free(chain_key_buf);
-    		axolotl_buffer_free(cur_chain_key_buf);
+    		ck_assert_int_eq(signal_buffer_compare(chain_key_buf, cur_chain_key_buf), 0);
+    		signal_buffer_free(chain_key_buf);
+    		signal_buffer_free(cur_chain_key_buf);
     	}
     }
 
     /* Cleanup */
     for(i = 0; i < 7; i++) {
-    	AXOLOTL_UNREF(chain_key[i]);
-    	AXOLOTL_UNREF(ratchet_key[i]);
+    	SIGNAL_UNREF(chain_key[i]);
+    	SIGNAL_UNREF(ratchet_key[i]);
     }
-    AXOLOTL_UNREF(kdf);
-    AXOLOTL_UNREF(state);
+    SIGNAL_UNREF(kdf);
+    SIGNAL_UNREF(state);
 }
 END_TEST
 

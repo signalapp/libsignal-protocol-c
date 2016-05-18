@@ -6,21 +6,21 @@
 #include "hkdf.h"
 #include "test_common.h"
 
-axolotl_context *global_context;
+signal_context *global_context;
 
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
     setup_test_crypto_provider(global_context);
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 START_TEST(test_hkdf_vector_v3)
@@ -59,7 +59,7 @@ START_TEST(test_hkdf_vector_v3)
     ck_assert_int_eq(memcmp(okm, output, result), 0);
 
     if(output) { free(output); }
-    AXOLOTL_UNREF(context);
+    SIGNAL_UNREF(context);
 }
 END_TEST
 
@@ -127,7 +127,7 @@ START_TEST(test_hkdf_vector_long_v3)
     ck_assert_int_eq(memcmp(okm, output, result), 0);
 
     if(output) { free(output); }
-    AXOLOTL_UNREF(context);
+    SIGNAL_UNREF(context);
 }
 END_TEST
 
@@ -169,7 +169,7 @@ START_TEST(test_hkdf_vector_v2)
     ck_assert_int_eq(memcmp(okm, output, result), 0);
 
     if(output) { free(output); }
-    AXOLOTL_UNREF(context);
+    SIGNAL_UNREF(context);
 }
 END_TEST
 

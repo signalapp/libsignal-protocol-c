@@ -14,7 +14,7 @@ struct axolotl_key_helper_pre_key_list_node
     struct axolotl_key_helper_pre_key_list_node *next;
 };
 
-int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, axolotl_context *global_context)
+int axolotl_key_helper_generate_identity_key_pair(ratchet_identity_key_pair **key_pair, signal_context *global_context)
 {
     int result = 0;
     ratchet_identity_key_pair *result_pair = 0;
@@ -39,11 +39,11 @@ complete:
     if(result >= 0) {
         *key_pair = result_pair;
     }
-    AXOLOTL_UNREF(ec_pair);
+    SIGNAL_UNREF(ec_pair);
     return result;
 }
 
-int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, axolotl_context *global_context)
+int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, signal_context *global_context)
 {
     uint32_t range;
     uint32_t id_value;
@@ -59,7 +59,7 @@ int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int e
         range = INT32_MAX - 1;
     }
     else {
-        return AX_ERR_INVAL;
+        return SG_ERR_INVAL;
     }
 
     result = global_context->crypto_provider.random_func(
@@ -76,7 +76,7 @@ int axolotl_key_helper_generate_registration_id(uint32_t *registration_id, int e
     return 0;
 }
 
-int axolotl_key_helper_get_random_sequence(int *value, int max, axolotl_context *global_context)
+int axolotl_key_helper_get_random_sequence(int *value, int max, signal_context *global_context)
 {
     int result = 0;
     int32_t result_value;
@@ -100,7 +100,7 @@ int axolotl_key_helper_get_random_sequence(int *value, int max, axolotl_context 
 
 int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **head,
         unsigned int start, unsigned int count,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
     ec_key_pair *ec_pair = 0;
@@ -127,12 +127,12 @@ int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **
             goto complete;
         }
 
-        AXOLOTL_UNREF(ec_pair);
+        SIGNAL_UNREF(ec_pair);
         ec_pair = 0;
 
         node = malloc(sizeof(axolotl_key_helper_pre_key_list_node));
         if(!node) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
         node->element = pre_key;
@@ -151,10 +151,10 @@ int axolotl_key_helper_generate_pre_keys(axolotl_key_helper_pre_key_list_node **
 
 complete:
     if(ec_pair) {
-        AXOLOTL_UNREF(ec_pair);
+        SIGNAL_UNREF(ec_pair);
     }
     if(pre_key) {
-        AXOLOTL_UNREF(pre_key);
+        SIGNAL_UNREF(pre_key);
     }
     if(node) {
         free(node);
@@ -164,7 +164,7 @@ complete:
             axolotl_key_helper_pre_key_list_node *tmp_node;
             LL_FOREACH_SAFE(result_head, cur_node, tmp_node) {
                 LL_DELETE(result_head, cur_node);
-                AXOLOTL_UNREF(cur_node->element);
+                SIGNAL_UNREF(cur_node->element);
                 free(cur_node);
             }
         }
@@ -195,13 +195,13 @@ void axolotl_key_helper_key_list_free(axolotl_key_helper_pre_key_list_node *head
         axolotl_key_helper_pre_key_list_node *tmp_node;
         LL_FOREACH_SAFE(head, cur_node, tmp_node) {
             LL_DELETE(head, cur_node);
-            AXOLOTL_UNREF(cur_node->element);
+            SIGNAL_UNREF(cur_node->element);
             free(cur_node);
         }
     }
 }
 
-int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, axolotl_context *global_context)
+int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context)
 {
     int result = 0;
     session_pre_key *result_pre_key = 0;
@@ -217,7 +217,7 @@ int axolotl_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, a
     result = session_pre_key_create(&result_pre_key, PRE_KEY_MEDIUM_MAX_VALUE, ec_pair);
 
 complete:
-    AXOLOTL_UNREF(ec_pair);
+    SIGNAL_UNREF(ec_pair);
     if(result >= 0) {
         *pre_key = result_pre_key;
     }
@@ -228,13 +228,13 @@ int axolotl_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_p
         const ratchet_identity_key_pair *identity_key_pair,
         uint32_t signed_pre_key_id,
         uint64_t timestamp,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
     session_signed_pre_key *result_signed_pre_key = 0;
     ec_key_pair *ec_pair = 0;
-    axolotl_buffer *public_buf = 0;
-    axolotl_buffer *signature_buf = 0;
+    signal_buffer *public_buf = 0;
+    signal_buffer *signature_buf = 0;
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
 
@@ -256,28 +256,28 @@ int axolotl_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_p
     result = curve_calculate_signature(global_context,
             &signature_buf,
             private_key,
-            axolotl_buffer_data(public_buf),
-            axolotl_buffer_len(public_buf));
+            signal_buffer_data(public_buf),
+            signal_buffer_len(public_buf));
     if(result < 0) {
         goto complete;
     }
 
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,
-            axolotl_buffer_data(signature_buf),
-            axolotl_buffer_len(signature_buf));
+            signal_buffer_data(signature_buf),
+            signal_buffer_len(signature_buf));
 
 complete:
-    AXOLOTL_UNREF(ec_pair);
-    axolotl_buffer_free(public_buf);
-    axolotl_buffer_free(signature_buf);
+    SIGNAL_UNREF(ec_pair);
+    signal_buffer_free(public_buf);
+    signal_buffer_free(signature_buf);
     if(result >= 0) {
         *signed_pre_key = result_signed_pre_key;
     }
     return result;
 }
 
-int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, axolotl_context *global_context)
+int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, signal_context *global_context)
 {
     int result;
 
@@ -288,26 +288,26 @@ int axolotl_key_helper_generate_sender_signing_key(ec_key_pair **key_pair, axolo
     return result;
 }
 
-int axolotl_key_helper_generate_sender_key(axolotl_buffer **key_buffer, axolotl_context *global_context)
+int axolotl_key_helper_generate_sender_key(signal_buffer **key_buffer, signal_context *global_context)
 {
     int result = 0;
-    axolotl_buffer *result_buffer = 0;
+    signal_buffer *result_buffer = 0;
 
     assert(global_context);
 
-    result_buffer = axolotl_buffer_alloc(32);
+    result_buffer = signal_buffer_alloc(32);
     if(!result_buffer) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    result = axolotl_crypto_random(global_context,
-            axolotl_buffer_data(result_buffer),
-            axolotl_buffer_len(result_buffer));
+    result = signal_crypto_random(global_context,
+            signal_buffer_data(result_buffer),
+            signal_buffer_len(result_buffer));
 
 complete:
     if(result < 0) {
-        axolotl_buffer_free(result_buffer);
+        signal_buffer_free(result_buffer);
     }
     else {
         *key_buffer = result_buffer;
@@ -316,7 +316,7 @@ complete:
     return result;
 }
 
-int axolotl_key_helper_generate_sender_key_id(uint32_t *key_id, axolotl_context *global_context)
+int axolotl_key_helper_generate_sender_key_id(uint32_t *key_id, signal_context *global_context)
 {
     int result;
     int value;

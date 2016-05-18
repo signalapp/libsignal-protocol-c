@@ -7,21 +7,21 @@
 #include "session_state.h"
 #include "test_common.h"
 
-axolotl_context *global_context;
+signal_context *global_context;
 
 void test_setup()
 {
     int result;
-    result = axolotl_context_create(&global_context, 0);
+    result = signal_context_create(&global_context, 0);
     ck_assert_int_eq(result, 0);
-    axolotl_context_set_log_function(global_context, test_log);
+    signal_context_set_log_function(global_context, test_log);
 
     setup_test_crypto_provider(global_context);
 }
 
 void test_teardown()
 {
-    axolotl_context_destroy(global_context);
+    signal_context_destroy(global_context);
 }
 
 START_TEST(test_chain_key_derivation_v2)
@@ -59,15 +59,15 @@ START_TEST(test_chain_key_derivation_v2)
     result = ratchet_chain_key_create(&chain_key, kdf, seed, sizeof(seed), 0, global_context);
     ck_assert_int_eq(result, 0);
 
-    AXOLOTL_UNREF(kdf);
+    SIGNAL_UNREF(kdf);
 
-    axolotl_buffer *actual_key;
+    signal_buffer *actual_key;
     result = ratchet_chain_key_get_key(chain_key, &actual_key);
     ck_assert_int_eq(result, 0);
-    int actual_key_len = axolotl_buffer_len(actual_key);
+    int actual_key_len = signal_buffer_len(actual_key);
     ck_assert_int_eq(actual_key_len, sizeof(seed));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(actual_key), seed, actual_key_len), 0);
-    axolotl_buffer_free(actual_key);
+    ck_assert_int_eq(memcmp(signal_buffer_data(actual_key), seed, actual_key_len), 0);
+    signal_buffer_free(actual_key);
 
     ratchet_message_keys message_keys;
     result = ratchet_chain_key_get_message_keys(chain_key, &message_keys);
@@ -83,10 +83,10 @@ START_TEST(test_chain_key_derivation_v2)
 
     result = ratchet_chain_key_get_key(next_chain_key, &actual_key);
     ck_assert_int_eq(result, 0);
-    actual_key_len = axolotl_buffer_len(actual_key);
+    actual_key_len = signal_buffer_len(actual_key);
     ck_assert_int_eq(actual_key_len, sizeof(nextChainKey));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(actual_key), nextChainKey, actual_key_len), 0);
-    axolotl_buffer_free(actual_key);
+    ck_assert_int_eq(memcmp(signal_buffer_data(actual_key), nextChainKey, actual_key_len), 0);
+    signal_buffer_free(actual_key);
 
     ck_assert_int_eq(ratchet_chain_key_get_index(chain_key), 0);
     ck_assert_int_eq(ratchet_chain_key_get_index(next_chain_key), 1);
@@ -96,8 +96,8 @@ START_TEST(test_chain_key_derivation_v2)
     ck_assert_int_eq(result, 0);
     ck_assert_int_eq(next_message_keys.counter, 1);
 
-    AXOLOTL_UNREF(chain_key);
-    AXOLOTL_UNREF(next_chain_key);
+    SIGNAL_UNREF(chain_key);
+    SIGNAL_UNREF(next_chain_key);
 }
 END_TEST
 
@@ -136,15 +136,15 @@ START_TEST(test_chain_key_derivation_v3)
     result = ratchet_chain_key_create(&chain_key, kdf, seed, sizeof(seed), 0, global_context);
     ck_assert_int_eq(result, 0);
 
-    AXOLOTL_UNREF(kdf);
+    SIGNAL_UNREF(kdf);
 
-    axolotl_buffer *actual_key;
+    signal_buffer *actual_key;
     result = ratchet_chain_key_get_key(chain_key, &actual_key);
     ck_assert_int_eq(result, 0);
-    int actual_key_len = axolotl_buffer_len(actual_key);
+    int actual_key_len = signal_buffer_len(actual_key);
     ck_assert_int_eq(actual_key_len, sizeof(seed));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(actual_key), seed, actual_key_len), 0);
-    axolotl_buffer_free(actual_key);
+    ck_assert_int_eq(memcmp(signal_buffer_data(actual_key), seed, actual_key_len), 0);
+    signal_buffer_free(actual_key);
 
     ratchet_message_keys message_keys;
     result = ratchet_chain_key_get_message_keys(chain_key, &message_keys);
@@ -160,10 +160,10 @@ START_TEST(test_chain_key_derivation_v3)
 
     result = ratchet_chain_key_get_key(next_chain_key, &actual_key);
     ck_assert_int_eq(result, 0);
-    actual_key_len = axolotl_buffer_len(actual_key);
+    actual_key_len = signal_buffer_len(actual_key);
     ck_assert_int_eq(actual_key_len, sizeof(nextChainKey));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(actual_key), nextChainKey, actual_key_len), 0);
-    axolotl_buffer_free(actual_key);
+    ck_assert_int_eq(memcmp(signal_buffer_data(actual_key), nextChainKey, actual_key_len), 0);
+    signal_buffer_free(actual_key);
 
     ck_assert_int_eq(ratchet_chain_key_get_index(chain_key), 0);
     ck_assert_int_eq(ratchet_chain_key_get_index(next_chain_key), 1);
@@ -173,8 +173,8 @@ START_TEST(test_chain_key_derivation_v3)
     ck_assert_int_eq(result, 0);
     ck_assert_int_eq(next_message_keys.counter, 1);
 
-    AXOLOTL_UNREF(chain_key);
-    AXOLOTL_UNREF(next_chain_key);
+    SIGNAL_UNREF(chain_key);
+    SIGNAL_UNREF(next_chain_key);
 }
 END_TEST
 
@@ -246,7 +246,7 @@ START_TEST(test_root_key_derivation_v2)
     result = ratchet_root_key_create(&root_key, kdf, rootKeySeed, sizeof(rootKeySeed), global_context);
     ck_assert_int_eq(result, 0);
 
-    AXOLOTL_UNREF(kdf);
+    SIGNAL_UNREF(kdf);
 
     /* Get the next key pair in the chain */
     ratchet_root_key *next_root_key;
@@ -257,40 +257,40 @@ START_TEST(test_root_key_derivation_v2)
     ck_assert_int_eq(result, 0);
 
     /* Check the value of the root key */
-    axolotl_buffer *root_bytes;
+    signal_buffer *root_bytes;
     result = ratchet_root_key_get_key(root_key, &root_bytes);
     ck_assert_int_eq(result, 0);
-    int root_len = axolotl_buffer_len(root_bytes);
+    int root_len = signal_buffer_len(root_bytes);
     ck_assert_int_eq(root_len, sizeof(rootKeySeed));
 
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(root_bytes), rootKeySeed, root_len), 0);
-    axolotl_buffer_free(root_bytes);
+    ck_assert_int_eq(memcmp(signal_buffer_data(root_bytes), rootKeySeed, root_len), 0);
+    signal_buffer_free(root_bytes);
 
     /* Check the value of the next root key */
-    axolotl_buffer *next_root_bytes;
+    signal_buffer *next_root_bytes;
     result = ratchet_root_key_get_key(next_root_key, &next_root_bytes);
     ck_assert_int_eq(result, 0);
-    int next_root_len = axolotl_buffer_len(next_root_bytes);
+    int next_root_len = signal_buffer_len(next_root_bytes);
     ck_assert_int_eq(next_root_len, sizeof(nextRoot));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(next_root_bytes), nextRoot, next_root_len), 0);
-    axolotl_buffer_free(next_root_bytes);
+    ck_assert_int_eq(memcmp(signal_buffer_data(next_root_bytes), nextRoot, next_root_len), 0);
+    signal_buffer_free(next_root_bytes);
 
     /* Check the value of the next chain key */
-    axolotl_buffer *next_chain_bytes;
+    signal_buffer *next_chain_bytes;
     result = ratchet_chain_key_get_key(next_chain_key, &next_chain_bytes);
     ck_assert_int_eq(result, 0);
-    int next_chain_len = axolotl_buffer_len(next_chain_bytes);
+    int next_chain_len = signal_buffer_len(next_chain_bytes);
     ck_assert_int_eq(next_chain_len, sizeof(nextChain));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(next_chain_bytes), nextChain, next_chain_len), 0);
-    axolotl_buffer_free(next_chain_bytes);
+    ck_assert_int_eq(memcmp(signal_buffer_data(next_chain_bytes), nextChain, next_chain_len), 0);
+    signal_buffer_free(next_chain_bytes);
 
     /* Cleanup */
-    AXOLOTL_UNREF(next_root_key);
-    AXOLOTL_UNREF(next_chain_key);
-    AXOLOTL_UNREF(root_key);
-    AXOLOTL_UNREF(alice_public_key);
-    AXOLOTL_UNREF(alice_private_key);
-    AXOLOTL_UNREF(bob_public_key);
+    SIGNAL_UNREF(next_root_key);
+    SIGNAL_UNREF(next_chain_key);
+    SIGNAL_UNREF(root_key);
+    SIGNAL_UNREF(alice_public_key);
+    SIGNAL_UNREF(alice_private_key);
+    SIGNAL_UNREF(bob_public_key);
 }
 END_TEST
 
@@ -300,7 +300,7 @@ START_TEST(test_identity_key_serialize)
     ec_key_pair *key_pair = 0;
     ratchet_identity_key_pair *identity_key_pair = 0;
     ratchet_identity_key_pair *result_identity_key_pair = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
 
     result = curve_generate_key_pair(global_context, &key_pair);
     ck_assert_int_eq(result, 0);
@@ -316,7 +316,7 @@ START_TEST(test_identity_key_serialize)
     ck_assert_int_ge(result, 0);
 
     result = ratchet_identity_key_pair_deserialize(&result_identity_key_pair,
-            axolotl_buffer_data(buffer), axolotl_buffer_len(buffer), global_context);
+            signal_buffer_data(buffer), signal_buffer_len(buffer), global_context);
     ck_assert_int_eq(result, 0);
 
     ec_public_key *result_public_key = ratchet_identity_key_pair_get_public(result_identity_key_pair);
@@ -326,10 +326,10 @@ START_TEST(test_identity_key_serialize)
     ck_assert_int_eq(ec_private_key_compare(private_key, result_private_key), 0);
 
     /* Cleanup */
-    AXOLOTL_UNREF(key_pair);
-    AXOLOTL_UNREF(identity_key_pair);
-    AXOLOTL_UNREF(result_identity_key_pair);
-    axolotl_buffer_free(buffer);
+    SIGNAL_UNREF(key_pair);
+    SIGNAL_UNREF(identity_key_pair);
+    SIGNAL_UNREF(result_identity_key_pair);
+    signal_buffer_free(buffer);
 }
 END_TEST
 
@@ -417,8 +417,8 @@ START_TEST(test_ratcheting_session_as_bob)
     result = ratchet_identity_key_pair_create(&bob_identity_key_pair,
             bob_identity_key_public, bob_identity_key_private);
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(bob_identity_key_public);
-    AXOLOTL_UNREF(bob_identity_key_private);
+    SIGNAL_UNREF(bob_identity_key_public);
+    SIGNAL_UNREF(bob_identity_key_private);
 
     /* Create Bob's public ephemeral key */
     ec_public_key *bob_ephemeral_key_public;
@@ -434,12 +434,12 @@ START_TEST(test_ratcheting_session_as_bob)
     ec_key_pair *bob_ephemeral_key_pair;
     result = ec_key_pair_create(&bob_ephemeral_key_pair, bob_ephemeral_key_public, bob_ephemeral_key_private);
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(bob_ephemeral_key_public);
-    AXOLOTL_UNREF(bob_ephemeral_key_private);
+    SIGNAL_UNREF(bob_ephemeral_key_public);
+    SIGNAL_UNREF(bob_ephemeral_key_private);
 
     /* Assign Bob's base key pair as the same as the ephemeral key pair */
     ec_key_pair *bob_base_key_pair = bob_ephemeral_key_pair;
-    AXOLOTL_REF(bob_ephemeral_key_pair);
+    SIGNAL_REF(bob_ephemeral_key_pair);
 
     /* Create Bob's public signed pre key */
     ec_public_key *bob_signed_pre_key_public;
@@ -455,8 +455,8 @@ START_TEST(test_ratcheting_session_as_bob)
     ec_key_pair *bob_signed_pre_key_pair;
     result = ec_key_pair_create(&bob_signed_pre_key_pair, bob_signed_pre_key_public, bob_signed_pre_key_private);
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(bob_signed_pre_key_public);
-    AXOLOTL_UNREF(bob_signed_pre_key_private);
+    SIGNAL_UNREF(bob_signed_pre_key_public);
+    SIGNAL_UNREF(bob_signed_pre_key_private);
 
     /* Create Alice's base public key */
     ec_public_key *alice_base_key_public;
@@ -483,10 +483,10 @@ START_TEST(test_ratcheting_session_as_bob)
             alice_identity_key_public,
             alice_base_key_public);
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(bob_base_key_pair);
-    AXOLOTL_UNREF(bob_signed_pre_key_pair);
-    AXOLOTL_UNREF(bob_ephemeral_key_pair);
-    AXOLOTL_UNREF(alice_base_key_public);
+    SIGNAL_UNREF(bob_base_key_pair);
+    SIGNAL_UNREF(bob_signed_pre_key_pair);
+    SIGNAL_UNREF(bob_ephemeral_key_pair);
+    SIGNAL_UNREF(alice_base_key_public);
     /*
      * Not unref'ing the following items that are needed for assertions:
      *   bob_identity_key_pair
@@ -510,20 +510,20 @@ START_TEST(test_ratcheting_session_as_bob)
             session_state_get_remote_identity_key(test_session_state)), 0);
 
     ratchet_chain_key *sender_chain_key = session_state_get_sender_chain_key(test_session_state);
-    axolotl_buffer *sender_chain_key_data;
+    signal_buffer *sender_chain_key_data;
     result = ratchet_chain_key_get_key(sender_chain_key, &sender_chain_key_data);
     ck_assert_int_eq(result, 0);
-    int sender_chain_key_size = axolotl_buffer_len(sender_chain_key_data);
+    int sender_chain_key_size = signal_buffer_len(sender_chain_key_data);
     ck_assert_int_eq(sender_chain_key_size, sizeof(senderChain));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(sender_chain_key_data), senderChain, sizeof(senderChain)), 0);
-    axolotl_buffer_free(sender_chain_key_data);
+    ck_assert_int_eq(memcmp(signal_buffer_data(sender_chain_key_data), senderChain, sizeof(senderChain)), 0);
+    signal_buffer_free(sender_chain_key_data);
 
     /* Cleanup */
-    AXOLOTL_UNREF(alice_ephemeral_key_public);
-    AXOLOTL_UNREF(bob_identity_key_pair);
-    AXOLOTL_UNREF(alice_identity_key_public);
-    AXOLOTL_UNREF(bob_parameters);
-    AXOLOTL_UNREF(test_session_state);
+    SIGNAL_UNREF(alice_ephemeral_key_public);
+    SIGNAL_UNREF(bob_identity_key_pair);
+    SIGNAL_UNREF(alice_identity_key_public);
+    SIGNAL_UNREF(bob_parameters);
+    SIGNAL_UNREF(test_session_state);
 }
 END_TEST
 
@@ -613,7 +613,7 @@ START_TEST(test_ratcheting_session_as_alice)
 
     /* Create Bob's base public key */
     ec_public_key *bob_base_key_public = bob_ephemeral_key_public;
-    AXOLOTL_REF(bob_base_key_public);
+    SIGNAL_REF(bob_base_key_public);
 
     /* Create Alice's base public key */
     ec_public_key *alice_base_public_key;
@@ -629,8 +629,8 @@ START_TEST(test_ratcheting_session_as_alice)
     ec_key_pair *alice_base_key;
     result = ec_key_pair_create(&alice_base_key, alice_base_public_key, alice_base_private_key);
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(alice_base_public_key);
-    AXOLOTL_UNREF(alice_base_private_key);
+    SIGNAL_UNREF(alice_base_public_key);
+    SIGNAL_UNREF(alice_base_private_key);
 
     /* Create Alice's ephemeral public key */
     ec_public_key *alice_ephemeral_public_key;
@@ -646,8 +646,8 @@ START_TEST(test_ratcheting_session_as_alice)
     ec_key_pair *alice_ephemeral_key;
     result = ec_key_pair_create(&alice_ephemeral_key, alice_ephemeral_public_key, alice_ephemeral_private_key);
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(alice_ephemeral_public_key);
-    AXOLOTL_UNREF(alice_ephemeral_private_key);
+    SIGNAL_UNREF(alice_ephemeral_public_key);
+    SIGNAL_UNREF(alice_ephemeral_private_key);
 
     /* Create Alice's identity public key */
     ec_public_key *alice_identity_public_key;
@@ -664,8 +664,8 @@ START_TEST(test_ratcheting_session_as_alice)
     result = ratchet_identity_key_pair_create(&alice_identity_key_pair,
             alice_identity_public_key, alice_identity_private_key);
     ck_assert_int_eq(result, 0);
-    AXOLOTL_UNREF(alice_identity_public_key);
-    AXOLOTL_UNREF(alice_identity_private_key);
+    SIGNAL_UNREF(alice_identity_public_key);
+    SIGNAL_UNREF(alice_identity_private_key);
 
     /* Create the session state */
     session_state *test_session_state;
@@ -695,24 +695,24 @@ START_TEST(test_ratcheting_session_as_alice)
             session_state_get_receiver_chain_key(test_session_state, bob_ephemeral_key_public);
     ck_assert_ptr_ne(receiver_chain_actual, 0);
 
-    axolotl_buffer *receiver_chain_actual_data = 0;
+    signal_buffer *receiver_chain_actual_data = 0;
     result = ratchet_chain_key_get_key(receiver_chain_actual, &receiver_chain_actual_data);
     ck_assert_int_eq(result, 0);
-    int receiver_chain_actual_data_len = axolotl_buffer_len(receiver_chain_actual_data);
+    int receiver_chain_actual_data_len = signal_buffer_len(receiver_chain_actual_data);
     ck_assert_int_eq(receiver_chain_actual_data_len, sizeof(receiverChain));
-    ck_assert_int_eq(memcmp(axolotl_buffer_data(receiver_chain_actual_data), receiverChain, receiver_chain_actual_data_len), 0);
-    axolotl_buffer_free(receiver_chain_actual_data);
+    ck_assert_int_eq(memcmp(signal_buffer_data(receiver_chain_actual_data), receiverChain, receiver_chain_actual_data_len), 0);
+    signal_buffer_free(receiver_chain_actual_data);
 
     /* Cleanup */
-    AXOLOTL_UNREF(bob_identity_key_public);
-    AXOLOTL_UNREF(bob_ephemeral_key_public);
-    AXOLOTL_UNREF(bob_base_key_public);
-    AXOLOTL_UNREF(bob_signed_pre_key);
-    AXOLOTL_UNREF(alice_base_key);
-    AXOLOTL_UNREF(alice_ephemeral_key);
-    AXOLOTL_UNREF(alice_identity_key_pair);
-    AXOLOTL_UNREF(alice_parameters);
-    AXOLOTL_UNREF(test_session_state);
+    SIGNAL_UNREF(bob_identity_key_public);
+    SIGNAL_UNREF(bob_ephemeral_key_public);
+    SIGNAL_UNREF(bob_base_key_public);
+    SIGNAL_UNREF(bob_signed_pre_key);
+    SIGNAL_UNREF(alice_base_key);
+    SIGNAL_UNREF(alice_ephemeral_key);
+    SIGNAL_UNREF(alice_identity_key_pair);
+    SIGNAL_UNREF(alice_parameters);
+    SIGNAL_UNREF(test_session_state);
 }
 END_TEST
 

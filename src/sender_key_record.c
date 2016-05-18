@@ -17,20 +17,20 @@ typedef struct sender_key_state_node {
 
 struct sender_key_record
 {
-    axolotl_type_base base;
+    signal_type_base base;
     sender_key_state_node *sender_key_states_head;
-    axolotl_context *global_context;
+    signal_context *global_context;
 };
 
 int sender_key_record_create(sender_key_record **record,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     sender_key_record *result = malloc(sizeof(sender_key_record));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result, 0, sizeof(sender_key_record));
-    AXOLOTL_INIT(result, sender_key_record_destroy);
+    SIGNAL_INIT(result, sender_key_record_destroy);
 
     result->global_context = global_context;
 
@@ -38,14 +38,14 @@ int sender_key_record_create(sender_key_record **record,
     return 0;
 }
 
-int sender_key_record_serialize(axolotl_buffer **buffer, sender_key_record *record)
+int sender_key_record_serialize(signal_buffer **buffer, sender_key_record *record)
 {
     int result = 0;
     size_t result_size = 0;
     unsigned int i = 0;
     Textsecure__SenderKeyRecordStructure record_structure = TEXTSECURE__SENDER_KEY_RECORD_STRUCTURE__INIT;
     sender_key_state_node *cur_node = 0;
-    axolotl_buffer *result_buf = 0;
+    signal_buffer *result_buf = 0;
     uint8_t *data;
     size_t len;
 
@@ -54,13 +54,13 @@ int sender_key_record_serialize(axolotl_buffer **buffer, sender_key_record *reco
         DL_COUNT(record->sender_key_states_head, cur_node, count);
 
         if(count > SIZE_MAX / sizeof(Textsecure__SenderKeyStateStructure *)) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
         record_structure.senderkeystates = malloc(sizeof(Textsecure__SenderKeyStateStructure *) * count);
         if(!record_structure.senderkeystates) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
@@ -68,7 +68,7 @@ int sender_key_record_serialize(axolotl_buffer **buffer, sender_key_record *reco
         DL_FOREACH(record->sender_key_states_head, cur_node) {
             record_structure.senderkeystates[i] = malloc(sizeof(Textsecure__SenderKeyStateStructure));
             if(!record_structure.senderkeystates[i]) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 break;
             }
             textsecure__sender_key_state_structure__init(record_structure.senderkeystates[i]);
@@ -87,17 +87,17 @@ int sender_key_record_serialize(axolotl_buffer **buffer, sender_key_record *reco
 
     len = textsecure__sender_key_record_structure__get_packed_size(&record_structure);
 
-    result_buf = axolotl_buffer_alloc(len);
+    result_buf = signal_buffer_alloc(len);
     if(!result_buf) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    data = axolotl_buffer_data(result_buf);
+    data = signal_buffer_data(result_buf);
     result_size = textsecure__sender_key_record_structure__pack(&record_structure, data);
     if(result_size != len) {
-        axolotl_buffer_free(result_buf);
-        result = AX_ERR_INVALID_PROTO_BUF;
+        signal_buffer_free(result_buf);
+        result = SG_ERR_INVALID_PROTO_BUF;
         result_buf = 0;
         goto complete;
     }
@@ -118,7 +118,7 @@ complete:
     return result;
 }
 
-int sender_key_record_deserialize(sender_key_record **record, const uint8_t *data, size_t len, axolotl_context *global_context)
+int sender_key_record_deserialize(sender_key_record **record, const uint8_t *data, size_t len, signal_context *global_context)
 {
     int result = 0;
     sender_key_record *result_record = 0;
@@ -126,7 +126,7 @@ int sender_key_record_deserialize(sender_key_record **record, const uint8_t *dat
 
     record_structure = textsecure__sender_key_record_structure__unpack(0, len, data);
     if(!record_structure) {
-        result = AX_ERR_INVALID_PROTO_BUF;
+        result = SG_ERR_INVALID_PROTO_BUF;
         goto complete;
     }
 
@@ -147,7 +147,7 @@ int sender_key_record_deserialize(sender_key_record **record, const uint8_t *dat
 
             state_node = malloc(sizeof(sender_key_state_node));
             if(!state_node) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
 
@@ -162,7 +162,7 @@ complete:
     }
     if(result_record) {
         if(result < 0) {
-            AXOLOTL_UNREF(result_record);
+            SIGNAL_UNREF(result_record);
         }
         else {
             *record = result_record;
@@ -171,10 +171,10 @@ complete:
     return result;
 }
 
-int sender_key_record_copy(sender_key_record **record, sender_key_record *other_record, axolotl_context *global_context)
+int sender_key_record_copy(sender_key_record **record, sender_key_record *other_record, signal_context *global_context)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     uint8_t *data;
     size_t len;
 
@@ -186,8 +186,8 @@ int sender_key_record_copy(sender_key_record **record, sender_key_record *other_
         goto complete;
     }
 
-    data = axolotl_buffer_data(buffer);
-    len = axolotl_buffer_len(buffer);
+    data = signal_buffer_data(buffer);
+    len = signal_buffer_len(buffer);
 
     result = sender_key_record_deserialize(record, data, len, global_context);
     if(result < 0) {
@@ -196,7 +196,7 @@ int sender_key_record_copy(sender_key_record **record, sender_key_record *other_
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     return result;
 }
@@ -220,8 +220,8 @@ int sender_key_record_get_sender_key_state(sender_key_record *record, sender_key
         return 0;
     }
     else {
-        axolotl_log(record->global_context, AX_LOG_ERROR, "No key state in record!");
-        return AX_ERR_INVALID_KEY_ID;
+        signal_log(record->global_context, SG_LOG_ERROR, "No key state in record!");
+        return SG_ERR_INVALID_KEY_ID;
     }
 }
 
@@ -237,12 +237,12 @@ int sender_key_record_get_sender_key_state_by_id(sender_key_record *record, send
         }
     }
 
-    axolotl_log(record->global_context, AX_LOG_ERROR, "No keys for: %d", key_id);
-    return AX_ERR_INVALID_KEY_ID;
+    signal_log(record->global_context, SG_LOG_ERROR, "No keys for: %d", key_id);
+    return SG_ERR_INVALID_KEY_ID;
 }
 
 static int sender_key_record_add_sender_key_state_impl(sender_key_record *record,
-        uint32_t id, uint32_t iteration, axolotl_buffer *chain_key,
+        uint32_t id, uint32_t iteration, signal_buffer *chain_key,
         ec_public_key *signature_public_key, ec_private_key *signature_private_key)
 {
     int result = 0;
@@ -266,7 +266,7 @@ static int sender_key_record_add_sender_key_state_impl(sender_key_record *record
 
     state_node = malloc(sizeof(sender_key_state_node));
     if(!state_node) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
@@ -278,22 +278,22 @@ static int sender_key_record_add_sender_key_state_impl(sender_key_record *record
         state_node = record->sender_key_states_head->prev;
         DL_DELETE(record->sender_key_states_head, state_node);
         if(state_node->state) {
-            AXOLOTL_UNREF(state_node->state);
+            SIGNAL_UNREF(state_node->state);
         }
         free(state_node);
         --count;
     }
 
 complete:
-    AXOLOTL_UNREF(chain_key_element);
+    SIGNAL_UNREF(chain_key_element);
     if(result < 0) {
-        AXOLOTL_UNREF(state);
+        SIGNAL_UNREF(state);
     }
     return result;
 }
 
 int sender_key_record_add_sender_key_state(sender_key_record *record,
-        uint32_t id, uint32_t iteration, axolotl_buffer *chain_key, ec_public_key *signature_key)
+        uint32_t id, uint32_t iteration, signal_buffer *chain_key, ec_public_key *signature_key)
 {
     int result = sender_key_record_add_sender_key_state_impl(
             record, id, iteration, chain_key, signature_key, 0);
@@ -301,7 +301,7 @@ int sender_key_record_add_sender_key_state(sender_key_record *record,
 }
 
 int sender_key_record_set_sender_key_state(sender_key_record *record,
-        uint32_t id, uint32_t iteration, axolotl_buffer *chain_key, ec_key_pair *signature_key_pair)
+        uint32_t id, uint32_t iteration, signal_buffer *chain_key, ec_key_pair *signature_key_pair)
 {
     int result = 0;
     sender_key_state_node *cur_node;
@@ -311,7 +311,7 @@ int sender_key_record_set_sender_key_state(sender_key_record *record,
     DL_FOREACH_SAFE(record->sender_key_states_head, cur_node, tmp_node) {
         DL_DELETE(record->sender_key_states_head, cur_node);
         if(cur_node->state) {
-            AXOLOTL_UNREF(cur_node->state);
+            SIGNAL_UNREF(cur_node->state);
         }
         free(cur_node);
     }
@@ -324,7 +324,7 @@ int sender_key_record_set_sender_key_state(sender_key_record *record,
     return result;
 }
 
-void sender_key_record_destroy(axolotl_type_base *type)
+void sender_key_record_destroy(signal_type_base *type)
 {
     sender_key_record *record = (sender_key_record *)type;
     sender_key_state_node *cur_node;
@@ -333,7 +333,7 @@ void sender_key_record_destroy(axolotl_type_base *type)
     DL_FOREACH_SAFE(record->sender_key_states_head, cur_node, tmp_node) {
         DL_DELETE(record->sender_key_states_head, cur_node);
         if(cur_node->state) {
-            AXOLOTL_UNREF(cur_node->state);
+            SIGNAL_UNREF(cur_node->state);
         }
         free(cur_node);
     }

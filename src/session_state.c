@@ -53,7 +53,7 @@ typedef struct session_pending_pre_key
 
 struct session_state
 {
-    axolotl_type_base base;
+    signal_type_base base;
 
     uint32_t session_version;
     ec_public_key *local_identity_public;
@@ -79,7 +79,7 @@ struct session_state
     int needs_refresh;
     ec_public_key *alice_base_key;
 
-    axolotl_context *global_context;
+    signal_context *global_context;
 };
 
 static int session_state_serialize_prepare_sender_chain(
@@ -115,35 +115,35 @@ static void session_state_serialize_prepare_pending_pre_key_free(
 static int session_state_deserialize_protobuf_pending_key_exchange(
         session_pending_key_exchange *result_exchange,
         Textsecure__SessionStructure__PendingKeyExchange *exchange_structure,
-        axolotl_context *global_context);
+        signal_context *global_context);
 static int session_state_deserialize_protobuf_pending_pre_key(
         session_pending_pre_key *result_pre_key,
         Textsecure__SessionStructure__PendingPreKey *pre_key_structure,
-        axolotl_context *global_context);
+        signal_context *global_context);
 static int session_state_deserialize_protobuf_sender_chain(
         uint32_t session_version,
         session_state_sender_chain *chain,
         Textsecure__SessionStructure__Chain *chain_structure,
-        axolotl_context *global_context);
+        signal_context *global_context);
 static int session_state_deserialize_protobuf_receiver_chain(
         uint32_t session_version,
         session_state_receiver_chain *chain,
         Textsecure__SessionStructure__Chain *chain_structure,
-        axolotl_context *global_context);
+        signal_context *global_context);
 
 static void session_state_free_sender_chain(session_state *state);
 static void session_state_free_receiver_chain_node(session_state_receiver_chain *node);
 static void session_state_free_receiver_chain(session_state *state);
 static session_state_receiver_chain *session_state_find_receiver_chain(const session_state *state, const ec_public_key *sender_ephemeral);
 
-int session_state_create(session_state **state, axolotl_context *global_context)
+int session_state_create(session_state **state, signal_context *global_context)
 {
     session_state *result = malloc(sizeof(session_state));
     if(!result) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(result, 0, sizeof(session_state));
-    AXOLOTL_INIT(result, session_state_destroy);
+    SIGNAL_INIT(result, session_state_destroy);
     result->session_version = 2;
     result->global_context = global_context;
 
@@ -151,18 +151,18 @@ int session_state_create(session_state **state, axolotl_context *global_context)
     return 0;
 }
 
-int session_state_serialize(axolotl_buffer **buffer, session_state *state)
+int session_state_serialize(signal_buffer **buffer, session_state *state)
 {
     int result = 0;
     size_t result_size = 0;
     Textsecure__SessionStructure *state_structure = 0;
-    axolotl_buffer *result_buf = 0;
+    signal_buffer *result_buf = 0;
     size_t len = 0;
     uint8_t *data = 0;
 
     state_structure = malloc(sizeof(Textsecure__SessionStructure));
     if(!state_structure) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     textsecure__session_structure__init(state_structure);
@@ -174,17 +174,17 @@ int session_state_serialize(axolotl_buffer **buffer, session_state *state)
 
     len = textsecure__session_structure__get_packed_size(state_structure);
 
-    result_buf = axolotl_buffer_alloc(len);
+    result_buf = signal_buffer_alloc(len);
     if(!result_buf) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    data = axolotl_buffer_data(result_buf);
+    data = signal_buffer_data(result_buf);
     result_size = textsecure__session_structure__pack(state_structure, data);
     if(result_size != len) {
-        axolotl_buffer_free(result_buf);
-        result = AX_ERR_INVALID_PROTO_BUF;
+        signal_buffer_free(result_buf);
+        result = SG_ERR_INVALID_PROTO_BUF;
         result_buf = 0;
         goto complete;
     }
@@ -199,7 +199,7 @@ complete:
     return result;
 }
 
-int session_state_deserialize(session_state **state, const uint8_t *data, size_t len, axolotl_context *global_context)
+int session_state_deserialize(session_state **state, const uint8_t *data, size_t len, signal_context *global_context)
 {
     int result = 0;
     session_state *result_state = 0;
@@ -207,7 +207,7 @@ int session_state_deserialize(session_state **state, const uint8_t *data, size_t
 
     session_structure = textsecure__session_structure__unpack(0, len, data);
     if(!session_structure) {
-        result = AX_ERR_INVALID_PROTO_BUF;
+        result = SG_ERR_INVALID_PROTO_BUF;
         goto complete;
     }
 
@@ -222,7 +222,7 @@ complete:
     }
     if(result_state) {
         if(result < 0) {
-            AXOLOTL_UNREF(result_state);
+            SIGNAL_UNREF(result_state);
         }
         else {
             *state = result_state;
@@ -275,7 +275,7 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
     if(state->has_sender_chain) {
         session_structure->senderchain = malloc(sizeof(Textsecure__SessionStructure__Chain));
         if(!session_structure->senderchain) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
         textsecure__session_structure__chain__init(session_structure->senderchain);
@@ -292,20 +292,20 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
         DL_COUNT(state->receiver_chain_head, cur_node, count);
 
         if(count > SIZE_MAX / sizeof(Textsecure__SessionStructure__Chain *)) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
         session_structure->receiverchains = malloc(sizeof(Textsecure__SessionStructure__Chain *) * count);
         if(!session_structure->receiverchains) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
 
         DL_FOREACH(state->receiver_chain_head, cur_node) {
             session_structure->receiverchains[i] = malloc(sizeof(Textsecure__SessionStructure__Chain));
             if(!session_structure->receiverchains[i]) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 break;
             }
             textsecure__session_structure__chain__init(session_structure->receiverchains[i]);
@@ -324,7 +324,7 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
     if(state->has_pending_key_exchange) {
         session_structure->pendingkeyexchange = malloc(sizeof(Textsecure__SessionStructure__PendingKeyExchange));
         if(!session_structure->pendingkeyexchange) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
         textsecure__session_structure__pending_key_exchange__init(session_structure->pendingkeyexchange);
@@ -339,7 +339,7 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
     if(state->has_pending_pre_key) {
         session_structure->pendingprekey = malloc(sizeof(Textsecure__SessionStructure__PendingPreKey));
         if(!session_structure->pendingprekey) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             goto complete;
         }
         textsecure__session_structure__pending_pre_key__init(session_structure->pendingprekey);
@@ -455,7 +455,7 @@ static int session_state_serialize_prepare_chain_chain_key(
     int result = 0;
     chain_structure->chainkey = malloc(sizeof(Textsecure__SessionStructure__Chain__ChainKey));
     if(!chain_structure->chainkey) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     textsecure__session_structure__chain__chain_key__init(chain_structure->chainkey);
@@ -487,20 +487,20 @@ static int session_state_serialize_prepare_chain_message_keys_list(
     }
 
     if(count > SIZE_MAX / sizeof(Textsecure__SessionStructure__Chain__MessageKey *)) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
     chain_structure->messagekeys = malloc(sizeof(Textsecure__SessionStructure__Chain__MessageKey *) * count);
     if(!chain_structure->messagekeys) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
 
     DL_FOREACH(message_keys_head, cur_node) {
         chain_structure->messagekeys[i] = malloc(sizeof(Textsecure__SessionStructure__Chain__MessageKey));
         if(!chain_structure->messagekeys[i]) {
-            result = AX_ERR_NOMEM;
+            result = SG_ERR_NOMEM;
             break;
         }
         textsecure__session_structure__chain__message_key__init(chain_structure->messagekeys[i]);
@@ -531,7 +531,7 @@ static int session_state_serialize_prepare_message_keys(
 
     message_key_structure->cipherkey.data = malloc(sizeof(message_key->cipher_key));
     if(!message_key_structure->cipherkey.data) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     memcpy(message_key_structure->cipherkey.data, message_key->cipher_key, sizeof(message_key->cipher_key));
@@ -540,7 +540,7 @@ static int session_state_serialize_prepare_message_keys(
 
     message_key_structure->mackey.data = malloc(sizeof(message_key->mac_key));
     if(!message_key_structure->mackey.data) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     memcpy(message_key_structure->mackey.data, message_key->mac_key, sizeof(message_key->mac_key));
@@ -549,7 +549,7 @@ static int session_state_serialize_prepare_message_keys(
 
     message_key_structure->iv.data = malloc(sizeof(message_key->iv));
     if(!message_key_structure->iv.data) {
-        result = AX_ERR_NOMEM;
+        result = SG_ERR_NOMEM;
         goto complete;
     }
     memcpy(message_key_structure->iv.data, message_key->iv, sizeof(message_key->iv));
@@ -777,7 +777,7 @@ static void session_state_serialize_prepare_pending_pre_key_free(
     free(pre_key_structure);
 }
 
-int session_state_deserialize_protobuf(session_state **state, Textsecure__SessionStructure *session_structure, axolotl_context *global_context)
+int session_state_deserialize_protobuf(session_state **state, Textsecure__SessionStructure *session_structure, signal_context *global_context)
 {
     int result = 0;
     session_state *result_state  = 0;
@@ -824,7 +824,7 @@ int session_state_deserialize_protobuf(session_state **state, Textsecure__Sessio
                 &result_state->root_key, kdf,
                 session_structure->rootkey.data,
                 session_structure->rootkey.len, global_context);
-        AXOLOTL_UNREF(kdf);
+        SIGNAL_UNREF(kdf);
         if(result < 0) {
             goto complete;
         }
@@ -850,7 +850,7 @@ int session_state_deserialize_protobuf(session_state **state, Textsecure__Sessio
         for(i = 0; i < session_structure->n_receiverchains; i++) {
             session_state_receiver_chain *node = malloc(sizeof(session_state_receiver_chain));
             if(!node) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
             memset(node, 0, sizeof(session_state_receiver_chain));
@@ -917,7 +917,7 @@ complete:
     }
     else {
         if(result_state) {
-            AXOLOTL_UNREF(result_state);
+            SIGNAL_UNREF(result_state);
         }
     }
     return result;
@@ -926,7 +926,7 @@ complete:
 static int session_state_deserialize_protobuf_pending_key_exchange(
         session_pending_key_exchange *result_exchange,
         Textsecure__SessionStructure__PendingKeyExchange *exchange_structure,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
 
@@ -1021,17 +1021,17 @@ static int session_state_deserialize_protobuf_pending_key_exchange(
     result_exchange->local_identity_key = local_identity_key;
 
 complete:
-    AXOLOTL_UNREF(local_base_key_public);
-    AXOLOTL_UNREF(local_base_key_private);
-    AXOLOTL_UNREF(local_ratchet_key_public);
-    AXOLOTL_UNREF(local_ratchet_key_private);
-    AXOLOTL_UNREF(local_identity_key_public);
-    AXOLOTL_UNREF(local_identity_key_private);
+    SIGNAL_UNREF(local_base_key_public);
+    SIGNAL_UNREF(local_base_key_private);
+    SIGNAL_UNREF(local_ratchet_key_public);
+    SIGNAL_UNREF(local_ratchet_key_private);
+    SIGNAL_UNREF(local_identity_key_public);
+    SIGNAL_UNREF(local_identity_key_private);
 
     if(result < 0) {
-        AXOLOTL_UNREF(local_base_key);
-        AXOLOTL_UNREF(local_ratchet_key);
-        AXOLOTL_UNREF(local_identity_key);
+        SIGNAL_UNREF(local_base_key);
+        SIGNAL_UNREF(local_ratchet_key);
+        SIGNAL_UNREF(local_identity_key);
     }
 
     return result;
@@ -1040,7 +1040,7 @@ complete:
 static int session_state_deserialize_protobuf_pending_pre_key(
         session_pending_pre_key *result_pre_key,
         Textsecure__SessionStructure__PendingPreKey *pre_key_structure,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
 
@@ -1073,7 +1073,7 @@ static int session_state_deserialize_protobuf_sender_chain(
         uint32_t session_version,
         session_state_sender_chain *chain,
         Textsecure__SessionStructure__Chain *chain_structure,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
     hkdf_context *kdf = 0;
@@ -1127,12 +1127,12 @@ static int session_state_deserialize_protobuf_sender_chain(
     chain->chain_key = sender_chain_key;
 
 complete:
-    AXOLOTL_UNREF(kdf);
-    AXOLOTL_UNREF(sender_ratchet_key_public);
-    AXOLOTL_UNREF(sender_ratchet_key_private);
+    SIGNAL_UNREF(kdf);
+    SIGNAL_UNREF(sender_ratchet_key_public);
+    SIGNAL_UNREF(sender_ratchet_key_private);
     if(result < 0) {
-        AXOLOTL_UNREF(sender_ratchet_key_pair);
-        AXOLOTL_UNREF(sender_chain_key);
+        SIGNAL_UNREF(sender_ratchet_key_pair);
+        SIGNAL_UNREF(sender_chain_key);
     }
     return result;
 }
@@ -1141,7 +1141,7 @@ static int session_state_deserialize_protobuf_receiver_chain(
         uint32_t session_version,
         session_state_receiver_chain *chain,
         Textsecure__SessionStructure__Chain *chain_structure,
-        axolotl_context *global_context)
+        signal_context *global_context)
 {
     int result = 0;
 
@@ -1185,7 +1185,7 @@ static int session_state_deserialize_protobuf_receiver_chain(
 
             message_keys_node *node = malloc(sizeof(message_keys_node));
             if(!node) {
-                result = AX_ERR_NOMEM;
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
             memset(node, 0, sizeof(message_keys_node));
@@ -1212,16 +1212,16 @@ static int session_state_deserialize_protobuf_receiver_chain(
     chain->message_keys_head = message_keys_head;
 
 complete:
-    AXOLOTL_UNREF(kdf);
+    SIGNAL_UNREF(kdf);
     if(result < 0) {
-        AXOLOTL_UNREF(sender_ratchet_key);
-        AXOLOTL_UNREF(chain_key);
+        SIGNAL_UNREF(sender_ratchet_key);
+        SIGNAL_UNREF(chain_key);
         if(message_keys_head) {
             message_keys_node *cur_node;
             message_keys_node *tmp_node;
             DL_FOREACH_SAFE(message_keys_head, cur_node, tmp_node) {
                 DL_DELETE(message_keys_head, cur_node);
-                axolotl_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
+                signal_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
                 free(cur_node);
             }
         }
@@ -1229,10 +1229,10 @@ complete:
     return result;
 }
 
-int session_state_copy(session_state **state, session_state *other_state, axolotl_context *global_context)
+int session_state_copy(session_state **state, session_state *other_state, signal_context *global_context)
 {
     int result = 0;
-    axolotl_buffer *buffer = 0;
+    signal_buffer *buffer = 0;
     size_t len = 0;
     uint8_t *data = 0;
 
@@ -1244,8 +1244,8 @@ int session_state_copy(session_state **state, session_state *other_state, axolot
         goto complete;
     }
 
-    data = axolotl_buffer_data(buffer);
-    len = axolotl_buffer_len(buffer);
+    data = signal_buffer_data(buffer);
+    len = signal_buffer_len(buffer);
 
     result = session_state_deserialize(state, data, len, global_context);
     if(result < 0) {
@@ -1254,7 +1254,7 @@ int session_state_copy(session_state **state, session_state *other_state, axolot
 
 complete:
     if(buffer) {
-        axolotl_buffer_free(buffer);
+        signal_buffer_free(buffer);
     }
     return result;
 }
@@ -1276,9 +1276,9 @@ void session_state_set_local_identity_key(session_state *state, ec_public_key *i
     assert(state);
     assert(identity_key);
     if(state->local_identity_public) {
-        AXOLOTL_UNREF(state->local_identity_public);
+        SIGNAL_UNREF(state->local_identity_public);
     }
-    AXOLOTL_REF(identity_key);
+    SIGNAL_REF(identity_key);
     state->local_identity_public = identity_key;
 }
 
@@ -1293,9 +1293,9 @@ void session_state_set_remote_identity_key(session_state *state, ec_public_key *
     assert(state);
     assert(identity_key);
     if(state->remote_identity_public) {
-        AXOLOTL_UNREF(state->remote_identity_public);
+        SIGNAL_UNREF(state->remote_identity_public);
     }
-    AXOLOTL_REF(identity_key);
+    SIGNAL_REF(identity_key);
     state->remote_identity_public = identity_key;
 }
 
@@ -1310,9 +1310,9 @@ void session_state_set_root_key(session_state *state, ratchet_root_key *root_key
     assert(state);
     assert(root_key);
     if(state->root_key) {
-        AXOLOTL_UNREF(state->root_key);
+        SIGNAL_UNREF(state->root_key);
     }
-    AXOLOTL_REF(root_key);
+    SIGNAL_REF(root_key);
     state->root_key = root_key;
 }
 
@@ -1343,15 +1343,15 @@ void session_state_set_sender_chain(session_state *state, ec_key_pair *sender_ra
     state->has_sender_chain = 1;
 
     if(state->sender_chain.sender_ratchet_key_pair) {
-        AXOLOTL_UNREF(state->sender_chain.sender_ratchet_key_pair);
+        SIGNAL_UNREF(state->sender_chain.sender_ratchet_key_pair);
     }
-    AXOLOTL_REF(sender_ratchet_key_pair);
+    SIGNAL_REF(sender_ratchet_key_pair);
     state->sender_chain.sender_ratchet_key_pair = sender_ratchet_key_pair;
 
     if(state->sender_chain.chain_key) {
-        AXOLOTL_UNREF(state->sender_chain.chain_key);
+        SIGNAL_UNREF(state->sender_chain.chain_key);
     }
-    AXOLOTL_REF(chain_key);
+    SIGNAL_REF(chain_key);
     state->sender_chain.chain_key = chain_key;
 }
 
@@ -1383,14 +1383,14 @@ int session_state_set_sender_chain_key(session_state *state, ratchet_chain_key *
     assert(state);
     if(state->has_sender_chain) {
         if(state->sender_chain.chain_key) {
-            AXOLOTL_UNREF(state->sender_chain.chain_key);
+            SIGNAL_UNREF(state->sender_chain.chain_key);
         }
-        AXOLOTL_REF(chain_key);
+        SIGNAL_REF(chain_key);
         state->sender_chain.chain_key = chain_key;
         return 0;
     }
     else {
-        return AX_ERR_UNKNOWN;
+        return SG_ERR_UNKNOWN;
     }
 }
 
@@ -1443,7 +1443,7 @@ int session_state_remove_message_keys(session_state *state,
         if(cur_node->message_key.counter == counter) {
             memcpy(message_keys_result, &(cur_node->message_key), sizeof(ratchet_message_keys));
             DL_DELETE(chain->message_keys_head, cur_node);
-            axolotl_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
+            signal_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
             free(cur_node);
             return 1;
         }
@@ -1470,7 +1470,7 @@ int session_state_set_message_keys(session_state *state,
 
     node = malloc(sizeof(message_keys_node));
     if(!node) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memcpy(&(node->message_key), message_keys, sizeof(ratchet_message_keys));
     node->prev = 0;
@@ -1482,7 +1482,7 @@ int session_state_set_message_keys(session_state *state,
     while(count > MAX_MESSAGE_KEYS) {
         node = chain->message_keys_head;
         DL_DELETE(chain->message_keys_head, node);
-        axolotl_explicit_bzero(&node->message_key, sizeof(ratchet_message_keys));
+        signal_explicit_bzero(&node->message_key, sizeof(ratchet_message_keys));
         free(node);
         --count;
     }
@@ -1501,13 +1501,13 @@ int session_state_add_receiver_chain(session_state *state, ec_public_key *sender
 
     node = malloc(sizeof(session_state_receiver_chain));
     if(!node) {
-        return AX_ERR_NOMEM;
+        return SG_ERR_NOMEM;
     }
     memset(node, 0, sizeof(session_state_receiver_chain));
 
-    AXOLOTL_REF(sender_ratchet_key);
+    SIGNAL_REF(sender_ratchet_key);
     node->sender_ratchet_key = sender_ratchet_key;
-    AXOLOTL_REF(chain_key);
+    SIGNAL_REF(chain_key);
     node->chain_key = chain_key;
 
     DL_APPEND(state->receiver_chain_head, node);
@@ -1534,13 +1534,13 @@ int session_state_set_receiver_chain_key(session_state *state, ec_public_key *se
 
     node = session_state_find_receiver_chain(state, sender_ephemeral);
     if(!node) {
-        axolotl_log(state->global_context, AX_LOG_WARNING, "Couldn't find receiver chain to set chain key on");
-        result = AX_ERR_UNKNOWN;
+        signal_log(state->global_context, SG_LOG_WARNING, "Couldn't find receiver chain to set chain key on");
+        result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
-    AXOLOTL_UNREF(node->chain_key);
-    AXOLOTL_REF(chain_key);
+    SIGNAL_UNREF(node->chain_key);
+    SIGNAL_REF(chain_key);
     node->chain_key = chain_key;
 
 complete:
@@ -1585,21 +1585,21 @@ void session_state_set_pending_key_exchange(session_state *state,
     assert(our_identity_key);
 
     if(state->pending_key_exchange.local_base_key) {
-        AXOLOTL_UNREF(state->pending_key_exchange.local_base_key);
+        SIGNAL_UNREF(state->pending_key_exchange.local_base_key);
         state->pending_key_exchange.local_base_key = 0;
     }
     if(state->pending_key_exchange.local_ratchet_key) {
-        AXOLOTL_UNREF(state->pending_key_exchange.local_ratchet_key);
+        SIGNAL_UNREF(state->pending_key_exchange.local_ratchet_key);
         state->pending_key_exchange.local_ratchet_key = 0;
     }
     if(state->pending_key_exchange.local_identity_key) {
-        AXOLOTL_UNREF(state->pending_key_exchange.local_identity_key);
+        SIGNAL_UNREF(state->pending_key_exchange.local_identity_key);
         state->pending_key_exchange.local_identity_key = 0;
     }
 
-    AXOLOTL_REF(our_base_key);
-    AXOLOTL_REF(our_ratchet_key);
-    AXOLOTL_REF(our_identity_key);
+    SIGNAL_REF(our_base_key);
+    SIGNAL_REF(our_ratchet_key);
+    SIGNAL_REF(our_identity_key);
 
     state->has_pending_key_exchange = 1;
     state->pending_key_exchange.sequence = sequence;
@@ -1665,11 +1665,11 @@ void session_state_set_unacknowledged_pre_key_message(session_state *state,
     assert(base_key);
 
     if(state->pending_pre_key.base_key) {
-        AXOLOTL_UNREF(state->pending_pre_key.base_key);
+        SIGNAL_UNREF(state->pending_pre_key.base_key);
         state->pending_pre_key.base_key = 0;
     }
 
-    AXOLOTL_REF(base_key);
+    SIGNAL_REF(base_key);
 
     state->has_pending_pre_key = 1;
     if(pre_key_id) {
@@ -1719,7 +1719,7 @@ void session_state_clear_unacknowledged_pre_key_message(session_state *state)
 {
     assert(state);
     if(state->pending_pre_key.base_key) {
-        AXOLOTL_UNREF(state->pending_pre_key.base_key);
+        SIGNAL_UNREF(state->pending_pre_key.base_key);
     }
     memset(&state->pending_pre_key, 0, sizeof(state->pending_pre_key));
     state->has_pending_pre_key = 0;
@@ -1768,9 +1768,9 @@ void session_state_set_alice_base_key(session_state *state, ec_public_key *key)
     assert(key);
 
     if(state->alice_base_key) {
-        AXOLOTL_UNREF(state->alice_base_key);
+        SIGNAL_UNREF(state->alice_base_key);
     }
-    AXOLOTL_REF(key);
+    SIGNAL_REF(key);
     state->alice_base_key = key;
 }
 
@@ -1783,11 +1783,11 @@ ec_public_key *session_state_get_alice_base_key(const session_state *state)
 static void session_state_free_sender_chain(session_state *state)
 {
     if(state->sender_chain.sender_ratchet_key_pair) {
-        AXOLOTL_UNREF(state->sender_chain.sender_ratchet_key_pair);
+        SIGNAL_UNREF(state->sender_chain.sender_ratchet_key_pair);
         state->sender_chain.sender_ratchet_key_pair = 0;
     }
     if(state->sender_chain.chain_key) {
-        AXOLOTL_UNREF(state->sender_chain.chain_key);
+        SIGNAL_UNREF(state->sender_chain.chain_key);
         state->sender_chain.chain_key = 0;
     }
 
@@ -1796,7 +1796,7 @@ static void session_state_free_sender_chain(session_state *state)
         message_keys_node *tmp_node;
         DL_FOREACH_SAFE(state->sender_chain.message_keys_head, cur_node, tmp_node) {
             DL_DELETE(state->sender_chain.message_keys_head, cur_node);
-            axolotl_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
+            signal_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
             free(cur_node);
         }
         state->sender_chain.message_keys_head = 0;
@@ -1806,10 +1806,10 @@ static void session_state_free_sender_chain(session_state *state)
 static void session_state_free_receiver_chain_node(session_state_receiver_chain *node)
 {
     if(node->sender_ratchet_key) {
-        AXOLOTL_UNREF(node->sender_ratchet_key);
+        SIGNAL_UNREF(node->sender_ratchet_key);
     }
     if(node->chain_key) {
-        AXOLOTL_UNREF(node->chain_key);
+        SIGNAL_UNREF(node->chain_key);
     }
 
     if(node->message_keys_head) {
@@ -1817,7 +1817,7 @@ static void session_state_free_receiver_chain_node(session_state_receiver_chain 
         message_keys_node *tmp_node;
         DL_FOREACH_SAFE(node->message_keys_head, cur_node, tmp_node) {
             DL_DELETE(node->message_keys_head, cur_node);
-            axolotl_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
+            signal_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
             free(cur_node);
         }
         node->message_keys_head = 0;
@@ -1837,39 +1837,39 @@ static void session_state_free_receiver_chain(session_state *state)
     state->receiver_chain_head = 0;
 }
 
-void session_state_destroy(axolotl_type_base *type)
+void session_state_destroy(signal_type_base *type)
 {
     session_state *state = (session_state *)type;
 
     if(state->local_identity_public) {
-        AXOLOTL_UNREF(state->local_identity_public);
+        SIGNAL_UNREF(state->local_identity_public);
     }
     if(state->remote_identity_public) {
-        AXOLOTL_UNREF(state->remote_identity_public);
+        SIGNAL_UNREF(state->remote_identity_public);
     }
     if(state->root_key) {
-        AXOLOTL_UNREF(state->root_key);
+        SIGNAL_UNREF(state->root_key);
     }
     session_state_free_sender_chain(state);
     session_state_free_receiver_chain(state);
     if(state->has_pending_key_exchange) {
         if(state->pending_key_exchange.local_base_key) {
-            AXOLOTL_UNREF(state->pending_key_exchange.local_base_key);
+            SIGNAL_UNREF(state->pending_key_exchange.local_base_key);
         }
         if(state->pending_key_exchange.local_ratchet_key) {
-            AXOLOTL_UNREF(state->pending_key_exchange.local_ratchet_key);
+            SIGNAL_UNREF(state->pending_key_exchange.local_ratchet_key);
         }
         if(state->pending_key_exchange.local_identity_key) {
-            AXOLOTL_UNREF(state->pending_key_exchange.local_identity_key);
+            SIGNAL_UNREF(state->pending_key_exchange.local_identity_key);
         }
     }
     if(state->has_pending_pre_key) {
         if(state->pending_pre_key.base_key) {
-            AXOLOTL_UNREF(state->pending_pre_key.base_key);
+            SIGNAL_UNREF(state->pending_pre_key.base_key);
         }
     }
     if(state->alice_base_key) {
-        AXOLOTL_UNREF(state->alice_base_key);
+        SIGNAL_UNREF(state->alice_base_key);
     }
     free(state);
 }
