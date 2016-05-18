@@ -3,8 +3,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "axolotl_internal.h"
 #include "curve.h"
+#include "signal_protocol_internal.h"
 #include "WhisperTextProtocol.pb-c.h"
 
 #define SIGNAL_MESSAGE_MAC_LENGTH 8

@@ -74,7 +74,7 @@ CMake toolchain files have been included from the following sources:
 Before using the library, a libsignal-protocol-c client needs to initialize a global
 context. This global context is used to provide callbacks for implementations
 of functions used across the library that need client-specific implementations.
-Refer to "axolotl.h" for detailed documentation on these functions, and the unit
+Refer to "signal_protocol.h" for detailed documentation on these functions, and the unit
 tests for example implementations.
 
     signal_context *global_context;    
@@ -124,7 +124,7 @@ all data flowing through them as opaque binary blobs. Anything necessary for
 referencing that data will be provided as separate function arguments to those
 callbacks. If it is ever necessary for clients to directly access stored data
 in terms of library data structures, they should use the accessor functions
-declared in "axolotl.h" for these data stores.
+declared in "signal_protocol.h" for these data stores.
 
 Once the callbacks for these data stores are implemented, building a session
 is fairly straightforward:

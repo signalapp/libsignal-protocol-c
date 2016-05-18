@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <check.h>
 
-#include "axolotl.h"
+#include "../src/signal_protocol.h"
 #include "hkdf.h"
 #include "session_record.h"
 #include "session_state.h"

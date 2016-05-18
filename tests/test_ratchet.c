@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <check.h>
 
-#include "axolotl.h"
+#include "../src/signal_protocol.h"
 #include "hkdf.h"
 #include "ratchet.h"
 #include "session_state.h"

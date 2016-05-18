@@ -1,7 +1,7 @@
 #ifndef GROUP_SESSION_BUILDER_H
 #define GROUP_SESSION_BUILDER_H
 
-#include "axolotl_types.h"
+#include "signal_protocol_types.h"
 
 #ifdef __cplusplus
 extern "C" {

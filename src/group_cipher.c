@@ -2,11 +2,11 @@
 
 #include <assert.h>
 #include <string.h>
-#include "axolotl_internal.h"
 #include "protocol.h"
 #include "sender_key.h"
 #include "sender_key_record.h"
 #include "sender_key_state.h"
+#include "signal_protocol_internal.h"
 
 struct group_cipher
 {

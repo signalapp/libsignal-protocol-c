@@ -4,10 +4,10 @@
 #include <string.h>
 #include <assert.h>
 
-#include "axolotl_internal.h"
 #include "session_state.h"
 #include "utlist.h"
 #include "LocalStorageProtocol.pb-c.h"
+#include "signal_protocol_internal.h"
 
 #define ARCHIVED_STATES_MAX_LENGTH 40
 

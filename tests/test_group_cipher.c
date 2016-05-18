@@ -3,7 +3,7 @@
 #include <check.h>
 #include <pthread.h>
 
-#include "axolotl.h"
+#include "../src/signal_protocol.h"
 #include "protocol.h"
 #include "group_cipher.h"
 #include "group_session_builder.h"

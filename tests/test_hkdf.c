@@ -2,7 +2,7 @@
 #include <string.h>
 #include <check.h>
 
-#include "axolotl.h"
+#include "../src/signal_protocol.h"
 #include "hkdf.h"
 #include "test_common.h"
 

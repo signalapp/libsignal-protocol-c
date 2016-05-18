@@ -7,7 +7,7 @@
 #include <openssl/sha.h>
 #include <check.h>
 
-#include "axolotl.h"
+#include "../src/signal_protocol.h"
 #include "curve.h"
 #include "uthash.h"
 #include "utarray.h"

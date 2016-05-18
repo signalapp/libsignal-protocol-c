@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "hkdf.h"
-#include "axolotl_internal.h"
+#include "signal_protocol_internal.h"
 
 #define HASH_OUTPUT_SIZE 32
 

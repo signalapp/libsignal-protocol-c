@@ -2,12 +2,12 @@
 
 #include <assert.h>
 #include <string.h>
-#include "axolotl_internal.h"
 #include "sender_key_record.h"
 #include "sender_key_state.h"
 #include "sender_key.h"
 #include "protocol.h"
 #include "key_helper.h"
+#include "signal_protocol_internal.h"
 
 struct group_session_builder
 {

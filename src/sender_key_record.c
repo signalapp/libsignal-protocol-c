@@ -2,11 +2,11 @@
 
 #include <string.h>
 
-#include "axolotl_internal.h"
 #include "sender_key_state.h"
 #include "sender_key.h"
 #include "utlist.h"
 #include "LocalStorageProtocol.pb-c.h"
+#include "signal_protocol_internal.h"
 
 #define MAX_STATES 5
 

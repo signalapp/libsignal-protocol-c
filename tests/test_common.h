@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "axolotl.h"
+#include "../src/signal_protocol.h"
 
 /* Test utility functions */
 void print_public_key(const char *prefix, ec_public_key *key);

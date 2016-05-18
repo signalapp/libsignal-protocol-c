@@ -1,9 +1,9 @@
-#ifndef AXOLOTL_INTERNAL_H
-#define AXOLOTL_INTERNAL_H
+#ifndef SIGNAL_PROTOCOL_INTERNAL_H
+#define SIGNAL_PROTOCOL_INTERNAL_H
 
 #include <protobuf-c/protobuf-c.h>
-#include "axolotl.h"
 #include "LocalStorageProtocol.pb-c.h"
+#include "signal_protocol.h"
 
 struct signal_type_base {
     unsigned int ref_count;
@@ -79,4 +79,4 @@ int sender_key_state_deserialize_protobuf(sender_key_state **state, Textsecure__
 void axolotl_str_serialize_protobuf(ProtobufCBinaryData *buffer, const char *str);
 char *axolotl_str_deserialize_protobuf(ProtobufCBinaryData *buffer);
 
-#endif /* AXOLOTL_INTERNAL_H */
+#endif /* SIGNAL_PROTOCOL_INTERNAL_H */

@@ -1,5 +1,4 @@
-#include "axolotl.h"
-#include "axolotl_internal.h"
+#include "signal_protocol.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +6,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+
+#include "signal_protocol_internal.h"
 #include "utlist.h"
 #include "utarray.h"
 

@@ -1,7 +1,7 @@
 #ifndef SENDER_KEY_RECORD_H
 #define SENDER_KEY_RECORD_H
 
-#include "axolotl_types.h"
+#include "signal_protocol_types.h"
 
 #ifdef __cplusplus
 extern "C" {

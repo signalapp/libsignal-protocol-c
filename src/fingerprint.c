@@ -3,8 +3,8 @@
 #include <assert.h>
 #include <string.h>
 
-#include "axolotl_internal.h"
 #include "FingerprintProtocol.pb-c.h"
+#include "signal_protocol_internal.h"
 
 #define VERSION 0
 #define SHA512_DIGEST_LENGTH 64

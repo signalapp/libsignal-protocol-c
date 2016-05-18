@@ -6,13 +6,13 @@
 #include <assert.h>
 #include <protobuf-c/protobuf-c.h>
 
-#include "axolotl_internal.h"
 #include "hkdf.h"
 #include "curve.h"
 #include "session_state.h"
 #include "protocol.h"
 #include "vpool.h"
 #include "LocalStorageProtocol.pb-c.h"
+#include "signal_protocol_internal.h"
 
 #define HASH_OUTPUT_SIZE 32
 #define DERIVED_MESSAGE_SECRETS_SIZE 80

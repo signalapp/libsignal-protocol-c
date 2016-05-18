@@ -2,12 +2,12 @@
 
 #include <assert.h>
 #include <string.h>
-#include "axolotl_internal.h"
 #include "session_builder.h"
 #include "session_record.h"
 #include "session_state.h"
 #include "ratchet.h"
 #include "protocol.h"
+#include "signal_protocol_internal.h"
 
 struct session_cipher
 {

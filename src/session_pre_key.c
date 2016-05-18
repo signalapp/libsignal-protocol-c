@@ -4,9 +4,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include "axolotl_internal.h"
 #include "curve.h"
 #include "LocalStorageProtocol.pb-c.h"
+#include "signal_protocol_internal.h"
 
 struct session_pre_key {
     signal_type_base base;

@@ -1,16 +1,16 @@
-#ifndef AXOLOTL_H
-#define AXOLOTL_H
+#ifndef SIGNAL_PROTOCOL_H
+#define SIGNAL_PROTOCOL_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "axolotl_types.h"
 #include "ratchet.h"
 #include "curve.h"
 #include "session_record.h"
 #include "session_pre_key.h"
 #include "sender_key_record.h"
+#include "signal_protocol_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -728,4 +728,4 @@ int axolotl_sender_key_load_key(axolotl_store_context *context, sender_key_recor
 }
 #endif
 
-#endif /* AXOLOTL_H */
+#endif /* SIGNAL_PROTOCOL_H */

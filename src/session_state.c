@@ -7,8 +7,8 @@
 #include "hkdf.h"
 #include "curve.h"
 #include "ratchet.h"
-#include "axolotl_internal.h"
 #include "LocalStorageProtocol.pb-c.h"
+#include "signal_protocol_internal.h"
 
 #include "utlist.h"
 

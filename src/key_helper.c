@@ -2,10 +2,10 @@
 
 #include <assert.h>
 
-#include "axolotl_internal.h"
 #include "session_pre_key.h"
 #include "ratchet.h"
 #include "curve.h"
+#include "signal_protocol_internal.h"
 #include "utlist.h"
 
 struct axolotl_key_helper_pre_key_list_node

@@ -1,6 +1,6 @@
 #include <check.h>
 
-#include "axolotl.h"
+#include "../src/signal_protocol.h"
 #include "curve.h"
 #include "fingerprint.h"
 #include "test_common.h"

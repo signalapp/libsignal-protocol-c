@@ -5,9 +5,9 @@
 #include <assert.h>
 
 #include "sender_key.h"
-#include "axolotl_internal.h"
 #include "utlist.h"
 #include "LocalStorageProtocol.pb-c.h"
+#include "signal_protocol_internal.h"
 
 #define MAX_MESSAGE_KEYS 2000
 

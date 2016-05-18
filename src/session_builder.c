@@ -2,13 +2,13 @@
 
 #include <assert.h>
 #include <string.h>
-#include "axolotl_internal.h"
 #include "session_pre_key.h"
 #include "session_record.h"
 #include "session_state.h"
 #include "ratchet.h"
 #include "protocol.h"
 #include "key_helper.h"
+#include "signal_protocol_internal.h"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 

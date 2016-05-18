@@ -1,5 +1,5 @@
-#ifndef AXOLOTL_TYPES_H
-#define AXOLOTL_TYPES_H
+#ifndef SIGNAL_PROTOCOL_TYPES_H
+#define SIGNAL_PROTOCOL_TYPES_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -130,4 +130,4 @@ typedef struct fingerprint_generator fingerprint_generator;
 }
 #endif
 
-#endif // AXOLOTL_TYPES_H
+#endif /* SIGNAL_PROTOCOL_TYPES_H */

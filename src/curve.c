@@ -7,7 +7,7 @@
 
 #include "curve25519/curve25519-donna.h"
 #include "curve25519/ed25519/additions/curve_sigs.h"
-#include "axolotl_internal.h"
+#include "signal_protocol_internal.h"
 
 #define DJB_TYPE 0x05
 #define DJB_KEY_LEN 32
