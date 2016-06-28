@@ -199,7 +199,7 @@ int ratchet_chain_key_get_message_keys(ratchet_chain_key *chain_key, ratchet_mes
 
     if(key_material_data_len != RATCHET_CIPHER_KEY_LENGTH + RATCHET_MAC_KEY_LENGTH + RATCHET_IV_LENGTH) {
         signal_log(chain_key->global_context, SG_LOG_WARNING,
-                "key_material_data length mismatch: %d != %d",
+                "key_material_data length mismatch: %zu != %d",
                 key_material_data_len, (RATCHET_CIPHER_KEY_LENGTH + RATCHET_MAC_KEY_LENGTH + RATCHET_IV_LENGTH));
         result = SG_ERR_UNKNOWN;
         goto complete;

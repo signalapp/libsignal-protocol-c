@@ -214,7 +214,7 @@ ssize_t hkdf_derive_secrets(hkdf_context *context,
 
     prk_len = hkdf_extract(context, &prk, salt, salt_len, input_key_material, input_key_material_len);
     if(prk_len < 0) {
-        signal_log(context->global_context, SG_LOG_ERROR, "hkdf_extract error: %d", prk_len);
+        signal_log(context->global_context, SG_LOG_ERROR, "hkdf_extract error: %zd", prk_len);
         return prk_len;
     }
 

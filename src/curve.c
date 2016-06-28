@@ -41,7 +41,7 @@ int curve_decode_point(ec_public_key **public_key, const uint8_t *key_data, size
     }
 
     if(key_len != DJB_KEY_LEN + 1) {
-        signal_log(global_context, SG_LOG_ERROR, "Invalid key length: %d", key_len);
+        signal_log(global_context, SG_LOG_ERROR, "Invalid key length: %zu", key_len);
         return SG_ERR_INVALID_KEY;
     }
 
@@ -143,7 +143,7 @@ int curve_decode_private_point(ec_private_key **private_key, const uint8_t *key_
     ec_private_key *key = 0;
 
     if(key_len != DJB_KEY_LEN) {
-        signal_log(global_context, SG_LOG_ERROR, "Invalid key length: %d", key_len);
+        signal_log(global_context, SG_LOG_ERROR, "Invalid key length: %zu", key_len);
         return SG_ERR_INVALID_KEY;
     }
 
