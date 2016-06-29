@@ -447,7 +447,7 @@ void signal_log(signal_context *context, int level, const char *format, ...)
 {
     char buf[256];
     int n;
-    if(context->log) {
+    if(context && context->log) {
         va_list args;
         va_start(args, format);
         n = vsnprintf(buf, sizeof(buf), format, args);
