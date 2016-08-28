@@ -32,6 +32,9 @@ Items marked with *1 are required for tests, with *2 are additionally required f
 
     $ cd /path/to/libsignal-protocol-c/build
     $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 ..
+    $ cd tests
+    $ make
+    $ cd ..
     $ ctest
 
 ### Creating the code coverage report
