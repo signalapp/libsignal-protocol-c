@@ -283,9 +283,16 @@ int curve_generate_private_key(signal_context *context, ec_private_key **private
     key->data[31] &= 127;
     key->data[31] |= 64;
 
-    *private_key = key;
-
 complete:
+    if(result < 0) {
+        if(key) {
+            SIGNAL_UNREF(key);
+        }
+    }
+    else {
+        *private_key = key;
+    }
+
     return result;
 }
 
