@@ -405,7 +405,10 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
     message_identity_key = key_exchange_message_get_identity_key(message);
     message_base_key = key_exchange_message_get_base_key(message);
 
-    ec_public_key_serialize(&message_base_key_serialized, message_base_key);
+    result = ec_public_key_serialize(&message_base_key_serialized, message_base_key);
+    if(result < 0) {
+        goto complete;
+    }
 
     message_base_key_signature = key_exchange_message_get_base_key_signature(message);
 
@@ -603,7 +606,10 @@ static int session_builder_process_response(session_builder *builder, key_exchan
         signal_buffer *message_base_key_serialized = 0;
         uint8_t *message_base_key_signature = 0;
 
-        ec_public_key_serialize(&message_base_key_serialized, message_base_key);
+        result = ec_public_key_serialize(&message_base_key_serialized, message_base_key);
+        if(result < 0) {
+            goto complete;
+        }
 
         message_base_key_signature = key_exchange_message_get_base_key_signature(message);
 
