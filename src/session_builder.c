@@ -10,8 +10,6 @@
 #include "key_helper.h"
 #include "signal_protocol_internal.h"
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-
 struct session_builder
 {
     signal_protocol_store_context *store;
