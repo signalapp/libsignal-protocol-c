@@ -69,6 +69,9 @@ void signal_type_unref(signal_type_base *instance)
 #ifdef DEBUG_REFCOUNT
 int signal_type_ref_count(signal_type_base *instance)
 {
+    if(!instance) {
+        return 0;
+    }
     return instance->ref_count;
 }
 #endif
