@@ -145,7 +145,10 @@ static int session_builder_process_pre_key_signal_message_v3(session_builder *bu
     }
 
     if(!session_record_is_fresh(record)) {
-        session_record_archive_current_state(record);
+        result = session_record_archive_current_state(record);
+        if(result < 0) {
+            goto complete;
+        }
     }
 
     state = session_record_get_state(record);
