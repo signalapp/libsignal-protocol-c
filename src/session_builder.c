@@ -296,7 +296,10 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     }
 
     if(!session_record_is_fresh(record)) {
-        session_record_archive_current_state(record);
+        result = session_record_archive_current_state(record);
+        if(result < 0) {
+            goto complete;
+        }
     }
 
     state = session_record_get_state(record);
@@ -473,7 +476,10 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
     }
 
     if(!session_record_is_fresh(record)) {
-        session_record_archive_current_state(record);
+        result = session_record_archive_current_state(record);
+        if(result < 0) {
+            goto complete;
+        }
     }
 
     state = session_record_get_state(record);
@@ -585,7 +591,10 @@ static int session_builder_process_response(session_builder *builder, key_exchan
     }
 
     if(!session_record_is_fresh(record)) {
-        session_record_archive_current_state(record);
+        result = session_record_archive_current_state(record);
+        if(result < 0) {
+            goto complete;
+        }
     }
 
     state = session_record_get_state(record);
