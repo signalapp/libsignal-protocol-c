@@ -36,6 +36,7 @@ set(signal_protocol_SRCS
 	session_pre_key.h
 	session_builder.c
 	session_builder.h
+	session_builder_internal.h
 	session_cipher.c
 	session_cipher.h
 	key_helper.c

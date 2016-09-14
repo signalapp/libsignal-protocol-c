@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include "session_builder.h"
+#include "session_builder_internal.h"
 #include "session_record.h"
 #include "session_state.h"
 #include "ratchet.h"
