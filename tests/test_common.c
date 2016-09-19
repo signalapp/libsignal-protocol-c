@@ -286,6 +286,11 @@ int test_encrypt(signal_buffer **output,
         return SG_ERR_UNKNOWN;
     }
 
+    if(plaintext_len > INT_MAX - EVP_CIPHER_block_size(evp_cipher)) {
+        fprintf(stderr, "invalid plaintext length: %zu\n", plaintext_len);
+        return SG_ERR_UNKNOWN;
+    }
+
     EVP_CIPHER_CTX ctx;
     EVP_CIPHER_CTX_init(&ctx);
 
@@ -305,7 +310,7 @@ int test_encrypt(signal_buffer **output,
         }
     }
 
-    out_buf = malloc(sizeof(uint8_t) * (plaintext_len + EVP_MAX_BLOCK_LENGTH));
+    out_buf = malloc(sizeof(uint8_t) * (plaintext_len + EVP_CIPHER_block_size(evp_cipher)));
     if(!out_buf) {
         fprintf(stderr, "cannot allocate output buffer\n");
         result = SG_ERR_NOMEM;
@@ -360,6 +365,11 @@ int test_decrypt(signal_buffer **output,
         return SG_ERR_INVAL;
     }
 
+    if(ciphertext_len > INT_MAX - EVP_CIPHER_block_size(evp_cipher)) {
+        fprintf(stderr, "invalid ciphertext length: %zu\n", ciphertext_len);
+        return SG_ERR_UNKNOWN;
+    }
+
     EVP_CIPHER_CTX ctx;
     EVP_CIPHER_CTX_init(&ctx);
 
@@ -379,7 +389,7 @@ int test_decrypt(signal_buffer **output,
         }
     }
 
-    out_buf = malloc(sizeof(uint8_t) * (ciphertext_len + EVP_MAX_BLOCK_LENGTH));
+    out_buf = malloc(sizeof(uint8_t) * (ciphertext_len + EVP_CIPHER_block_size(evp_cipher)));
     if(!out_buf) {
         fprintf(stderr, "cannot allocate output buffer\n");
         result = SG_ERR_UNKNOWN;
