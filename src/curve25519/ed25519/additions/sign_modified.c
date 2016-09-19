@@ -3,7 +3,6 @@
 #include "crypto_hash_sha512.h"
 #include "ge.h"
 #include "sc.h"
-#include "zeroize.h"
 
 /* NEW: Compare to pristine crypto_sign() 
    Uses explicit private key for nonce derivation and as scalar,
