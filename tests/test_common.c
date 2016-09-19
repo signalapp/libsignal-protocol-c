@@ -2,8 +2,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <openssl/rand.h>
+#include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <check.h>
 

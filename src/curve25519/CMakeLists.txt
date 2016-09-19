@@ -59,7 +59,6 @@ set(ed25519_SRCS
 	ed25519/additions/compare.c
 	ed25519/additions/curve_sigs.c
 	ed25519/additions/sign_modified.c
-	ed25519/additions/zeroize.c
 	ed25519/additions/crypto_hash_sha512.h
 	ed25519/nacl_sha512/blocks.c
 	ed25519/nacl_sha512/hash.c
