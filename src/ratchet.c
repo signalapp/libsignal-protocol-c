@@ -485,6 +485,11 @@ int ratchet_identity_key_pair_serialize(signal_buffer **buffer, const ratchet_id
     size_t len = 0;
     uint8_t *data = 0;
 
+    if(!key_pair) {
+        result = SG_ERR_INVAL;
+        goto complete;
+    }
+
     result = ec_public_key_serialize_protobuf(&key_structure.publickey, key_pair->public_key);
     if(result < 0) {
         goto complete;

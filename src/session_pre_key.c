@@ -72,6 +72,11 @@ int session_pre_key_serialize(signal_buffer **buffer, const session_pre_key *pre
     size_t len = 0;
     uint8_t *data = 0;
 
+    if(!pre_key) {
+        result = SG_ERR_INVAL;
+        goto complete;
+    }
+
     public_key = ec_key_pair_get_public(pre_key->key_pair);
     result = ec_public_key_serialize(&public_buf, public_key);
     if(result < 0) {

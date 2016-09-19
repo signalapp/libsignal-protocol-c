@@ -67,6 +67,11 @@ int session_record_serialize(signal_buffer **buffer, const session_record *recor
     size_t len = 0;
     uint8_t *data = 0;
 
+    if(!record) {
+        result = SG_ERR_INVAL;
+        goto complete;
+    }
+
     if(record->state) {
         record_structure.currentsession = malloc(sizeof(Textsecure__SessionStructure));
         if(!record_structure.currentsession) {

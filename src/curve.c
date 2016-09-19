@@ -96,6 +96,10 @@ int ec_public_key_serialize(signal_buffer **buffer, const ec_public_key *key)
     signal_buffer *buf = 0;
     uint8_t *data = 0;
 
+    if(!key) {
+        return SG_ERR_INVAL;
+    }
+
     buf = signal_buffer_alloc(sizeof(uint8_t) * (DJB_KEY_LEN + 1));
     if(!buf) {
         return SG_ERR_NOMEM;
