@@ -327,10 +327,17 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
             session_pre_key_bundle_get_registration_id(bundle));
     session_state_set_alice_base_key(state, ec_key_pair_get_public(our_base_key));
 
-    signal_protocol_session_store_session(builder->store, builder->remote_address, record);
-    signal_protocol_identity_save_identity(builder->store,
+    result = signal_protocol_session_store_session(builder->store, builder->remote_address, record);
+    if(result < 0) {
+        goto complete;
+    }
+
+    result = signal_protocol_identity_save_identity(builder->store,
             builder->remote_address->name, builder->remote_address->name_len,
             their_identity_key);
+    if(result < 0) {
+        goto complete;
+    }
 
 complete:
     SIGNAL_UNREF(record);
