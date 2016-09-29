@@ -41,7 +41,7 @@ struct ratchet_identity_key_pair {
     ec_private_key *private_key;
 };
 
-int ratchet_chain_key_create(ratchet_chain_key **chain_key, hkdf_context *kdf, uint8_t *key, size_t key_len, uint32_t index, signal_context *global_context)
+int ratchet_chain_key_create(ratchet_chain_key **chain_key, hkdf_context *kdf, const uint8_t *key, size_t key_len, uint32_t index, signal_context *global_context)
 {
     ratchet_chain_key *result = 0;
 
