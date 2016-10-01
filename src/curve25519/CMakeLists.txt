@@ -66,3 +66,8 @@ set(ed25519_SRCS
 )
 
 add_library(curve25519 OBJECT ${curve25519_SRCS} ${ed25519_SRCS})
+
+# Add -fPIC flag
+if(BUILD_SHARED_LIBS)
+	set_property(TARGET curve25519 PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()
