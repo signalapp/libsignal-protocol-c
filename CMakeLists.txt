@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8.4)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
 project(signal-protocol-c)
 
+SET(LIB_SUFFIX "" CACHE STRING "Define suffix of directory name (32/64)")
+SET(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "Directory where lib will install")
+SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "The directory the headers are installed in")
+
 INCLUDE(CheckSymbolExists)
 INCLUDE(CheckCCompilerFlag)
 

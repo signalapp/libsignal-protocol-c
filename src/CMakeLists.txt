@@ -85,7 +85,7 @@ INSTALL(
 	group_session_builder.h
 	group_cipher.h
 	fingerprint.h
-	DESTINATION include/signal
+	DESTINATION ${INCLUDE_INSTALL_DIR}/signal
 )
 
-INSTALL(TARGETS signal-protocol-c DESTINATION lib)
+INSTALL(TARGETS signal-protocol-c DESTINATION ${LIB_INSTALL_DIR})
