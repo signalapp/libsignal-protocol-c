@@ -18,3 +18,8 @@ set(protobuf_SRCS
 )
 
 add_library(protobuf-c OBJECT ${protobuf_SRCS})
+
+# Add -fPIC flag
+if(BUILD_SHARED_LIBS)
+	set_property(TARGET protobuf-c PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()
