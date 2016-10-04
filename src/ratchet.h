@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 int ratchet_chain_key_create(ratchet_chain_key **chain_key, hkdf_context *kdf,
-        uint8_t *key, size_t key_len, uint32_t index,
+        const uint8_t *key, size_t key_len, uint32_t index,
         signal_context *global_context);
 int ratchet_chain_key_get_key(const ratchet_chain_key *chain_key, signal_buffer **buffer);
 uint32_t ratchet_chain_key_get_index(const ratchet_chain_key *chain_key);
