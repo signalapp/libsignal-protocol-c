@@ -948,7 +948,7 @@ int signal_protocol_identity_get_local_registration_id(signal_protocol_store_con
     return result;
 }
 
-int signal_protocol_identity_save_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
+int signal_protocol_identity_save_identity(signal_protocol_store_context *context, const signal_protocol_address *address, ec_public_key *identity_key)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -963,14 +963,14 @@ int signal_protocol_identity_save_identity(signal_protocol_store_context *contex
         }
 
         result = context->identity_key_store.save_identity(
-                name, name_len,
+                address,
                 signal_buffer_data(buffer),
                 signal_buffer_len(buffer),
                 context->identity_key_store.user_data);
     }
     else {
         result = context->identity_key_store.save_identity(
-                name, name_len, 0, 0,
+                address, 0, 0,
                 context->identity_key_store.user_data);
     }
 
@@ -982,7 +982,7 @@ complete:
     return result;
 }
 
-int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key)
+int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *context, const signal_protocol_address *address, ec_public_key *identity_key)
 {
     int result = 0;
     signal_buffer *buffer = 0;
@@ -996,7 +996,7 @@ int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *
     }
 
     result = context->identity_key_store.is_trusted_identity(
-            name, name_len,
+            address,
             signal_buffer_data(buffer),
             signal_buffer_len(buffer),
             context->identity_key_store.user_data);

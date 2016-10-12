@@ -538,13 +538,12 @@ typedef struct signal_protocol_identity_key_store {
      * from the identity store, but retain any metadata that may be kept
      * alongside it.
      *
-     * @param name the name of the remote client
-     * @param name_len the length of the name
+     * @param address the address of the remote client
      * @param key_data Pointer to the remote client's identity key, may be null
      * @param key_len Length of the remote client's identity key
      * @return 0 on success, negative on failure
      */
-    int (*save_identity)(const char *name, size_t name_len, uint8_t *key_data, size_t key_len, void *user_data);
+    int (*save_identity)(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
 
     /**
      * Verify a remote client's identity key.
@@ -556,14 +555,13 @@ typedef struct signal_protocol_identity_key_store {
      * store.  Only if it mismatches an entry in the local store is it considered
      * 'untrusted.'
      *
-     * @param name the name of the remote client
-     * @param name_len the length of the name
+     * @param address the address of the remote client
      * @param identityKey The identity key to verify.
      * @param key_data Pointer to the identity key to verify
      * @param key_len Length of the identity key to verify
      * @return 1 if trusted, 0 if untrusted, negative on failure
      */
-    int (*is_trusted_identity)(const char *name, size_t name_len, uint8_t *key_data, size_t key_len, void *user_data);
+    int (*is_trusted_identity)(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being
@@ -710,8 +708,8 @@ int signal_protocol_signed_pre_key_remove_key(signal_protocol_store_context *con
 
 int signal_protocol_identity_get_key_pair(signal_protocol_store_context *context, ratchet_identity_key_pair **key_pair);
 int signal_protocol_identity_get_local_registration_id(signal_protocol_store_context *context, uint32_t *registration_id);
-int signal_protocol_identity_save_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key);
-int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *context, const char *name, size_t name_len, ec_public_key *identity_key);
+int signal_protocol_identity_save_identity(signal_protocol_store_context *context, const signal_protocol_address *address, ec_public_key *identity_key);
+int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *context, const signal_protocol_address *address, ec_public_key *identity_key);
 
 
 /*

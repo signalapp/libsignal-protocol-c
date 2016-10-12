@@ -421,7 +421,7 @@ START_TEST(test_basic_pre_key_v3)
 
     /* Save the identity key to Bob's store */
     result = signal_protocol_identity_save_identity(bob_store,
-            alice_address.name, alice_address.name_len,
+            &alice_address,
             pre_key_signal_message_get_identity_key(outgoing_message_copy));
     ck_assert_int_eq(result, 0);
     SIGNAL_UNREF(outgoing_message_copy); outgoing_message_copy = 0;
@@ -1173,7 +1173,7 @@ START_TEST(test_basic_key_exchange)
 
     /* Save Alice's new identity key in Bob's store */
     result = signal_protocol_identity_save_identity(bob_store,
-            alice_address.name, alice_address.name_len,
+            &alice_address,
             key_exchange_message_get_identity_key(alice_key_exchange_message));
     ck_assert_int_eq(result, 0);
 

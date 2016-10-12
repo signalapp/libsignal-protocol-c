@@ -910,7 +910,7 @@ int test_identity_key_store_get_local_registration_id(void *user_data, uint32_t 
     return 0;
 }
 
-int test_identity_key_store_save_identity(const char *name, size_t name_len, uint8_t *key_data, size_t key_len, void *user_data)
+int test_identity_key_store_save_identity(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data)
 {
     test_identity_store_data *data = user_data;
 
@@ -921,7 +921,7 @@ int test_identity_key_store_save_identity(const char *name, size_t name_len, uin
         return SG_ERR_NOMEM;
     }
 
-    int64_t recipient_hash = jenkins_hash(name, name_len);
+    int64_t recipient_hash = jenkins_hash(address->name, address->name_len);
 
     HASH_FIND(hh, data->keys, &recipient_hash, sizeof(int64_t), s);
     if(s) {
@@ -943,11 +943,11 @@ int test_identity_key_store_save_identity(const char *name, size_t name_len, uin
     return 0;
 }
 
-int test_identity_key_store_is_trusted_identity(const char *name, size_t name_len, uint8_t *key_data, size_t key_len, void *user_data)
+int test_identity_key_store_is_trusted_identity(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data)
 {
     test_identity_store_data *data = user_data;
 
-    int64_t recipient_hash = jenkins_hash(name, name_len);
+    int64_t recipient_hash = jenkins_hash(address->name, address->name_len);
 
     test_identity_store_key *s;
     HASH_FIND(hh, data->keys, &recipient_hash, sizeof(int64_t), s);

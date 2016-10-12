@@ -57,7 +57,7 @@ int session_builder_process_pre_key_signal_message(session_builder *builder,
     ec_public_key *their_identity_key = pre_key_signal_message_get_identity_key(message);
 
     result = signal_protocol_identity_is_trusted_identity(builder->store,
-            builder->remote_address->name, builder->remote_address->name_len,
+            builder->remote_address,
             their_identity_key);
     if(result < 0) {
         goto complete;
@@ -74,7 +74,7 @@ int session_builder_process_pre_key_signal_message(session_builder *builder,
     has_unsigned_pre_key_id_result = result;
 
     result = signal_protocol_identity_save_identity(builder->store,
-            builder->remote_address->name, builder->remote_address->name_len,
+            builder->remote_address,
             their_identity_key);
     if(result < 0) {
         goto complete;
@@ -215,7 +215,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     signal_lock(builder->global_context);
 
     result = signal_protocol_identity_is_trusted_identity(builder->store,
-            builder->remote_address->name, builder->remote_address->name_len,
+            builder->remote_address,
             session_pre_key_bundle_get_identity_key(bundle));
     if(result < 0) {
         goto complete;
@@ -333,7 +333,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     }
 
     result = signal_protocol_identity_save_identity(builder->store,
-            builder->remote_address->name, builder->remote_address->name_len,
+            builder->remote_address,
             their_identity_key);
     if(result < 0) {
         goto complete;
@@ -358,7 +358,7 @@ int session_builder_process_key_exchange_message(session_builder *builder, key_e
     signal_lock(builder->global_context);
 
     result = signal_protocol_identity_is_trusted_identity(builder->store,
-            builder->remote_address->name, builder->remote_address->name_len,
+            builder->remote_address,
             key_exchange_message_get_identity_key(message));
     if(result < 0) {
         goto complete;
@@ -504,7 +504,7 @@ static int session_builder_process_initiate(session_builder *builder, key_exchan
     }
 
     result = signal_protocol_identity_save_identity(builder->store,
-            builder->remote_address->name, builder->remote_address->name_len,
+            builder->remote_address,
             key_exchange_message_get_identity_key(message));
     if(result < 0) {
         goto complete;
@@ -652,7 +652,7 @@ static int session_builder_process_response(session_builder *builder, key_exchan
     }
 
     result = signal_protocol_identity_save_identity(builder->store,
-            builder->remote_address->name, builder->remote_address->name_len,
+            builder->remote_address,
             key_exchange_message_get_identity_key(message));
     if(result < 0) {
         goto complete;
