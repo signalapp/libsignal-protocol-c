@@ -95,7 +95,7 @@ static int sender_key_distribution_message_serialize(signal_buffer **buffer, con
 
 int key_exchange_message_create(key_exchange_message **message,
         uint8_t message_version, uint32_t sequence, uint32_t flags,
-        ec_public_key *base_key, uint8_t *base_key_signature,
+        ec_public_key *base_key, const uint8_t *base_key_signature,
         ec_public_key *ratchet_key, ec_public_key *identity_key)
 {
     int result = 0;
