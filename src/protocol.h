@@ -26,7 +26,7 @@ extern "C" {
 
 int key_exchange_message_create(key_exchange_message **message,
         uint8_t message_version, uint32_t sequence, uint32_t flags,
-        ec_public_key *base_key, uint8_t *base_key_signature,
+        ec_public_key *base_key, const uint8_t *base_key_signature,
         ec_public_key *ratchet_key, ec_public_key *identity_key);
 
 int key_exchange_message_deserialize(key_exchange_message **message, const uint8_t *data, size_t len, signal_context *global_context);
