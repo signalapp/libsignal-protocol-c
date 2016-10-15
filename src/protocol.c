@@ -273,7 +273,7 @@ int key_exchange_message_deserialize(key_exchange_message **message, const uint8
     }
 
     if(message_structure->has_basekeysignature && message_structure->basekeysignature.len != CURVE_SIGNATURE_LEN) {
-        signal_log(global_context, SG_LOG_WARNING, "Invalid base key signature length: %d", message_structure->basekeysignature.len);
+        signal_log(global_context, SG_LOG_WARNING, "Invalid base key signature length: %zu", message_structure->basekeysignature.len);
         result = SG_ERR_INVALID_MESSAGE;
         goto complete;
     }
@@ -770,7 +770,7 @@ int signal_message_verify_mac(signal_message *message,
     our_mac_data = signal_buffer_data(our_mac_buffer);
     our_mac_len = signal_buffer_len(our_mac_buffer);
     if(our_mac_len != their_mac_len) {
-        signal_log(global_context, SG_LOG_WARNING, "MAC length mismatch: %d != %d", our_mac_len, their_mac_len);
+        signal_log(global_context, SG_LOG_WARNING, "MAC length mismatch: %zu != %zu", our_mac_len, their_mac_len);
         result = SG_ERR_UNKNOWN;
         goto complete;
     }
