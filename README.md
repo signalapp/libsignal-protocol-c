@@ -10,7 +10,7 @@ environments. See the [Java library](https://github.com/whispersystems/libsignal
 ### Build dependencies
 
 * [CMake](https://cmake.org/) 2.8.4 or higher
-* [Check *1](http://check.sourceforge.net/)
+* [Check *1](https://libcheck.github.io/check/)
 * [OpenSSL *1](https://www.openssl.org/) 1.0 or higher
 * [LCOV *2](http://ltp.sourceforge.net/coverage/lcov.php)
 
