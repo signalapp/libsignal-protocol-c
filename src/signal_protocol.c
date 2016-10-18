@@ -278,7 +278,7 @@ int signal_int_list_at(signal_int_list *list, unsigned int index)
     int *value = 0;
 
     assert(list);
-    assert(index >= 0 && index < utarray_len(list->values));
+    assert(index < utarray_len(list->values));
 
     value = (int *)utarray_eltptr(list->values, index);
 
