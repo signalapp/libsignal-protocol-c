@@ -25,75 +25,6 @@ void test_teardown()
     signal_context_destroy(global_context);
 }
 
-START_TEST(test_serialize_key_exchange_message)
-{
-    int result = 0;
-
-    ec_public_key *base_key = create_test_ec_public_key(global_context);
-    ec_public_key *ratchet_key = create_test_ec_public_key(global_context);
-    ec_public_key *identity_key = create_test_ec_public_key(global_context);
-    uint8_t base_key_signature[CURVE_SIGNATURE_LEN];
-    memset(base_key_signature, 42, sizeof(base_key_signature));
-
-    key_exchange_message *message = 0;
-    key_exchange_message *result_message = 0;
-
-    result = key_exchange_message_create(&message,
-            3, /* message version */
-            8, /* sequence */
-            KEY_EXCHANGE_INITIATE_FLAG,
-            base_key, base_key_signature,
-            ratchet_key, identity_key);
-    ck_assert_int_eq(result, 0);
-
-    signal_buffer *serialized = key_exchange_message_get_serialized(message);
-
-    result = key_exchange_message_deserialize(&result_message,
-            signal_buffer_data(serialized),
-            signal_buffer_len(serialized), global_context);
-    ck_assert_int_eq(result, 0);
-
-    int version1 = key_exchange_message_get_version(message);
-    int version2 = key_exchange_message_get_version(result_message);
-    ck_assert_int_eq(version1, version2);
-
-    ec_public_key *base_key1 = key_exchange_message_get_base_key(message);
-    ec_public_key *base_key2 = key_exchange_message_get_base_key(result_message);
-    ck_assert_int_eq(ec_public_key_compare(base_key1, base_key2), 0);
-
-    uint8_t *signature1 = key_exchange_message_get_base_key_signature(message);
-    uint8_t *signature2 = key_exchange_message_get_base_key_signature(result_message);
-    ck_assert_int_eq(memcmp(signature1, signature2, CURVE_SIGNATURE_LEN), 0);
-
-    ec_public_key *ratchet_key1 = key_exchange_message_get_ratchet_key(message);
-    ec_public_key *ratchet_key2 = key_exchange_message_get_ratchet_key(result_message);
-    ck_assert_int_eq(ec_public_key_compare(ratchet_key1, ratchet_key2), 0);
-
-    ec_public_key *identity_key1 = key_exchange_message_get_identity_key(message);
-    ec_public_key *identity_key2 = key_exchange_message_get_identity_key(result_message);
-    ck_assert_int_eq(ec_public_key_compare(identity_key1, identity_key2), 0);
-
-    int max_version1 = key_exchange_message_get_max_version(message);
-    int max_version2 = key_exchange_message_get_max_version(result_message);
-    ck_assert_int_eq(max_version1, max_version2);
-
-    int flags1 = key_exchange_message_get_flags(message);
-    int flags2 = key_exchange_message_get_flags(result_message);
-    ck_assert_int_eq(flags1, flags2);
-
-    int sequence1 = key_exchange_message_get_sequence(message);
-    int sequence2 = key_exchange_message_get_sequence(result_message);
-    ck_assert_int_eq(sequence1, sequence2);
-
-    /* Cleanup */
-    SIGNAL_UNREF(message);
-    SIGNAL_UNREF(result_message);
-    SIGNAL_UNREF(base_key);
-    SIGNAL_UNREF(ratchet_key);
-    SIGNAL_UNREF(identity_key);
-}
-END_TEST
-
 void compare_signal_messages(signal_message *message1, signal_message *message2)
 {
     ec_public_key *sender_ratchet_key1 = signal_message_get_sender_ratchet_key(message1);
@@ -363,7 +294,6 @@ Suite *protocol_suite(void)
 
     TCase *tcase = tcase_create("case");
     tcase_add_checked_fixture(tcase, test_setup, test_teardown);
-    tcase_add_test(tcase, test_serialize_key_exchange_message);
     tcase_add_test(tcase, test_serialize_signal_message);
     tcase_add_test(tcase, test_serialize_pre_key_signal_message);
     tcase_add_test(tcase, test_serialize_sender_key_message);

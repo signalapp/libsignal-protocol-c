@@ -24,30 +24,6 @@ extern "C" {
 /* Worst case overhead. Not always accurate, but good enough for padding. */
 #define CIPHERTEXT_ENCRYPTED_MESSAGE_OVERHEAD 53
 
-int key_exchange_message_create(key_exchange_message **message,
-        uint8_t message_version, uint32_t sequence, uint32_t flags,
-        ec_public_key *base_key, const uint8_t *base_key_signature,
-        ec_public_key *ratchet_key, ec_public_key *identity_key);
-
-int key_exchange_message_deserialize(key_exchange_message **message, const uint8_t *data, size_t len, signal_context *global_context);
-
-signal_buffer *key_exchange_message_get_serialized(const key_exchange_message *message);
-
-uint8_t key_exchange_message_get_version(const key_exchange_message *message);
-ec_public_key *key_exchange_message_get_base_key(const key_exchange_message *message);
-uint8_t *key_exchange_message_get_base_key_signature(key_exchange_message *message);
-ec_public_key *key_exchange_message_get_ratchet_key(const key_exchange_message *message);
-ec_public_key *key_exchange_message_get_identity_key(const key_exchange_message *message);
-int key_exchange_message_has_identity_key(const key_exchange_message *message);
-uint8_t key_exchange_message_get_max_version(const key_exchange_message *message);
-int key_exchange_message_is_response(const key_exchange_message *message);
-int key_exchange_message_is_initiate(const key_exchange_message *message);
-int key_exchange_message_is_response_for_simultaneous_initiate(const key_exchange_message *message);
-uint32_t key_exchange_message_get_flags(const key_exchange_message *message);
-uint32_t key_exchange_message_get_sequence(const key_exchange_message *message);
-
-void key_exchange_message_destroy(signal_type_base *type);
-
 int ciphertext_message_get_type(const ciphertext_message *message);
 signal_buffer *ciphertext_message_get_serialized(const ciphertext_message *message);
 
