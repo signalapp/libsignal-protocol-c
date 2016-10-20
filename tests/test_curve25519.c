@@ -4,6 +4,7 @@
 #include <check.h>
 
 #include "../src/signal_protocol.h"
+#include "../src/signal_protocol_internal.h"
 #include "curve.h"
 #include "test_common.h"
 
@@ -358,6 +359,117 @@ START_TEST(test_curve25519_large_signatures)
 }
 END_TEST
 
+START_TEST(test_unique_signatures)
+{
+    int result;
+    size_t i;
+    size_t r;
+    ec_key_pair *key_pair = 0;
+    uint8_t *message = 0;
+    signal_buffer *signature = 0;
+    signal_buffer *vrf_output = 0;
+
+    result = curve_generate_key_pair(global_context, &key_pair);
+    ck_assert_int_eq(result, 0);
+
+    message = malloc(256);
+    ck_assert_ptr_ne(message, 0);
+
+    for(i = 1; i <= 256; i++) {
+        result = signal_crypto_random(global_context, message, i);
+        ck_assert_int_eq(result, 0);
+
+        result = curve_calculate_vrf_signature(global_context, &signature,
+                ec_key_pair_get_private(key_pair), message, i);
+        ck_assert_int_eq(result, 0);
+
+        result = curve_verify_vrf_signature(global_context, &vrf_output,
+                ec_key_pair_get_public(key_pair), message, i,
+                signal_buffer_data(signature), signal_buffer_len(signature));
+        ck_assert_int_eq(result, 0);
+
+        result = curve_verify_signature(
+                ec_key_pair_get_public(key_pair), message, i,
+                signal_buffer_data(signature), signal_buffer_len(signature));
+        ck_assert_int_ne(result, 0);
+
+        signal_buffer_free(vrf_output);
+
+        result = signal_crypto_random(global_context, (uint8_t *)&r, sizeof(size_t));
+        ck_assert_int_eq(result, 0);
+
+        message[r % i] ^= 0x01;
+
+        result = curve_verify_vrf_signature(global_context, &vrf_output,
+                ec_key_pair_get_public(key_pair), message, i,
+                signal_buffer_data(signature), signal_buffer_len(signature));
+        ck_assert_int_eq(result, SG_ERR_VRF_SIG_VERIF_FAILED);
+
+        signal_buffer_free(signature);
+    }
+
+    /* Cleanup */
+    SIGNAL_UNREF(key_pair);
+    if(message) {
+        free(message);
+    }
+}
+END_TEST
+
+START_TEST(test_unique_signature_vector)
+{
+    uint8_t publicKey[] = {
+            0x05,
+            0x21, 0xf7, 0x34, 0x5f, 0x56, 0xd9, 0x60, 0x2f,
+            0x15, 0x23, 0x29, 0x8f, 0x4f, 0x6f, 0xce, 0xcb,
+            0x14, 0xdd, 0xe2, 0xd5, 0xb9, 0xa9, 0xb4, 0x8b,
+            0xca, 0x82, 0x42, 0x68, 0x14, 0x92, 0xb9, 0x20};
+    uint8_t privateKey[] = {
+            0x38, 0x61, 0x1d, 0x25, 0x3b, 0xea, 0x85, 0xa2,
+            0x03, 0x80, 0x53, 0x43, 0xb7, 0x4a, 0x93, 0x6d,
+            0x3b, 0x13, 0xb9, 0xe3, 0x12, 0x14, 0x53, 0xe9,
+            0x74, 0x0b, 0x6b, 0x82, 0x7e, 0x33, 0x7e, 0x5d};
+    uint8_t message[] = {
+            0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20,
+            0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x2e};
+    uint8_t vrf[] = {
+            0x75, 0xad, 0x49, 0xbc, 0x95, 0x5f, 0x38, 0xdc,
+            0xf6, 0x5f, 0xb6, 0x72, 0x08, 0x6b, 0xd5, 0x09,
+            0xcb, 0x4b, 0x4c, 0x41, 0x04, 0x7d, 0xb1, 0x7e,
+            0xfd, 0xaf, 0xee, 0xbc, 0x33, 0x03, 0x71, 0xe6};
+
+    int result;
+    ec_public_key *public_key = 0;
+    ec_private_key *private_key = 0;
+    signal_buffer *signature = 0;
+    signal_buffer *vrf_output = 0;
+
+    result = curve_decode_point(&public_key, publicKey, sizeof(publicKey), global_context);
+    ck_assert_int_eq(result, 0);
+
+    result = curve_decode_private_point(&private_key, privateKey, sizeof(privateKey), global_context);
+    ck_assert_int_eq(result, 0);
+
+    result = curve_calculate_vrf_signature(global_context, &signature,
+            private_key, message, sizeof(message));
+    ck_assert_int_eq(result, 0);
+
+    result = curve_verify_vrf_signature(global_context, &vrf_output,
+            public_key, message, sizeof(message),
+            signal_buffer_data(signature), signal_buffer_len(signature));
+    ck_assert_int_eq(result, 0);
+
+    ck_assert_int_eq(signal_buffer_len(vrf_output), sizeof(vrf));
+    ck_assert_int_eq(memcmp(signal_buffer_data(vrf_output), vrf, sizeof(vrf)), 0);
+
+    /* Cleanup */
+    signal_buffer_free(signature);
+    signal_buffer_free(vrf_output);
+    SIGNAL_UNREF(public_key);
+    SIGNAL_UNREF(private_key);
+}
+END_TEST
+
 Suite *curve25519_suite(void)
 {
     Suite *suite = suite_create("curve25519");
@@ -368,6 +480,8 @@ Suite *curve25519_suite(void)
     tcase_add_test(tcase, test_curve25519_random_agreements);
     tcase_add_test(tcase, test_curve25519_signature);
     tcase_add_test(tcase, test_curve25519_large_signatures);
+    tcase_add_test(tcase, test_unique_signatures);
+    tcase_add_test(tcase, test_unique_signature_vector);
     suite_add_tcase(suite, tcase);
     return suite;
 }

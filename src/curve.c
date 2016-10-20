@@ -7,10 +7,12 @@
 
 #include "curve25519/curve25519-donna.h"
 #include "curve25519/ed25519/additions/curve_sigs.h"
+#include "curve25519/ed25519/additions/vxeddsa.h"
 #include "signal_protocol_internal.h"
 
 #define DJB_TYPE 0x05
 #define DJB_KEY_LEN 32
+#define VRF_VERIFY_LEN 32
 
 struct ec_public_key
 {
@@ -436,6 +438,86 @@ complete:
         if(buffer) {
             signal_buffer_free(buffer);
         }
+    }
+    else {
+        *signature = buffer;
+    }
+    return result;
+}
+
+int curve_verify_vrf_signature(signal_context *context,
+        signal_buffer **vrf_output,
+        const ec_public_key *signing_key,
+        const uint8_t *message_data, size_t message_len,
+        const uint8_t *signature_data, size_t signature_len)
+{
+    int result = 0;
+    signal_buffer *buffer = 0;
+
+    if(!signing_key) {
+        return SG_ERR_INVAL;
+    }
+
+    if(!message_data || !signature_data || signature_len != 96) {
+        signal_log(context, SG_LOG_ERROR, "Invalid message or signature format");
+        return SG_ERR_VRF_SIG_VERIF_FAILED;
+    }
+
+    buffer = signal_buffer_alloc(VRF_VERIFY_LEN);
+    if(!buffer) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+
+    result = vxed25519_verify(signal_buffer_data(buffer),
+            signature_data, signing_key->data,
+            message_data, message_len);
+    if(result != 0) {
+        signal_log(context, SG_LOG_ERROR, "Invalid signature");
+        result = SG_ERR_VRF_SIG_VERIF_FAILED;
+    }
+
+complete:
+    if(result < 0) {
+        signal_buffer_free(buffer);
+    }
+    else {
+        *vrf_output = buffer;
+    }
+    return result;
+}
+
+int curve_calculate_vrf_signature(signal_context *context,
+        signal_buffer **signature,
+        const ec_private_key *signing_key,
+        const uint8_t *message_data, size_t message_len)
+{
+    int result = 0;
+    uint8_t random_data[64];
+    signal_buffer *buffer = 0;
+
+    result = signal_crypto_random(context, random_data, sizeof(random_data));
+    if(result < 0) {
+        goto complete;
+    }
+
+    buffer = signal_buffer_alloc(VRF_SIGNATURE_LEN);
+    if(!buffer) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+
+    result = vxed25519_sign(signal_buffer_data(buffer),
+            signing_key->data,
+            message_data, message_len, random_data);
+    if(result != 0) {
+        signal_log(context, SG_LOG_ERROR, "Signature failed!");
+        result = SG_ERR_UNKNOWN;
+    }
+
+complete:
+    if(result < 0) {
+        signal_buffer_free(buffer);
     }
     else {
         *signature = buffer;

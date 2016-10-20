@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 #define CURVE_SIGNATURE_LEN 64
+#define VRF_SIGNATURE_LEN 96
 
 int curve_decode_point(ec_public_key **public_key, const uint8_t *key_data, size_t key_len, signal_context *global_context);
 int ec_public_key_compare(const ec_public_key *key1, const ec_public_key *key2);
@@ -98,6 +99,37 @@ int curve_verify_signature(const ec_public_key *signing_key,
  * @return 0 on success, negative on failure
  */
 int curve_calculate_signature(signal_context *context,
+        signal_buffer **signature,
+        const ec_private_key *signing_key,
+        const uint8_t *message_data, size_t message_len);
+
+/**
+ * Verify a Unique Curve25519 signature.
+ *
+ * @param vrf_output Set to VRF output on success
+ * @param signing_key The Curve25519 public key the unique signature belongs to.
+ * @param message_data The message that was signed.
+ * @param message_len The length of the message that was signed.
+ * @param signature_data The signature to verify.
+ * @param signature_len The length of the signature to verify.
+ * @return 1 if valid, 0 if invalid, negative on failure
+ */
+int curve_verify_vrf_signature(signal_context *context,
+        signal_buffer **vrf_output,
+        const ec_public_key *signing_key,
+        const uint8_t *message_data, size_t message_len,
+        const uint8_t *signature_data, size_t signature_len);
+
+/**
+ * Calculates a Unique Curve25519 signature.
+ *
+ * @param signature Set to a 96-byte signature on success.
+ * @param signing_key The private Curve25519 key to create the signature with.
+ * @param message_data The message to sign.
+ * @param message_len The length of the message to sign.
+ * @return 0 on success, negative on failure
+ */
+int curve_calculate_vrf_signature(signal_context *context,
         signal_buffer **signature,
         const ec_private_key *signing_key,
         const uint8_t *message_data, size_t message_len);
