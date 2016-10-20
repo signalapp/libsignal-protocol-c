@@ -16,6 +16,7 @@ void fe_mont_rhs(fe v2, const fe u);
 void fe_montx_to_edy(fe y, const fe u);
 void fe_sqrt(fe b, const fe a);
 
+int ge_is_small_order(const ge_p3 *p);
 int ge_isneutral(const ge_p3* q);
 void ge_neg(ge_p3* r, const ge_p3 *p);
 void ge_montx_to_p3(ge_p3* p, const fe u, const unsigned char ed_sign_bit);
