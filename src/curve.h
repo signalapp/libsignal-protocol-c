@@ -55,12 +55,48 @@ void ec_key_pair_destroy(signal_type_base *type);
 
 int curve_generate_private_key(signal_context *context, ec_private_key **private_key);
 int curve_generate_public_key(ec_public_key **public_key, const ec_private_key *private_key);
+
+/**
+ * Generates a Curve25519 keypair.
+ *
+ * @param key_pair Set to a randomly generated Curve25519 keypair on success.
+ * @return 0 on success, negative on failure
+ */
 int curve_generate_key_pair(signal_context *context, ec_key_pair **key_pair);
 
+/**
+ * Calculates an ECDH agreement.
+ *
+ * @param shared_key_data Set to a 32-byte shared secret on success.
+ * @param public_key The Curve25519 (typically remote party's) public key.
+ * @param private_key The Curve25519 (typically yours) private key.
+ * @return 0 on success, negative on failure
+ */
 int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *public_key, const ec_private_key *private_key);
+
+/**
+ * Verify a Curve25519 signature.
+ *
+ * @param signing_key The Curve25519 public key the signature belongs to.
+ * @param message_data The message that was signed.
+ * @param message_len The length of the message that was signed.
+ * @param signature_data The signature to verify.
+ * @param signature_len The length of the signature to verify.
+ * @return 1 if valid, 0 if invalid, negative on failure
+ */
 int curve_verify_signature(const ec_public_key *signing_key,
         const uint8_t *message_data, size_t message_len,
         const uint8_t *signature_data, size_t signature_len);
+
+/**
+ * Calculates a Curve25519 signature.
+ *
+ * @param signature Set to a 64-byte signature on success.
+ * @param signing_key The private Curve25519 key to create the signature with.
+ * @param message_data The message to sign.
+ * @param message_len The length of the message to sign.
+ * @return 0 on success, negative on failure
+ */
 int curve_calculate_signature(signal_context *context,
         signal_buffer **signature,
         const ec_private_key *signing_key,
