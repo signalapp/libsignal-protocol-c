@@ -2,12 +2,21 @@
 #include "crypto_verify_32.h"
 
 /*
-return 1 if f == 0
+return nonzero if f == 0
 return 0 if f != 0
 
 Preconditions:
    |f| bounded by 1.1*2^26,1.1*2^25,1.1*2^26,1.1*2^25,etc.
 */
+
+/* TREVOR'S COMMENT 
+ *
+ * I think the above comment is wrong.  Instead:
+ *
+ * return 0 if f == 0
+ * return -1 if f != 0 
+ *
+ * */
 
 static const unsigned char zero[32];
 

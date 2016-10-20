@@ -1,38 +1,8 @@
 #include <string.h>
-#include <stdlib.h>
 #include "ge.h"
 #include "curve_sigs.h"
 #include "crypto_sign.h"
-
-void curve25519_keygen(unsigned char* curve25519_pubkey_out,
-                       const unsigned char* curve25519_privkey_in)
-{
-  ge_p3 ed; /* Ed25519 pubkey point */
-  fe ed_y, ed_y_plus_one, one_minus_ed_y, inv_one_minus_ed_y;
-  fe mont_x;
-
-  /* Perform a fixed-base multiplication of the Edwards base point,
-     (which is efficient due to precalculated tables), then convert
-     to the Curve25519 montgomery-format public key.  In particular,
-     convert Curve25519's "montgomery" x-coordinate into an Ed25519
-     "edwards" y-coordinate:
-
-     mont_x = (ed_y + 1) / (1 - ed_y)
-     
-     with projective coordinates:
-
-     mont_x = (ed_y + ed_z) / (ed_z - ed_y)
-
-     NOTE: ed_y=1 is converted to mont_x=0 since fe_invert is mod-exp
-  */
-
-  ge_scalarmult_base(&ed, curve25519_privkey_in);
-  fe_add(ed_y_plus_one, ed.Y, ed.Z);
-  fe_sub(one_minus_ed_y, ed.Z, ed.Y);  
-  fe_invert(inv_one_minus_ed_y, one_minus_ed_y);
-  fe_mul(mont_x, ed_y_plus_one, inv_one_minus_ed_y);
-  fe_tobytes(curve25519_pubkey_out, mont_x);
-}
+#include "crypto_additions.h"
 
 int curve25519_sign(unsigned char* signature_out,
                     const unsigned char* curve25519_privkey,
@@ -71,18 +41,16 @@ int curve25519_verify(const unsigned char* signature,
                       const unsigned char* curve25519_pubkey,
                       const unsigned char* msg, const unsigned long msg_len)
 {
-  fe mont_x, mont_x_minus_one, mont_x_plus_one, inv_mont_x_plus_one;
-  fe one;
-  fe ed_y;
+  fe u;
+  fe y;
   unsigned char ed_pubkey[32];
-  unsigned long long some_retval;
-  unsigned char *verifybuf = NULL; /* working buffer */
+  unsigned char *verifybuf  = NULL; /* working buffer */
   unsigned char *verifybuf2 = NULL; /* working buffer #2 */
   int result;
 
   if ((verifybuf = malloc(msg_len + 64)) == 0) {
-    result = -1;
-    goto err;
+   result = -1;
+   goto err;
   }
 
   if ((verifybuf2 = malloc(msg_len + 64)) == 0) {
@@ -91,22 +59,18 @@ int curve25519_verify(const unsigned char* signature,
   }
 
   /* Convert the Curve25519 public key into an Ed25519 public key.  In
-     particular, convert Curve25519's "montgomery" x-coordinate into an
+     particular, convert Curve25519's "montgomery" x-coordinate (u) into an
      Ed25519 "edwards" y-coordinate:
 
-     ed_y = (mont_x - 1) / (mont_x + 1)
+     y = (u - 1) / (u + 1)
 
-     NOTE: mont_x=-1 is converted to ed_y=0 since fe_invert is mod-exp
+     NOTE: u=-1 is converted to y=0 since fe_invert is mod-exp
 
      Then move the sign bit into the pubkey from the signature.
   */
-  fe_frombytes(mont_x, curve25519_pubkey);
-  fe_1(one);
-  fe_sub(mont_x_minus_one, mont_x, one);
-  fe_add(mont_x_plus_one, mont_x, one);
-  fe_invert(inv_mont_x_plus_one, mont_x_plus_one);
-  fe_mul(ed_y, mont_x_minus_one, inv_mont_x_plus_one);
-  fe_tobytes(ed_pubkey, ed_y);
+  fe_frombytes(u, curve25519_pubkey);
+  fe_montx_to_edy(y, u);
+  fe_tobytes(ed_pubkey, y);
 
   /* Copy the sign bit, and remove it from signature */
   ed_pubkey[31] &= 0x7F;  /* bit should be zero already, but just in case */
@@ -120,9 +84,8 @@ int curve25519_verify(const unsigned char* signature,
   /* The below call has a strange API: */
   /* verifybuf = R || S || message */
   /* verifybuf2 = internal to next call gets a copy of verifybuf, S gets 
-     replaced with pubkey for hashing, then the whole thing gets zeroized
-     (if bad sig), or contains a copy of msg (good sig) */
-  result = crypto_sign_open(verifybuf2, &some_retval, verifybuf, 64 + msg_len, ed_pubkey);
+     replaced with pubkey for hashing */
+  result = crypto_sign_open_modified(verifybuf2, verifybuf, 64 + msg_len, ed_pubkey);
 
   err:
 

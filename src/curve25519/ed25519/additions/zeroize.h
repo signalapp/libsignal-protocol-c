@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#define ZEROIZE_STACK_SIZE 2048
+#define ZEROIZE_STACK_SIZE 1024
 
 void zeroize(unsigned char* b, size_t len);
 
