@@ -87,7 +87,6 @@ set(ed25519_SRCS
     ed25519/additions/uopen_modified.c
     ed25519/additions/usign_modified.c
     ed25519/additions/utility.c
-    ed25519/additions/uxeddsa.c
     ed25519/additions/vopen_modified.c
     ed25519/additions/vsign_modified.c
     ed25519/additions/vxeddsa.c
