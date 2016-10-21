@@ -53,6 +53,8 @@ set(signal_protocol_SRCS
 	group_cipher.h
 	fingerprint.c
 	fingerprint.h
+	device_consistency.c
+	device_consistency.h
 )
 
 add_subdirectory(curve25519)
@@ -85,6 +87,7 @@ INSTALL(
 	group_session_builder.h
 	group_cipher.h
 	fingerprint.h
+	device_consistency.h
 	DESTINATION ${INCLUDE_INSTALL_DIR}/signal
 )
 

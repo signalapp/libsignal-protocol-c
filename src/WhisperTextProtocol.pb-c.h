@@ -20,6 +20,7 @@ typedef struct _Textsecure__PreKeySignalMessage Textsecure__PreKeySignalMessage;
 typedef struct _Textsecure__KeyExchangeMessage Textsecure__KeyExchangeMessage;
 typedef struct _Textsecure__SenderKeyMessage Textsecure__SenderKeyMessage;
 typedef struct _Textsecure__SenderKeyDistributionMessage Textsecure__SenderKeyDistributionMessage;
+typedef struct _Textsecure__DeviceConsistencyCodeMessage Textsecure__DeviceConsistencyCodeMessage;
 
 
 /* --- enums --- */
@@ -58,7 +59,7 @@ struct  _Textsecure__PreKeySignalMessage
   protobuf_c_boolean has_identitykey;
   ProtobufCBinaryData identitykey;
   /*
-   * WhisperMessage
+   * SignalMessage
    */
   protobuf_c_boolean has_message;
   ProtobufCBinaryData message;
@@ -117,6 +118,19 @@ struct  _Textsecure__SenderKeyDistributionMessage
 #define TEXTSECURE__SENDER_KEY_DISTRIBUTION_MESSAGE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&textsecure__sender_key_distribution_message__descriptor) \
     , 0,0, 0,0, 0,{0,NULL}, 0,{0,NULL} }
+
+
+struct  _Textsecure__DeviceConsistencyCodeMessage
+{
+  ProtobufCMessage base;
+  protobuf_c_boolean has_generation;
+  uint32_t generation;
+  protobuf_c_boolean has_signature;
+  ProtobufCBinaryData signature;
+};
+#define TEXTSECURE__DEVICE_CONSISTENCY_CODE_MESSAGE__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&textsecure__device_consistency_code_message__descriptor) \
+    , 0,0, 0,{0,NULL} }
 
 
 /* Textsecure__SignalMessage methods */
@@ -214,6 +228,25 @@ Textsecure__SenderKeyDistributionMessage *
 void   textsecure__sender_key_distribution_message__free_unpacked
                      (Textsecure__SenderKeyDistributionMessage *message,
                       ProtobufCAllocator *allocator);
+/* Textsecure__DeviceConsistencyCodeMessage methods */
+void   textsecure__device_consistency_code_message__init
+                     (Textsecure__DeviceConsistencyCodeMessage         *message);
+size_t textsecure__device_consistency_code_message__get_packed_size
+                     (const Textsecure__DeviceConsistencyCodeMessage   *message);
+size_t textsecure__device_consistency_code_message__pack
+                     (const Textsecure__DeviceConsistencyCodeMessage   *message,
+                      uint8_t             *out);
+size_t textsecure__device_consistency_code_message__pack_to_buffer
+                     (const Textsecure__DeviceConsistencyCodeMessage   *message,
+                      ProtobufCBuffer     *buffer);
+Textsecure__DeviceConsistencyCodeMessage *
+       textsecure__device_consistency_code_message__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   textsecure__device_consistency_code_message__free_unpacked
+                     (Textsecure__DeviceConsistencyCodeMessage *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*Textsecure__SignalMessage_Closure)
@@ -231,6 +264,9 @@ typedef void (*Textsecure__SenderKeyMessage_Closure)
 typedef void (*Textsecure__SenderKeyDistributionMessage_Closure)
                  (const Textsecure__SenderKeyDistributionMessage *message,
                   void *closure_data);
+typedef void (*Textsecure__DeviceConsistencyCodeMessage_Closure)
+                 (const Textsecure__DeviceConsistencyCodeMessage *message,
+                  void *closure_data);
 
 /* --- services --- */
 
@@ -242,6 +278,7 @@ extern const ProtobufCMessageDescriptor textsecure__pre_key_signal_message__desc
 extern const ProtobufCMessageDescriptor textsecure__key_exchange_message__descriptor;
 extern const ProtobufCMessageDescriptor textsecure__sender_key_message__descriptor;
 extern const ProtobufCMessageDescriptor textsecure__sender_key_distribution_message__descriptor;
+extern const ProtobufCMessageDescriptor textsecure__device_consistency_code_message__descriptor;
 
 PROTOBUF_C__END_DECLS
 

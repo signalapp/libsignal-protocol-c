@@ -9,6 +9,7 @@
 #include "curve25519/ed25519/additions/curve_sigs.h"
 #include "curve25519/ed25519/additions/vxeddsa.h"
 #include "signal_protocol_internal.h"
+#include "utarray.h"
 
 #define DJB_TYPE 0x05
 #define DJB_KEY_LEN 32
@@ -31,6 +32,11 @@ struct ec_key_pair
     signal_type_base base;
     ec_public_key *public_key;
     ec_private_key *private_key;
+};
+
+struct ec_public_key_list
+{
+    UT_array *values;
 };
 
 int curve_decode_point(ec_public_key **public_key, const uint8_t *key_data, size_t key_len, signal_context *global_context)
@@ -370,6 +376,98 @@ complete:
     }
 
     return result;
+}
+
+ec_public_key_list *ec_public_key_list_alloc()
+{
+    ec_public_key_list *list = malloc(sizeof(ec_public_key_list));
+    if(!list) {
+        return 0;
+    }
+    memset(list, 0, sizeof(ec_public_key_list));
+    utarray_new(list->values, &ut_ptr_icd);
+    return list;
+}
+
+ec_public_key_list *ec_public_key_list_copy(const ec_public_key_list *list)
+{
+    ec_public_key_list *result = 0;
+    unsigned int size;
+    unsigned int i;
+    ec_public_key **p;
+
+    result = ec_public_key_list_alloc();
+    if(!result) {
+        return 0;
+    }
+
+    size = utarray_len(list->values);
+
+    utarray_reserve(result->values, size);
+
+    for (i = 0; i < size; i++) {
+        p = (ec_public_key **)utarray_eltptr(list->values, i);
+        ec_public_key_list_push_back(result, *p);
+    }
+
+    return result;
+}
+
+void ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value)
+{
+    assert(list);
+    assert(value);
+    SIGNAL_REF(value);
+    utarray_push_back(list->values, &value);
+}
+
+unsigned int ec_public_key_list_size(const ec_public_key_list *list)
+{
+    assert(list);
+    return utarray_len(list->values);
+}
+
+ec_public_key *ec_public_key_list_at(const ec_public_key_list *list, unsigned int index)
+{
+    ec_public_key **value = 0;
+
+    assert(list);
+    assert(index < utarray_len(list->values));
+
+    value = (ec_public_key **)utarray_eltptr(list->values, index);
+
+    assert(*value);
+
+    return *value;
+}
+
+int ec_public_key_list_sort_comparator(const void *a, const void *b)
+{
+    const ec_public_key *key1 = *((const ec_public_key **)a);
+    const ec_public_key *key2 = *((const ec_public_key **)b);
+    return ec_public_key_memcmp(key1, key2);
+}
+
+void ec_public_key_list_sort(ec_public_key_list *list)
+{
+    assert(list);
+    utarray_sort(list->values, ec_public_key_list_sort_comparator);
+}
+
+void ec_public_key_list_free(ec_public_key_list *list)
+{
+    unsigned int size;
+    unsigned int i;
+    ec_public_key *p;
+    if(list) {
+        size = utarray_len(list->values);
+        for (i = 0; i < size; i++) {
+            p = (ec_public_key *)utarray_eltptr(list->values, i);
+            SIGNAL_UNREF(p);
+        }
+        utarray_free(list->values);
+        free(list);
+    }
 }
 
 int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *public_key, const ec_private_key *private_key)

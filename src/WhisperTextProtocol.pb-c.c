@@ -222,6 +222,49 @@ void   textsecure__sender_key_distribution_message__free_unpacked
   assert(message->base.descriptor == &textsecure__sender_key_distribution_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   textsecure__device_consistency_code_message__init
+                     (Textsecure__DeviceConsistencyCodeMessage         *message)
+{
+  static Textsecure__DeviceConsistencyCodeMessage init_value = TEXTSECURE__DEVICE_CONSISTENCY_CODE_MESSAGE__INIT;
+  *message = init_value;
+}
+size_t textsecure__device_consistency_code_message__get_packed_size
+                     (const Textsecure__DeviceConsistencyCodeMessage *message)
+{
+  assert(message->base.descriptor == &textsecure__device_consistency_code_message__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t textsecure__device_consistency_code_message__pack
+                     (const Textsecure__DeviceConsistencyCodeMessage *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &textsecure__device_consistency_code_message__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t textsecure__device_consistency_code_message__pack_to_buffer
+                     (const Textsecure__DeviceConsistencyCodeMessage *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &textsecure__device_consistency_code_message__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Textsecure__DeviceConsistencyCodeMessage *
+       textsecure__device_consistency_code_message__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Textsecure__DeviceConsistencyCodeMessage *)
+     protobuf_c_message_unpack (&textsecure__device_consistency_code_message__descriptor,
+                                allocator, len, data);
+}
+void   textsecure__device_consistency_code_message__free_unpacked
+                     (Textsecure__DeviceConsistencyCodeMessage *message,
+                      ProtobufCAllocator *allocator)
+{
+  assert(message->base.descriptor == &textsecure__device_consistency_code_message__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 static const ProtobufCFieldDescriptor textsecure__signal_message__field_descriptors[4] =
 {
   {
@@ -631,5 +674,56 @@ const ProtobufCMessageDescriptor textsecure__sender_key_distribution_message__de
   textsecure__sender_key_distribution_message__field_indices_by_name,
   1,  textsecure__sender_key_distribution_message__number_ranges,
   (ProtobufCMessageInit) textsecure__sender_key_distribution_message__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor textsecure__device_consistency_code_message__field_descriptors[2] =
+{
+  {
+    "generation",
+    1,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_UINT32,
+    offsetof(Textsecure__DeviceConsistencyCodeMessage, has_generation),
+    offsetof(Textsecure__DeviceConsistencyCodeMessage, generation),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "signature",
+    2,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(Textsecure__DeviceConsistencyCodeMessage, has_signature),
+    offsetof(Textsecure__DeviceConsistencyCodeMessage, signature),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned textsecure__device_consistency_code_message__field_indices_by_name[] = {
+  0,   /* field[0] = generation */
+  1,   /* field[1] = signature */
+};
+static const ProtobufCIntRange textsecure__device_consistency_code_message__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor textsecure__device_consistency_code_message__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "textsecure.DeviceConsistencyCodeMessage",
+  "DeviceConsistencyCodeMessage",
+  "Textsecure__DeviceConsistencyCodeMessage",
+  "textsecure",
+  sizeof(Textsecure__DeviceConsistencyCodeMessage),
+  2,
+  textsecure__device_consistency_code_message__field_descriptors,
+  textsecure__device_consistency_code_message__field_indices_by_name,
+  1,  textsecure__device_consistency_code_message__number_ranges,
+  (ProtobufCMessageInit) textsecure__device_consistency_code_message__init,
   NULL,NULL,NULL    /* reserved[123] */
 };

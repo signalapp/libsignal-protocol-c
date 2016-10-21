@@ -90,3 +90,7 @@ add_test(test_group_cipher ${TEST_PATH}/test_group_cipher)
 add_executable(test_fingerprint test_fingerprint.c ${common_SRCS})
 target_link_libraries(test_fingerprint ${LIBS})
 add_test(test_fingerprint ${TEST_PATH}/test_fingerprint)
+
+add_executable(test_device_consistency test_device_consistency.c ${common_SRCS})
+target_link_libraries(test_device_consistency ${LIBS})
+add_test(test_device_consistency ${TEST_PATH}/test_device_consistency)

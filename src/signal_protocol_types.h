@@ -57,6 +57,7 @@ typedef struct signal_protocol_sender_key_name {
 typedef struct ec_public_key ec_public_key;
 typedef struct ec_private_key ec_private_key;
 typedef struct ec_key_pair ec_key_pair;
+typedef struct ec_public_key_list ec_public_key_list;
 
 /*
  * HKDF types
@@ -124,6 +125,14 @@ typedef struct fingerprint fingerprint;
 typedef struct displayable_fingerprint displayable_fingerprint;
 typedef struct scannable_fingerprint scannable_fingerprint;
 typedef struct fingerprint_generator fingerprint_generator;
+
+/*
+ * Device consistency types
+ */
+typedef struct device_consistency_signature device_consistency_signature;
+typedef struct device_consistency_commitment device_consistency_commitment;
+typedef struct device_consistency_message device_consistency_message;
+typedef struct device_consistency_signature_list device_consistency_signature_list;
 
 #ifdef __cplusplus
 }

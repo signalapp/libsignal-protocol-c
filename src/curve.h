@@ -66,6 +66,58 @@ int curve_generate_public_key(ec_public_key **public_key, const ec_private_key *
 int curve_generate_key_pair(signal_context *context, ec_key_pair **key_pair);
 
 /**
+ * Allocate a new ec_public_key list
+ *
+ * @return pointer to the allocated list, or 0 on failure
+ */
+ec_public_key_list *ec_public_key_list_alloc(void);
+
+/**
+ * Copy an ec_public_key list
+ *
+ * @return pointer to the copy of the list, or 0 on failure
+ */
+ec_public_key_list *ec_public_key_list_copy(const ec_public_key_list *list);
+
+/**
+ * Push a new value onto the end of the list
+ *
+ * @param list the list
+ * @param value the value to push
+ */
+void ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value);
+
+/**
+ * Gets the size of the list.
+ *
+ * @param list the list
+ * @return the size of the list
+ */
+unsigned int ec_public_key_list_size(const ec_public_key_list *list);
+
+/**
+ * Gets the value of the element at a particular index in the list
+ *
+ * @param list the list
+ * @param index the index within the list
+ * @return the value
+ */
+ec_public_key *ec_public_key_list_at(const ec_public_key_list *list, unsigned int index);
+
+/**
+ * Sorts the list based on a comparison of the key data.
+ *
+ * @param list the list
+ */
+void ec_public_key_list_sort(ec_public_key_list *list);
+
+/**
+ * Free the ec_public_key list
+ * @param list the list to free
+ */
+void ec_public_key_list_free(ec_public_key_list *list);
+
+/**
  * Calculates an ECDH agreement.
  *
  * @param shared_key_data Set to a 32-byte shared secret on success.

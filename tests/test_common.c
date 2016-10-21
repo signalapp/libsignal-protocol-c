@@ -83,6 +83,19 @@ void shuffle_buffers(signal_buffer **array, size_t n)
     }
 }
 
+void shuffle_ec_public_keys(ec_public_key **array, size_t n)
+{
+    if (n > 1) {
+        size_t i;
+        for (i = 0; i < n - 1; i++) {
+            size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+            ec_public_key *t = array[j];
+            array[j] = array[i];
+            array[i] = t;
+        }
+    }
+}
+
 ec_public_key *create_test_ec_public_key(signal_context *context)
 {
     int result = 0;
