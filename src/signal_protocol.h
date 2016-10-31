@@ -281,14 +281,43 @@ typedef struct signal_crypto_provider {
 
     /**
      * Callback for a SHA512 message digest implementation.
-     * This function is currently only used by the fingerprint generator.
+     * This function shall initialize a digest context.
      *
-     * @param output buffer to be allocated and populated with the ciphertext
+     * @param digest_context private digest context pointer
+     * @return 0 on success, negative on failure
+     */
+    int (*sha512_digest_init_func)(void **digest_context, void *user_data);
+
+    /**
+     * Callback for a SHA512 message digest implementation.
+     * This function shall update the digest context with the provided data.
+     *
+     * @param digest_context private digest context pointer
      * @param data pointer to the data
      * @param data_len length of the data
      * @return 0 on success, negative on failure
      */
-    int (*sha512_digest_func)(signal_buffer **output, const uint8_t *data, size_t data_len, void *user_data);
+    int (*sha512_digest_update_func)(void *digest_context, const uint8_t *data, size_t data_len, void *user_data);
+
+    /**
+     * Callback for a SHA512 message digest implementation.
+     * This function shall finalize the digest calculation, populate the
+     * output buffer with the result, and prepare the context for reuse.
+     *
+     * @param digest_context private digest context pointer
+     * @param output buffer to be allocated and populated with the result
+     * @return 0 on success, negative on failure
+     */
+    int (*sha512_digest_final_func)(void *digest_context, signal_buffer **output, void *user_data);
+
+    /**
+     * Callback for a SHA512 message digest implementation.
+     * This function shall free the private context allocated in
+     * sha512_digest_init_func.
+     *
+     * @param digest_context private digest context pointer
+     */
+    void (*sha512_digest_cleanup_func)(void *digest_context, void *user_data);
 
     /**
      * Callback for an AES encryption implementation.

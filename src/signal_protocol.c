@@ -395,11 +395,32 @@ void signal_hmac_sha256_cleanup(signal_context *context, void *hmac_context)
     context->crypto_provider.hmac_sha256_cleanup_func(hmac_context, context->crypto_provider.user_data);
 }
 
-int signal_sha512_digest(signal_context *context, signal_buffer **output, const uint8_t *data, size_t data_len)
+int signal_sha512_digest_init(signal_context *context, void **digest_context)
 {
     assert(context);
-    assert(context->crypto_provider.sha512_digest_func);
-    return context->crypto_provider.sha512_digest_func(output, data, data_len, context->crypto_provider.user_data);
+    assert(context->crypto_provider.sha512_digest_init_func);
+    return context->crypto_provider.sha512_digest_init_func(digest_context, context->crypto_provider.user_data);
+}
+
+int signal_sha512_digest_update(signal_context *context, void *digest_context, const uint8_t *data, size_t data_len)
+{
+    assert(context);
+    assert(context->crypto_provider.sha512_digest_update_func);
+    return context->crypto_provider.sha512_digest_update_func(digest_context, data, data_len, context->crypto_provider.user_data);
+}
+
+int signal_sha512_digest_final(signal_context *context, void *digest_context, signal_buffer **output)
+{
+    assert(context);
+    assert(context->crypto_provider.sha512_digest_final_func);
+    return context->crypto_provider.sha512_digest_final_func(digest_context, output, context->crypto_provider.user_data);
+}
+
+void signal_sha512_digest_cleanup(signal_context *context, void *digest_context)
+{
+    assert(context);
+    assert(context->crypto_provider.sha512_digest_cleanup_func);
+    return context->crypto_provider.sha512_digest_cleanup_func(digest_context, context->crypto_provider.user_data);
 }
 
 int signal_encrypt(signal_context *context,

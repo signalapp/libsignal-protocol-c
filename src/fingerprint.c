@@ -122,20 +122,22 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
 {
     int result = 0;
     char *result_string = 0;
+    void *digest_context = 0;
     signal_buffer *identity_buffer = 0;
     signal_buffer *hash_buffer = 0;
-    signal_buffer *hash_in_buffer = 0;
     signal_buffer *hash_out_buffer = 0;
     uint8_t *data = 0;
     size_t len = 0;
-    uint8_t *in_data = 0;
-    size_t in_len = 0;
     int i = 0;
 
     assert(generator);
     assert(stable_identifier);
     assert(identity_key);
-    assert(generator->global_context->crypto_provider.sha512_digest_func);
+
+    result = signal_sha512_digest_init(generator->global_context, &digest_context);
+    if(result < 0) {
+        goto complete;
+    }
 
     result = ec_public_key_serialize(&identity_buffer, identity_key);
     if(result < 0) {
@@ -159,31 +161,27 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
     memcpy(data + 2, signal_buffer_data(identity_buffer), signal_buffer_len(identity_buffer));
     memcpy(data + 2 + signal_buffer_len(identity_buffer), stable_identifier, strlen(stable_identifier));
 
-    hash_in_buffer = signal_buffer_alloc(MAX(len, SHA512_DIGEST_LENGTH) + signal_buffer_len(identity_buffer));
-    if(!hash_in_buffer) {
-        result = SG_ERR_NOMEM;
-        goto complete;
-    }
-
-    in_data = signal_buffer_data(hash_in_buffer);
-    in_len = len + signal_buffer_len(identity_buffer);
-
     for(i = 0; i < generator->iterations; i++) {
         data = signal_buffer_data(hash_buffer);
         len = signal_buffer_len(hash_buffer);
-        in_len = signal_buffer_len(hash_buffer) + signal_buffer_len(identity_buffer);
-        memcpy(in_data, data, len);
-        memcpy(in_data + len,
-                signal_buffer_data(identity_buffer),
-                signal_buffer_len(identity_buffer));
 
-        result = signal_sha512_digest(generator->global_context,
-                &hash_out_buffer, in_data, in_len);
+        result = signal_sha512_digest_update(generator->global_context,
+                digest_context, data, len);
         if(result < 0) {
             goto complete;
         }
-        if(signal_buffer_len(hash_out_buffer) != SHA512_DIGEST_LENGTH) {
-            result = SG_ERR_INVAL;
+
+        result = signal_sha512_digest_update(generator->global_context,
+                digest_context,
+                signal_buffer_data(identity_buffer),
+                signal_buffer_len(identity_buffer));
+        if(result < 0) {
+            goto complete;
+        }
+
+        result = signal_sha512_digest_final(generator->global_context,
+                digest_context, &hash_out_buffer);
+        if(result < 0) {
             goto complete;
         }
 
@@ -220,9 +218,11 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
     }
 
 complete:
+    if(digest_context) {
+        signal_sha512_digest_cleanup(generator->global_context, digest_context);
+    }
     signal_buffer_free(identity_buffer);
     signal_buffer_free(hash_buffer);
-    signal_buffer_free(hash_in_buffer);
     signal_buffer_free(hash_out_buffer);
     if(result >= 0) {
         *display_string = result_string;

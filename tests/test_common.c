@@ -225,45 +225,87 @@ const EVP_CIPHER *aes_cipher(int cipher, size_t key_len)
     return 0;
 }
 
-int test_sha512_digest_func(signal_buffer **output, const uint8_t *data, size_t data_len, void *user_data)
+int test_sha512_digest_init(void **digest_context, void *user_data)
 {
     int result = 0;
-    signal_buffer *buffer = 0;
-    SHA512_CTX ctx;
+    EVP_MD_CTX *ctx;
 
-    buffer = signal_buffer_alloc(SHA512_DIGEST_LENGTH);
-    if(!buffer) {
+    ctx = EVP_MD_CTX_create();
+    if(!ctx) {
         result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    result = SHA512_Init(&ctx);
-    if(!result) {
-        result = SG_ERR_UNKNOWN;
-        goto complete;
+    result = EVP_DigestInit_ex(ctx, EVP_sha512(), 0);
+    if(result == 1) {
+        result = SG_SUCCESS;
     }
-
-    result = SHA512_Update(&ctx, data, data_len);
-    if(!result) {
+    else {
         result = SG_ERR_UNKNOWN;
-        goto complete;
     }
 
 complete:
-    if(buffer) {
-        result = SHA512_Final(signal_buffer_data(buffer), &ctx);
-        if(!result) {
-            result = SG_ERR_UNKNOWN;
+    if(result < 0) {
+        if(ctx) {
+            EVP_MD_CTX_destroy(ctx);
         }
     }
-
-    if(result < 0) {
-        signal_buffer_free(buffer);
-    }
     else {
-        *output = buffer;
+        *digest_context = ctx;
     }
     return result;
+}
+
+int test_sha512_digest_update(void *digest_context, const uint8_t *data, size_t data_len, void *user_data)
+{
+    EVP_MD_CTX *ctx = digest_context;
+
+    int result = EVP_DigestUpdate(ctx, data, data_len);
+
+    return (result == 1) ? SG_SUCCESS : SG_ERR_UNKNOWN;
+}
+
+int test_sha512_digest_final(void *digest_context, signal_buffer **output, void *user_data)
+{
+    int result = 0;
+    unsigned char md[EVP_MAX_MD_SIZE];
+    unsigned int len = 0;
+    EVP_MD_CTX *ctx = digest_context;
+
+    result = EVP_DigestFinal_ex(ctx, md, &len);
+    if(result == 1) {
+        result = SG_SUCCESS;
+    }
+    else {
+        result = SG_ERR_UNKNOWN;
+        goto complete;
+    }
+
+    result = EVP_DigestInit_ex(ctx, EVP_sha512(), 0);
+    if(result == 1) {
+        result = SG_SUCCESS;
+    }
+    else {
+        result = SG_ERR_UNKNOWN;
+        goto complete;
+    }
+
+    signal_buffer *output_buffer = signal_buffer_create(md, len);
+    if(!output_buffer) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+
+    *output = output_buffer;
+
+complete:
+    return result;
+}
+
+void test_sha512_digest_cleanup(void *digest_context, void *user_data)
+{
+    EVP_MD_CTX *ctx = digest_context;
+    EVP_MD_CTX_destroy(ctx);
 }
 
 int test_encrypt(signal_buffer **output,
@@ -432,7 +474,10 @@ void setup_test_crypto_provider(signal_context *context)
             .hmac_sha256_update_func = test_hmac_sha256_update,
             .hmac_sha256_final_func = test_hmac_sha256_final,
             .hmac_sha256_cleanup_func = test_hmac_sha256_cleanup,
-            .sha512_digest_func = test_sha512_digest_func,
+            .sha512_digest_init_func = test_sha512_digest_init,
+            .sha512_digest_update_func = test_sha512_digest_update,
+            .sha512_digest_final_func = test_sha512_digest_final,
+            .sha512_digest_cleanup_func = test_sha512_digest_cleanup,
             .encrypt_func = test_encrypt,
             .decrypt_func = test_decrypt,
             .user_data = 0

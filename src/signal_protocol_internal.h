@@ -29,12 +29,17 @@ struct signal_context {
 };
 
 int signal_crypto_random(signal_context *context, uint8_t *data, size_t len);
+
 int signal_hmac_sha256_init(signal_context *context, void **hmac_context, const uint8_t *key, size_t key_len);
 int signal_hmac_sha256_update(signal_context *context, void *hmac_context, const uint8_t *data, size_t data_len);
 int signal_hmac_sha256_final(signal_context *context, void *hmac_context, signal_buffer **output);
 void signal_hmac_sha256_cleanup(signal_context *context, void *hmac_context);
 
-int signal_sha512_digest(signal_context *context, signal_buffer **output, const uint8_t *data, size_t data_len);
+int signal_sha512_digest_init(signal_context *context, void **digest_context);
+int signal_sha512_digest_update(signal_context *context, void *digest_context, const uint8_t *data, size_t data_len);
+int signal_sha512_digest_final(signal_context *context, void *digest_context, signal_buffer **output);
+void signal_sha512_digest_cleanup(signal_context *context, void *digest_context);
+
 
 int signal_encrypt(signal_context *context,
         signal_buffer **output,
