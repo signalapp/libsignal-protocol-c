@@ -633,12 +633,12 @@ void device_consistency_signature_list_free(device_consistency_signature_list *l
 {
     unsigned int size;
     unsigned int i;
-    device_consistency_signature *p;
+    device_consistency_signature **p;
     if(list) {
         size = utarray_len(list->values);
         for (i = 0; i < size; i++) {
-            p = (device_consistency_signature *)utarray_eltptr(list->values, i);
-            SIGNAL_UNREF(p);
+            p = (device_consistency_signature **)utarray_eltptr(list->values, i);
+            SIGNAL_UNREF(*p);
         }
         utarray_free(list->values);
         free(list);

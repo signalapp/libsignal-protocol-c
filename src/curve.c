@@ -458,12 +458,12 @@ void ec_public_key_list_free(ec_public_key_list *list)
 {
     unsigned int size;
     unsigned int i;
-    ec_public_key *p;
+    ec_public_key **p;
     if(list) {
         size = utarray_len(list->values);
         for (i = 0; i < size; i++) {
-            p = (ec_public_key *)utarray_eltptr(list->values, i);
-            SIGNAL_UNREF(p);
+            p = (ec_public_key **)utarray_eltptr(list->values, i);
+            SIGNAL_UNREF(*p);
         }
         utarray_free(list->values);
         free(list);
