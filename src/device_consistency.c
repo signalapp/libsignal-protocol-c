@@ -428,7 +428,7 @@ int device_consistency_code_generate_for(device_consistency_commitment *commitme
 {
     int result = 0;
     char *result_string = 0;
-    void *digest_context;
+    void *digest_context = 0;
     device_consistency_signature_list *sorted_list = 0;
     uint8_t version_data[2];
     signal_buffer *commitment_buffer;
