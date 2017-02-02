@@ -185,8 +185,8 @@ struct signal_buffer_list
 
 signal_buffer_list *signal_buffer_list_alloc(void)
 {
-	int result = 0;
-	signal_buffer_list *list = malloc(sizeof(signal_buffer_list));
+    int result = 0;
+    signal_buffer_list *list = malloc(sizeof(signal_buffer_list));
     if(!list) {
         result = SG_ERR_NOMEM;
         goto complete;
@@ -197,20 +197,20 @@ signal_buffer_list *signal_buffer_list_alloc(void)
     utarray_new(list->values, &ut_ptr_icd);
 
 complete:
-	if(result < 0) {
-		if(list) {
-			free(list);
-		}
-		return 0;
-	}
-	else {
-		return list;
-	}
+    if(result < 0) {
+        if(list) {
+            free(list);
+        }
+        return 0;
+    }
+    else {
+        return list;
+    }
 }
 
 int signal_buffer_list_push_back(signal_buffer_list *list, signal_buffer *buffer)
 {
-	int result = 0;
+    int result = 0;
     assert(list);
     utarray_push_back(list->values, &buffer);
 
@@ -226,7 +226,7 @@ unsigned int signal_buffer_list_size(signal_buffer_list *list)
 
 const signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned int index)
 {
-	signal_buffer **value = 0;
+    signal_buffer **value = 0;
 
     assert(list);
     assert(index < utarray_len(list->values));
@@ -240,12 +240,12 @@ const signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned in
 
 void signal_buffer_list_free(signal_buffer_list *list)
 {
-	unsigned int i = 0;
+    unsigned int i = 0;
     if(list) {
-    	for(i = utarray_len(list->values) - 1; i >= 0; --i) {
-    		signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
-    		signal_buffer_free(buffer);
-    	}
+        for(i = utarray_len(list->values) - 1; i >= 0; --i) {
+            signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
+            signal_buffer_free(buffer);
+        }
         utarray_free(list->values);
         free(list);
     }
@@ -253,12 +253,12 @@ void signal_buffer_list_free(signal_buffer_list *list)
 
 void signal_buffer_list_bzero_free(signal_buffer_list *list)
 {
-	unsigned int i = 0;
+    unsigned int i = 0;
     if(list) {
-    	for(i = utarray_len(list->values) - 1; i >= 0; --i) {
-    		signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
-    		signal_buffer_bzero_free(buffer);
-    	}
+        for(i = utarray_len(list->values) - 1; i >= 0; --i) {
+            signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
+            signal_buffer_bzero_free(buffer);
+        }
         utarray_free(list->values);
         free(list);
     }
@@ -273,7 +273,7 @@ struct signal_int_list
 
 signal_int_list *signal_int_list_alloc()
 {
-	int result = 0;
+    int result = 0;
     signal_int_list *list = malloc(sizeof(signal_int_list));
     if(!list) {
         result = SG_ERR_NOMEM;
@@ -285,25 +285,25 @@ signal_int_list *signal_int_list_alloc()
     utarray_new(list->values, &ut_int_icd);
 
 complete:
-	if(result < 0) {
-		if(list) {
-			free(list);
-		}
-		return 0;
-	}
-	else {
-		return list;
-	}
+    if(result < 0) {
+        if(list) {
+            free(list);
+        }
+        return 0;
+    }
+    else {
+        return list;
+    }
 }
 
 int signal_int_list_push_back(signal_int_list *list, int value)
 {
-	int result = 0;
+    int result = 0;
     assert(list);
     utarray_push_back(list->values, &value);
 
 complete:
-	return result;
+    return result;
 }
 
 unsigned int signal_int_list_size(signal_int_list *list)

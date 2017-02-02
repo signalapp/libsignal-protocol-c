@@ -512,7 +512,7 @@ END_TEST
 START_TEST(test_session_receiver_chain_count)
 {
     int result = 0;
-	int i = 0;
+    int i = 0;
     hkdf_context *kdf = 0;
     session_state *state = 0;
     ratchet_chain_key *chain_key[7];
@@ -530,7 +530,7 @@ START_TEST(test_session_receiver_chain_count)
         ck_assert_int_eq(result, 0);
 
         ratchet_key[i] = create_test_ec_public_key(global_context);
-    	ck_assert_ptr_ne(ratchet_key[i], 0);
+        ck_assert_ptr_ne(ratchet_key[i], 0);
     }
 
     /* Create a new session state instance */
@@ -540,39 +540,39 @@ START_TEST(test_session_receiver_chain_count)
 
     /* Add 6 instances of receiver chain data */
     for(i = 0; i < 7; i++) {
-    	result = session_state_add_receiver_chain(state, ratchet_key[i], chain_key[i]);
-    	ck_assert_int_eq(result, 0);
+        result = session_state_add_receiver_chain(state, ratchet_key[i], chain_key[i]);
+        ck_assert_int_eq(result, 0);
     }
 
     /* Verify that only the latter 5 are actually there */
     for(i = 0; i < 7; i++) {
-    	ratchet_chain_key *cur_chain_key;
-    	signal_buffer *chain_key_buf;
-    	signal_buffer *cur_chain_key_buf;
+        ratchet_chain_key *cur_chain_key;
+        signal_buffer *chain_key_buf;
+        signal_buffer *cur_chain_key_buf;
 
-    	cur_chain_key = session_state_get_receiver_chain_key(state, ratchet_key[i]);
+        cur_chain_key = session_state_get_receiver_chain_key(state, ratchet_key[i]);
 
-    	if(i < 2) {
-    		ck_assert_ptr_eq(cur_chain_key, 0);
-    	}
-    	else {
-    		ck_assert_ptr_ne(cur_chain_key, 0);
+        if(i < 2) {
+            ck_assert_ptr_eq(cur_chain_key, 0);
+        }
+        else {
+            ck_assert_ptr_ne(cur_chain_key, 0);
 
-    		result = ratchet_chain_key_get_key(chain_key[i], &chain_key_buf);
-    		ck_assert_int_eq(result, 0);
-    		result = ratchet_chain_key_get_key(cur_chain_key, &cur_chain_key_buf);
-    		ck_assert_int_eq(result, 0);
+            result = ratchet_chain_key_get_key(chain_key[i], &chain_key_buf);
+            ck_assert_int_eq(result, 0);
+            result = ratchet_chain_key_get_key(cur_chain_key, &cur_chain_key_buf);
+            ck_assert_int_eq(result, 0);
 
-    		ck_assert_int_eq(signal_buffer_compare(chain_key_buf, cur_chain_key_buf), 0);
-    		signal_buffer_free(chain_key_buf);
-    		signal_buffer_free(cur_chain_key_buf);
-    	}
+            ck_assert_int_eq(signal_buffer_compare(chain_key_buf, cur_chain_key_buf), 0);
+            signal_buffer_free(chain_key_buf);
+            signal_buffer_free(cur_chain_key_buf);
+        }
     }
 
     /* Cleanup */
     for(i = 0; i < 7; i++) {
-    	SIGNAL_UNREF(chain_key[i]);
-    	SIGNAL_UNREF(ratchet_key[i]);
+        SIGNAL_UNREF(chain_key[i]);
+        SIGNAL_UNREF(ratchet_key[i]);
     }
     SIGNAL_UNREF(kdf);
     SIGNAL_UNREF(state);

@@ -380,7 +380,7 @@ complete:
 
 ec_public_key_list *ec_public_key_list_alloc()
 {
-	int result = 0;
+    int result = 0;
     ec_public_key_list *list = malloc(sizeof(ec_public_key_list));
     if(!list) {
         result = SG_ERR_NOMEM;
@@ -392,20 +392,20 @@ ec_public_key_list *ec_public_key_list_alloc()
     utarray_new(list->values, &ut_ptr_icd);
 
 complete:
-	if(result < 0) {
-		if(list) {
-			free(list);
-		}
-		return 0;
-	}
-	else {
-		return list;
-	}
+    if(result < 0) {
+        if(list) {
+            free(list);
+        }
+        return 0;
+    }
+    else {
+        return list;
+    }
 }
 
 ec_public_key_list *ec_public_key_list_copy(const ec_public_key_list *list)
 {
-	int result = 0;
+    int result = 0;
     ec_public_key_list *result_list = 0;
     unsigned int size;
     unsigned int i;
@@ -425,25 +425,25 @@ ec_public_key_list *ec_public_key_list_copy(const ec_public_key_list *list)
         p = (ec_public_key **)utarray_eltptr(list->values, i);
         result = ec_public_key_list_push_back(result_list, *p);
         if(result < 0) {
-        	goto complete;
+            goto complete;
         }
     }
 
 complete:
-	if(result < 0) {
-		if(result_list) {
-			ec_public_key_list_free(result_list);
-		}
-		return 0;
-	}
-	else {
-		return result_list;
-	}
+    if(result < 0) {
+        if(result_list) {
+            ec_public_key_list_free(result_list);
+        }
+        return 0;
+    }
+    else {
+        return result_list;
+    }
 }
 
 int ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value)
 {
-	int result = 0;
+    int result = 0;
     assert(list);
     assert(value);
 
@@ -451,7 +451,7 @@ int ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value)
     SIGNAL_REF(value);
 
 complete:
-	return result;
+    return result;
 }
 
 unsigned int ec_public_key_list_size(const ec_public_key_list *list)
