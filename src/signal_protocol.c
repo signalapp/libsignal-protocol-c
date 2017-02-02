@@ -8,8 +8,7 @@
 #include <assert.h>
 
 #include "signal_protocol_internal.h"
-#include "utlist.h"
-#include "utarray.h"
+#include "signal_utarray.h"
 
 #ifdef _WINDOWS
 #include "Windows.h"
@@ -179,92 +178,132 @@ void signal_buffer_bzero_free(signal_buffer *buffer)
 
 /*------------------------------------------------------------------------*/
 
-typedef struct signal_buffer_list_node
-{
-    signal_buffer *buffer;
-    struct signal_buffer_list_node *next;
-} signal_buffer_list_node;
-
 struct signal_buffer_list
-{
-    int size;
-    signal_buffer_list_node *head;
-};
-
-struct signal_int_list
 {
     UT_array *values;
 };
 
 signal_buffer_list *signal_buffer_list_alloc(void)
 {
-    signal_buffer_list *list = malloc(sizeof(signal_buffer_list));
-    if(list) {
-        memset(list, 0, sizeof(signal_buffer_list));
-    }
-    return list;
-}
-
-int signal_buffer_list_push(signal_buffer_list *list, signal_buffer *buffer)
-{
-    signal_buffer_list_node *node = 0;
-
-    assert(list);
-    assert(buffer);
-
-    node = malloc(sizeof(signal_buffer_list_node));
-
-    if(!node) {
-        return SG_ERR_NOMEM;
+	int result = 0;
+	signal_buffer_list *list = malloc(sizeof(signal_buffer_list));
+    if(!list) {
+        result = SG_ERR_NOMEM;
+        goto complete;
     }
 
-    node->buffer = buffer;
-    LL_PREPEND(list->head, node);
-    list->size++;
-    return 0;
+    memset(list, 0, sizeof(signal_buffer_list));
+
+    utarray_new(list->values, &ut_ptr_icd);
+
+complete:
+	if(result < 0) {
+		if(list) {
+			free(list);
+		}
+		return 0;
+	}
+	else {
+		return list;
+	}
 }
 
-int signal_buffer_list_size(signal_buffer_list *list)
+int signal_buffer_list_push_back(signal_buffer_list *list, signal_buffer *buffer)
+{
+	int result = 0;
+    assert(list);
+    utarray_push_back(list->values, &buffer);
+
+complete:
+    return result;
+}
+
+unsigned int signal_buffer_list_size(signal_buffer_list *list)
 {
     assert(list);
-    return list->size;
+    return utarray_len(list->values);
+}
+
+const signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned int index)
+{
+	signal_buffer **value = 0;
+
+    assert(list);
+    assert(index < utarray_len(list->values));
+
+    value = (signal_buffer**)utarray_eltptr(list->values, index);
+
+    assert(*value);
+
+    return *value;
 }
 
 void signal_buffer_list_free(signal_buffer_list *list)
 {
-    signal_buffer_list_node *cur_node;
-    signal_buffer_list_node *tmp_node;
-
-    assert(list);
-
-    LL_FOREACH_SAFE(list->head, cur_node, tmp_node) {
-        LL_DELETE(list->head, cur_node);
-        if(cur_node->buffer) {
-            signal_buffer_free(cur_node->buffer);
-        }
-        free(cur_node);
+	unsigned int i = 0;
+    if(list) {
+    	for(i = utarray_len(list->values) - 1; i >= 0; --i) {
+    		signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
+    		signal_buffer_free(buffer);
+    	}
+        utarray_free(list->values);
+        free(list);
     }
-    free(list);
 }
-signal_int_list *signal_int_list_alloc();
+
+void signal_buffer_list_bzero_free(signal_buffer_list *list)
+{
+	unsigned int i = 0;
+    if(list) {
+    	for(i = utarray_len(list->values) - 1; i >= 0; --i) {
+    		signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
+    		signal_buffer_bzero_free(buffer);
+    	}
+        utarray_free(list->values);
+        free(list);
+    }
+}
 
 /*------------------------------------------------------------------------*/
 
+struct signal_int_list
+{
+    UT_array *values;
+};
+
 signal_int_list *signal_int_list_alloc()
 {
+	int result = 0;
     signal_int_list *list = malloc(sizeof(signal_int_list));
     if(!list) {
-        return 0;
+        result = SG_ERR_NOMEM;
+        goto complete;
     }
+
     memset(list, 0, sizeof(signal_int_list));
+
     utarray_new(list->values, &ut_int_icd);
-    return list;
+
+complete:
+	if(result < 0) {
+		if(list) {
+			free(list);
+		}
+		return 0;
+	}
+	else {
+		return list;
+	}
 }
 
-void signal_int_list_push_back(signal_int_list *list, int value)
+int signal_int_list_push_back(signal_int_list *list, int value)
 {
+	int result = 0;
     assert(list);
     utarray_push_back(list->values, &value);
+
+complete:
+	return result;
 }
 
 unsigned int signal_int_list_size(signal_int_list *list)

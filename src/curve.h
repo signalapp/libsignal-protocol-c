@@ -84,8 +84,9 @@ ec_public_key_list *ec_public_key_list_copy(const ec_public_key_list *list);
  *
  * @param list the list
  * @param value the value to push
+ * @return 0 on success, negative on failure
  */
-void ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value);
+int ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value);
 
 /**
  * Gets the size of the list.

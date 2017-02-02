@@ -6,7 +6,7 @@
 #include "signal_protocol_internal.h"
 #include "curve.h"
 #include "WhisperTextProtocol.pb-c.h"
-#include "utarray.h"
+#include "signal_utarray.h"
 
 #define CODE_VERSION 0
 
@@ -542,45 +542,78 @@ complete:
 
 device_consistency_signature_list *device_consistency_signature_list_alloc()
 {
+	int result = 0;
     device_consistency_signature_list *list = malloc(sizeof(device_consistency_signature_list));
     if(!list) {
-        return 0;
+        result = SG_ERR_NOMEM;
+        goto complete;
     }
+
     memset(list, 0, sizeof(device_consistency_signature_list));
+
     utarray_new(list->values, &ut_ptr_icd);
-    return list;
+
+complete:
+	if(result < 0) {
+		if(list) {
+			free(list);
+		}
+		return 0;
+	}
+	else {
+		return list;
+	}
 }
 
 device_consistency_signature_list *device_consistency_signature_list_copy(const device_consistency_signature_list *list)
 {
-    device_consistency_signature_list *result = 0;
+	int result = 0;
+    device_consistency_signature_list *result_list = 0;
     unsigned int size;
     unsigned int i;
     device_consistency_signature **p;
 
-    result = device_consistency_signature_list_alloc();
-    if(!result) {
-        return 0;
+    result_list = device_consistency_signature_list_alloc();
+    if(!result_list) {
+    	result = SG_ERR_NOMEM;
+    	goto complete;
     }
 
     size = utarray_len(list->values);
 
-    utarray_reserve(result->values, size);
+    utarray_reserve(result_list->values, size);
 
     for (i = 0; i < size; i++) {
         p = (device_consistency_signature **)utarray_eltptr(list->values, i);
-        device_consistency_signature_list_push_back(result, *p);
+        result = device_consistency_signature_list_push_back(result_list, *p);
+        if(result < 0) {
+        	goto complete;
+        }
     }
 
-    return result;
+complete:
+	if(result < 0) {
+		if(result_list) {
+			device_consistency_signature_list_free(result_list);
+		}
+		return 0;
+	}
+	else {
+		return result_list;
+	}
 }
 
-void device_consistency_signature_list_push_back(device_consistency_signature_list *list, device_consistency_signature *value)
+int device_consistency_signature_list_push_back(device_consistency_signature_list *list, device_consistency_signature *value)
 {
+	int result = 0;
     assert(list);
     assert(value);
-    SIGNAL_REF(value);
+
     utarray_push_back(list->values, &value);
+    SIGNAL_REF(value);
+
+complete:
+	return result;
 }
 
 unsigned int device_consistency_signature_list_size(const device_consistency_signature_list *list)

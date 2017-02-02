@@ -8,7 +8,7 @@
 #include "group_cipher.h"
 #include "group_session_builder.h"
 #include "test_common.h"
-#include "utarray.h"
+#include "test_utarray.h"
 
 signal_context *global_context;
 pthread_mutex_t global_mutex;

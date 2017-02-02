@@ -165,13 +165,15 @@ void signal_buffer_bzero_free(signal_buffer *buffer);
 signal_buffer_list *signal_buffer_list_alloc(void);
 
 /**
- * Push the provided buffer onto the head of the list.
+ * Push the provided buffer onto the end of the list.
+ * The list will take ownership of the buffer, and free it when the list is
+ * freed.
  *
  * @param list the buffer list
  * @param buffer the buffer to push
  * @return 0 on success, or negative on failure
  */
-int signal_buffer_list_push(signal_buffer_list *list, signal_buffer *buffer);
+int signal_buffer_list_push_back(signal_buffer_list *list, signal_buffer *buffer);
 
 /**
  * Gets the size of the buffer list.
@@ -179,7 +181,16 @@ int signal_buffer_list_push(signal_buffer_list *list, signal_buffer *buffer);
  * @param list the buffer list
  * @return the size of the list
  */
-int signal_buffer_list_size(signal_buffer_list *list);
+unsigned int signal_buffer_list_size(signal_buffer_list *list);
+
+/**
+ * Gets the value of the element at a particular index in the list
+ *
+ * @param list the list
+ * @param index the index within the list
+ * @return the value
+ */
+const signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned int index);
 
 /**
  * Free the buffer list, including all the buffers added to it.
@@ -187,6 +198,15 @@ int signal_buffer_list_size(signal_buffer_list *list);
  * @param list the buffer list
  */
 void signal_buffer_list_free(signal_buffer_list *list);
+
+/**
+ * Free the buffer list, including all the buffers added to it.
+ * This function should be used when the buffer list contains sensitive
+ * data, to make sure the memory is cleared before being freed.
+ *
+ * @param list the buffer list
+ */
+void signal_buffer_list_bzero_free(signal_buffer_list *list);
 
 /**
  * Allocate a new int list
@@ -200,8 +220,9 @@ signal_int_list *signal_int_list_alloc(void);
  *
  * @param list the list
  * @param value the value to push
+ * @return 0 on success, or negative on failure
  */
-void signal_int_list_push_back(signal_int_list *list, int value);
+int signal_int_list_push_back(signal_int_list *list, int value);
 
 /**
  * Gets the size of the list.

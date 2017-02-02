@@ -9,7 +9,7 @@
 #include "curve25519/ed25519/additions/curve_sigs.h"
 #include "curve25519/ed25519/additions/vxeddsa.h"
 #include "signal_protocol_internal.h"
-#include "utarray.h"
+#include "signal_utarray.h"
 
 #define DJB_TYPE 0x05
 #define DJB_KEY_LEN 32
@@ -380,45 +380,78 @@ complete:
 
 ec_public_key_list *ec_public_key_list_alloc()
 {
+	int result = 0;
     ec_public_key_list *list = malloc(sizeof(ec_public_key_list));
     if(!list) {
-        return 0;
+        result = SG_ERR_NOMEM;
+        goto complete;
     }
+
     memset(list, 0, sizeof(ec_public_key_list));
+
     utarray_new(list->values, &ut_ptr_icd);
-    return list;
+
+complete:
+	if(result < 0) {
+		if(list) {
+			free(list);
+		}
+		return 0;
+	}
+	else {
+		return list;
+	}
 }
 
 ec_public_key_list *ec_public_key_list_copy(const ec_public_key_list *list)
 {
-    ec_public_key_list *result = 0;
+	int result = 0;
+    ec_public_key_list *result_list = 0;
     unsigned int size;
     unsigned int i;
     ec_public_key **p;
 
-    result = ec_public_key_list_alloc();
-    if(!result) {
-        return 0;
+    result_list = ec_public_key_list_alloc();
+    if(!result_list) {
+        result = SG_ERR_NOMEM;
+        goto complete;
     }
 
     size = utarray_len(list->values);
 
-    utarray_reserve(result->values, size);
+    utarray_reserve(result_list->values, size);
 
     for (i = 0; i < size; i++) {
         p = (ec_public_key **)utarray_eltptr(list->values, i);
-        ec_public_key_list_push_back(result, *p);
+        result = ec_public_key_list_push_back(result_list, *p);
+        if(result < 0) {
+        	goto complete;
+        }
     }
 
-    return result;
+complete:
+	if(result < 0) {
+		if(result_list) {
+			ec_public_key_list_free(result_list);
+		}
+		return 0;
+	}
+	else {
+		return result_list;
+	}
 }
 
-void ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value)
+int ec_public_key_list_push_back(ec_public_key_list *list, ec_public_key *value)
 {
+	int result = 0;
     assert(list);
     assert(value);
-    SIGNAL_REF(value);
+
     utarray_push_back(list->values, &value);
+    SIGNAL_REF(value);
+
+complete:
+	return result;
 }
 
 unsigned int ec_public_key_list_size(const ec_public_key_list *list)

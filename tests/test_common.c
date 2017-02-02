@@ -11,7 +11,6 @@
 #include "../src/signal_protocol.h"
 #include "curve.h"
 #include "uthash.h"
-#include "utarray.h"
 
 /*
  * This is an implementation of Jenkin's "One-at-a-Time" hash.

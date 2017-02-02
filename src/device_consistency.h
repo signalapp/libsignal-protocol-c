@@ -48,7 +48,7 @@ int device_consistency_code_generate_for(device_consistency_commitment *commitme
 
 device_consistency_signature_list *device_consistency_signature_list_alloc(void);
 device_consistency_signature_list *device_consistency_signature_list_copy(const device_consistency_signature_list *list);
-void device_consistency_signature_list_push_back(device_consistency_signature_list *list, device_consistency_signature *value);
+int device_consistency_signature_list_push_back(device_consistency_signature_list *list, device_consistency_signature *value);
 unsigned int device_consistency_signature_list_size(const device_consistency_signature_list *list);
 device_consistency_signature *device_consistency_signature_list_at(const device_consistency_signature_list *list, unsigned int index);
 void device_consistency_signature_list_free(device_consistency_signature_list *list);
