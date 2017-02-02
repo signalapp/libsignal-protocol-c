@@ -165,6 +165,14 @@ void signal_buffer_bzero_free(signal_buffer *buffer);
 signal_buffer_list *signal_buffer_list_alloc(void);
 
 /**
+ * Create a copy of an existing buffer list.
+ *
+ * @param list the existing buffer list to copy
+ * @return pointer to the updated buffer, or 0 on failure
+ */
+signal_buffer_list *signal_buffer_list_copy(const signal_buffer_list *list);
+
+/**
  * Push the provided buffer onto the end of the list.
  * The list will take ownership of the buffer, and free it when the list is
  * freed.
@@ -190,7 +198,7 @@ unsigned int signal_buffer_list_size(signal_buffer_list *list);
  * @param index the index within the list
  * @return the value
  */
-const signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned int index);
+signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned int index);
 
 /**
  * Free the buffer list, including all the buffers added to it.

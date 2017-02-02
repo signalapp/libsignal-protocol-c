@@ -208,6 +208,42 @@ complete:
     }
 }
 
+signal_buffer_list *signal_buffer_list_copy(const signal_buffer_list *list)
+{
+    int result = 0;
+    signal_buffer_list *result_list = 0;
+    signal_buffer *buffer_copy = 0;
+    unsigned int list_size;
+    unsigned int i;
+
+    result_list = signal_buffer_list_alloc();
+    if(!result_list) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+
+    list_size = utarray_len(list->values);
+
+    utarray_reserve(result_list->values, list_size);
+
+    for(i = 0; i < list_size; i++) {
+        signal_buffer **buffer = (signal_buffer**)utarray_eltptr(list->values, i);
+        buffer_copy = signal_buffer_copy(*buffer);
+        utarray_push_back(list->values, &buffer_copy);
+        buffer_copy = 0;
+    }
+
+complete:
+    if(result < 0) {
+        signal_buffer_free(buffer_copy);
+        signal_buffer_list_free(result_list);
+        return 0;
+    }
+    else {
+        return result_list;
+    }
+}
+
 int signal_buffer_list_push_back(signal_buffer_list *list, signal_buffer *buffer)
 {
     int result = 0;
@@ -224,7 +260,7 @@ unsigned int signal_buffer_list_size(signal_buffer_list *list)
     return utarray_len(list->values);
 }
 
-const signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned int index)
+signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned int index)
 {
     signal_buffer **value = 0;
 
@@ -240,11 +276,14 @@ const signal_buffer *signal_buffer_list_at(signal_buffer_list *list, unsigned in
 
 void signal_buffer_list_free(signal_buffer_list *list)
 {
-    unsigned int i = 0;
+    unsigned int size;
+    unsigned int i;
+    signal_buffer **p;
     if(list) {
-        for(i = utarray_len(list->values) - 1; i >= 0; --i) {
-            signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
-            signal_buffer_free(buffer);
+        size = utarray_len(list->values);
+        for (i = 0; i < size; i++) {
+            p = (signal_buffer **)utarray_eltptr(list->values, i);
+            signal_buffer_free(*p);
         }
         utarray_free(list->values);
         free(list);
@@ -253,11 +292,14 @@ void signal_buffer_list_free(signal_buffer_list *list)
 
 void signal_buffer_list_bzero_free(signal_buffer_list *list)
 {
-    unsigned int i = 0;
+    unsigned int size;
+    unsigned int i;
+    signal_buffer **p;
     if(list) {
-        for(i = utarray_len(list->values) - 1; i >= 0; --i) {
-            signal_buffer *buffer = *((signal_buffer**)utarray_eltptr(list->values, i));
-            signal_buffer_bzero_free(buffer);
+        size = utarray_len(list->values);
+        for (i = 0; i < size; i++) {
+            p = (signal_buffer **)utarray_eltptr(list->values, i);
+            signal_buffer_bzero_free(*p);
         }
         utarray_free(list->values);
         free(list);
