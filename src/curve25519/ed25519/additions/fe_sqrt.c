@@ -15,14 +15,15 @@ static unsigned char i_bytes[32] = {
 void fe_sqrt(fe out, const fe a)
 {
   fe exp, b, b2, bi, i;
+#ifndef NDEBUG
+  fe legendre, zero, one;
+#endif
 
   fe_frombytes(i, i_bytes); 
   fe_pow22523(exp, a);             /* b = a^(q-5)/8        */
 
   /* PRECONDITION: legendre symbol == 1 (square) or 0 (a == zero) */
 #ifndef NDEBUG
-  fe legendre, zero, one;
-
   fe_sq(legendre, exp);            /* in^((q-5)/4) */ 
   fe_sq(legendre, legendre);       /* in^((q-5)/2) */
   fe_mul(legendre, legendre, a);   /* in^((q-3)/2) */

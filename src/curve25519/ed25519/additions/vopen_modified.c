@@ -19,6 +19,9 @@ int crypto_vsign_open_modified(
   unsigned char hcheck[64];
   unsigned char vrf_output[64];
   int count;
+  ge_p1p1 Rp1p1;
+  ge_p3 Rv;
+  ge_cached h_Vnegcached;
 
   if (smlen < 96) goto badsig;
   if (sm[63] & 224) goto badsig; /* strict parsing of h */
@@ -51,9 +54,6 @@ int crypto_vsign_open_modified(
   ge_scalarmult(&h_Vneg, h, &Vneg);
 
   // Rv = (sc * Bv) + (hc * (-V))
-  ge_p1p1 Rp1p1;
-  ge_p3 Rv;
-  ge_cached h_Vnegcached;
   ge_p3_to_cached(&h_Vnegcached, &h_Vneg);
   ge_add(&Rp1p1, &s_Bv, &h_Vnegcached);
   ge_p1p1_to_p3(&Rv, &Rp1p1);
