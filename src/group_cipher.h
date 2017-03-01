@@ -79,7 +79,9 @@ void group_cipher_set_decryption_callback(group_cipher *cipher,
  * @param padded_message_len The length of the data pointed to by padded_message
  * @param encrypted_message Set to a ciphertext message encrypted to the group+sender+device tuple.
  *
- * @return SG_SUCCESS on success, negative on error
+ * @retval SG_SUCCESS Success
+ * @retval SG_ERR_NO_SESSION if there is no established session for this contact.
+ * @retval SG_ERR_INVALID_KEY if there is no valid private key for this session.
  */
 int group_cipher_encrypt(group_cipher *cipher,
         const uint8_t *padded_plaintext, size_t padded_plaintext_len,

@@ -98,7 +98,7 @@ int group_cipher_encrypt(group_cipher *cipher,
 
     signing_key_private = sender_key_state_get_signing_key_private(state);
     if(!signing_key_private) {
-        result = SG_ERR_NO_SESSION;
+        result = SG_ERR_INVALID_KEY;
         goto complete;
     }
 

@@ -735,6 +735,69 @@ START_TEST(test_message_key_limit)
 }
 END_TEST
 
+START_TEST(test_invalid_signature_key)
+{
+    int result = 0;
+
+    /* Create the test data stores */
+    signal_protocol_store_context *alice_store = 0;
+    setup_test_store_context(&alice_store, global_context);
+
+    signal_protocol_store_context *bob_store = 0;
+    setup_test_store_context(&bob_store, global_context);
+
+    /* Create the session builders */
+    group_session_builder *alice_session_builder = 0;
+    result = group_session_builder_create(&alice_session_builder, alice_store, global_context);
+    ck_assert_int_eq(result, 0);
+
+    group_session_builder *bob_session_builder = 0;
+    result = group_session_builder_create(&bob_session_builder, bob_store, global_context);
+    ck_assert_int_eq(result, 0);
+
+    /* Create the group cipher for Bob */
+    group_cipher *bob_group_cipher = 0;
+    result = group_cipher_create(&bob_group_cipher, bob_store, &GROUP_SENDER, global_context);
+
+    /* Create a sender key distribution message from Alice to Bob */
+    sender_key_distribution_message *sent_alice_distribution_message = 0;
+    result = group_session_builder_create_session(alice_session_builder, &sent_alice_distribution_message, &GROUP_SENDER);
+    ck_assert_int_eq(result, 0);
+
+    sender_key_distribution_message *received_alice_distribution_message = 0;
+    signal_buffer *serialized_distribution_message =
+            ciphertext_message_get_serialized((ciphertext_message *)sent_alice_distribution_message);
+    result = sender_key_distribution_message_deserialize(&received_alice_distribution_message,
+            signal_buffer_data(serialized_distribution_message),
+            signal_buffer_len(serialized_distribution_message),
+            global_context);
+    ck_assert_int_eq(result, 0);
+
+    /* Processing Alice's distribution message */
+    result = group_session_builder_process_session(bob_session_builder, &GROUP_SENDER, received_alice_distribution_message);
+    ck_assert_int_eq(result, 0);
+
+    /* Encrypt a test message from Bob */
+    static const char bob_plaintext[] = "smert ze smert";
+    size_t bob_plaintext_len = sizeof(bob_plaintext) - 1;
+    ciphertext_message *ciphertext_from_bob = 0;
+    result = group_cipher_encrypt(bob_group_cipher,
+            (const uint8_t *)bob_plaintext, bob_plaintext_len,
+            &ciphertext_from_bob);
+    ck_assert_int_eq(result, SG_ERR_INVALID_KEY);
+
+    /* Cleanup */
+    SIGNAL_UNREF(ciphertext_from_bob);
+    SIGNAL_UNREF(received_alice_distribution_message);
+    SIGNAL_UNREF(sent_alice_distribution_message);
+    group_cipher_free(bob_group_cipher);
+    group_session_builder_free(bob_session_builder);
+    group_session_builder_free(alice_session_builder);
+    signal_protocol_store_context_destroy(bob_store);
+    signal_protocol_store_context_destroy(alice_store);
+}
+END_TEST
+
 Suite *group_cipher_suite(void)
 {
     Suite *suite = suite_create("group_cipher");
@@ -749,6 +812,7 @@ Suite *group_cipher_suite(void)
     tcase_add_test(tcase, test_encrypt_no_session);
     tcase_add_test(tcase, test_too_far_in_future);
     tcase_add_test(tcase, test_message_key_limit);
+    tcase_add_test(tcase, test_invalid_signature_key);
     suite_add_tcase(suite, tcase);
 
     return suite;
