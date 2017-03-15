@@ -21,7 +21,7 @@
 #define _VPOOL_H_
 
 #include <sys/types.h>
-#ifndef _WINDOWS
+#if !defined(_WINDOWS) && !defined(__sun__)
 #include <sys/cdefs.h>
 #else
 #ifdef __cplusplus
