@@ -362,7 +362,7 @@ int device_consistency_message_create_from_serialized(device_consistency_message
     /* Assign the message fields */
     result_message->generation = message_structure->generation;
 
-    device_consistency_signature_create(&result_message->signature,
+    result = device_consistency_signature_create(&result_message->signature,
             message_structure->signature.data, message_structure->signature.len,
             signal_buffer_data(vrf_output_buffer), signal_buffer_len(vrf_output_buffer));
     if(result < 0) {
