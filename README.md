@@ -12,6 +12,7 @@ environments. See the [Java library](https://github.com/whispersystems/libsignal
 * [CMake](https://cmake.org/) 2.8.4 or higher
 * [Check *1](https://libcheck.github.io/check/)
 * [OpenSSL *1](https://www.openssl.org/) 1.0 or higher
+ * On MacOS X, [Common Crypto](https://developer.apple.com/library/content/documentation/Security/Conceptual/cryptoservices/GeneralPurposeCrypto/GeneralPurposeCrypto.html) is used instead of OpenSSL
 * [LCOV *2](http://ltp.sourceforge.net/coverage/lcov.php)
 
 Most of these dependencies are required just for the unit test suite and

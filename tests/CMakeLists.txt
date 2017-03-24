@@ -1,7 +1,9 @@
 enable_testing()
 find_library(M_LIB m)
 find_package(Check REQUIRED)
-find_package(OpenSSL 1.0 REQUIRED)
+IF(NOT(APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
+  find_package(OpenSSL 1.0 REQUIRED)
+ENDIF()
 find_package(Threads)
 include_directories(${CHECK_INCLUDE_DIRS})
 
@@ -41,7 +43,18 @@ set(common_SRCS
 	test_common.h
 )
 
-include_directories(. ../src ${OPENSSL_INCLUDE_DIR})
+include_directories(. ../src)
+
+IF(APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(common_SRCS ${common_SRCS}
+		test_common_ccrypto.c
+	)
+ELSE()
+	set(common_SRCS ${common_SRCS}
+		test_common_openssl.c
+	)
+	include_directories(${OPENSSL_INCLUDE_DIR})
+ENDIF()
 
 add_executable(test_curve25519 test_curve25519.c ${common_SRCS})
 target_link_libraries(test_curve25519 ${LIBS})
