@@ -53,7 +53,6 @@ signal_buffer *signal_message_get_body(const signal_message *message);
  * @return 1 if verified, 0 if invalid, negative on error
  */
 int signal_message_verify_mac(signal_message *message,
-        uint8_t message_version,
         ec_public_key *sender_identity_key,
         ec_public_key *receiver_identity_key,
         const uint8_t *mac_key, size_t mac_key_len,

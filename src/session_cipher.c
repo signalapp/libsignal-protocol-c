@@ -512,7 +512,7 @@ static int session_cipher_decrypt_from_state_and_signal_message(session_cipher *
         goto complete;
     }
 
-    result = signal_message_verify_mac(ciphertext, message_version,
+    result = signal_message_verify_mac(ciphertext,
             remote_identity_key, local_identity_key,
             message_keys.mac_key, sizeof(message_keys.mac_key),
             cipher->global_context);

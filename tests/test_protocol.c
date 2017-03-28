@@ -80,7 +80,7 @@ START_TEST(test_serialize_signal_message)
     compare_signal_messages(message, result_message);
 
     /* Exercise the MAC verification code */
-    result = signal_message_verify_mac(result_message, 3,
+    result = signal_message_verify_mac(result_message,
             sender_identity_key, receiver_identity_key,
             mac_key, sizeof(mac_key), global_context);
     ck_assert_int_eq(result, 1);
