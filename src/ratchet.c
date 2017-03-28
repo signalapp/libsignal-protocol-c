@@ -1086,16 +1086,18 @@ int ratcheting_session_alice_initialize(
         goto complete;
     }
 
-complete:
-    if(result >= 0) {
-        session_state_set_session_version(state, CIPHERTEXT_CURRENT_VERSION);
-        session_state_set_remote_identity_key(state, parameters->their_identity_key);
-        session_state_set_local_identity_key(state, parameters->our_identity_key->public_key);
-        session_state_add_receiver_chain(state, parameters->their_ratchet_key, derived_chain);
-        session_state_set_sender_chain(state, sending_ratchet_key, sending_chain_key);
-        session_state_set_root_key(state, sending_chain_root);
+    result = session_state_add_receiver_chain(state, parameters->their_ratchet_key, derived_chain);
+    if(result < 0) {
+        goto complete;
     }
 
+    session_state_set_session_version(state, CIPHERTEXT_CURRENT_VERSION);
+    session_state_set_remote_identity_key(state, parameters->their_identity_key);
+    session_state_set_local_identity_key(state, parameters->our_identity_key->public_key);
+    session_state_set_sender_chain(state, sending_ratchet_key, sending_chain_key);
+    session_state_set_root_key(state, sending_chain_root);
+
+complete:
     vpool_final(&vp);
     if(agreement) {
         free(agreement);
