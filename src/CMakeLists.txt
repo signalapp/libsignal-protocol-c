@@ -67,6 +67,8 @@ add_library(signal-protocol-c
 	$<TARGET_OBJECTS:protobuf-c>
 )
 
+target_link_libraries(signal-protocol-c m)
+
 INSTALL(
 	FILES
 	signal_protocol.h
