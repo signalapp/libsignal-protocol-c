@@ -73,6 +73,10 @@ add_library(signal-protocol-c
 
 if(BUILD_SHARED_LIBS)
 	target_link_libraries(signal-protocol-c ${M_LIB})
+	set_target_properties(signal-protocol-c PROPERTIES
+		VERSION ${SIGNAL_PROTOCOL_C_VERSION}
+		SOVERSION ${SIGNAL_PROTOCOL_C_VERSION_MAJOR}
+	)
 endif()
 
 INSTALL(
