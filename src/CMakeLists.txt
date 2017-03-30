@@ -1,3 +1,7 @@
+if(BUILD_SHARED_LIBS)
+	find_library(M_LIB m)
+endif()
+
 include_directories(
 	.
 	curve25519/ed25519/nacl_includes
@@ -66,6 +70,10 @@ add_library(signal-protocol-c
 	$<TARGET_OBJECTS:curve25519>
 	$<TARGET_OBJECTS:protobuf-c>
 )
+
+if(BUILD_SHARED_LIBS)
+	target_link_libraries(signal-protocol-c ${M_LIB})
+endif()
 
 INSTALL(
 	FILES
