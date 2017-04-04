@@ -7,6 +7,7 @@
  */
 
 int sha512_fast_test(int silent);
+int strict_fast_test(int silent);
 int elligator_fast_test(int silent);
 int curvesigs_fast_test(int silent);
 int xeddsa_fast_test(int silent);

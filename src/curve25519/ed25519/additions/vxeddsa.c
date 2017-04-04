@@ -50,7 +50,6 @@ int vxed25519_verify(unsigned char* vrf_out,
   fe u; 
   fe y;
   unsigned char ed_pubkey[32];
-  unsigned char strict[32];
   unsigned char verifybuf[MAX_MSG_LEN + 160]; /* working buffer */
   unsigned char verifybuf2[MAX_MSG_LEN + 160]; /* working buffer #2 ?? !!! */
   ge_p3 Bv;
@@ -65,10 +64,9 @@ int vxed25519_verify(unsigned char* vrf_out,
 
      NOTE: u=-1 is converted to y=0 since fe_invert is mod-exp
   */
+  if (!fe_isreduced(curve25519_pubkey))
+      return -1;
   fe_frombytes(u, curve25519_pubkey);
-  fe_tobytes(strict, u);
-  if (crypto_verify_32(strict, curve25519_pubkey) != 0)
-    return 0;
   fe_montx_to_edy(y, u);
   fe_tobytes(ed_pubkey, y);
 
