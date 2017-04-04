@@ -55,6 +55,35 @@ int sha512_fast_test(int silent)
   return 0;
 }
 
+int strict_fast_test(int silent)
+{
+  unsigned char unreduced1[32] = {
+  0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F,
+  };
+  unsigned char unreduced2[32] = {
+  0xED, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F,
+  };
+  unsigned char unreduced3[32] = {
+  0xEC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F,
+  };
+
+  TEST("fe_isreduced", 
+      (fe_isreduced(unreduced1) == 0) && 
+      (fe_isreduced(unreduced2) == 0) &&
+      (fe_isreduced(unreduced3) == 1)
+      );
+  return 0;
+}
+
 int elligator_fast_test(int silent)
 {
   unsigned char elligator_correct_output[32] = 
@@ -235,6 +264,8 @@ int xeddsa_fast_test(int silent)
   TEST("XEdDSA verify #1", xed25519_verify(signature, pubkey, msg, MSG_LEN) == 0);
   signature[0] ^= 1;
   TEST("XEdDSA verify #2", xed25519_verify(signature, pubkey, msg, MSG_LEN) != 0);
+  memset(pubkey, 0xFF, 32);
+  TEST("XEdDSA verify #3", xed25519_verify(signature, pubkey, msg, MSG_LEN) != 0);
   return 0;
 }
 
@@ -276,12 +307,15 @@ int vxeddsa_fast_test(int silent)
   curve25519_keygen(pubkey, privkey);
 
   vxed25519_sign(signature, privkey, msg, MSG_LEN, random);
-
   TEST("VXEdDSA sign", memcmp(signature, signature_correct, 96) == 0);
   TEST("VXEdDSA verify #1", vxed25519_verify(vrf_out, signature, pubkey, msg, MSG_LEN) == 0);
   memcpy(vrf_outprev, vrf_out, 32);
   signature[0] ^= 1;
   TEST("VXEdDSA verify #2", vxed25519_verify(vrf_out, signature, pubkey, msg, MSG_LEN) != 0);
+
+  memset(pubkey, 0xFF, 32);
+  TEST("VXEdDSA verify #3", vxed25519_verify(vrf_out, signature, pubkey, msg, MSG_LEN) != 0);
+  curve25519_keygen(pubkey, privkey);
 
   /* Test U */
   unsigned char sigprev[96];
@@ -433,7 +467,6 @@ int xeddsa_slow_test(int silent, int iterations)
 
 int xeddsa_to_curvesigs_slow_test(int silent, int iterations)
 {
-
   unsigned char signature_10k_correct[64] = {
   0x33, 0x50, 0xa8, 0x68, 0xcd, 0x9e, 0x74, 0x99, 
   0xa3, 0x5c, 0x33, 0x75, 0x2b, 0x22, 0x03, 0xf8, 
@@ -516,7 +549,7 @@ int vxeddsa_slow_test(int silent, int iterations)
   0x43, 0x31, 0xb3, 0xac, 0x26, 0xd9, 0x76, 0xfc, 
   0xfe, 0x30, 0xa1, 0x7c, 0xce, 0x10, 0x67, 0x0e, 
   };
-
+  /*
   unsigned char signature_100k_correct[96] = {
   0xc9, 0x11, 0x2b, 0x55, 0xfa, 0xc4, 0xb2, 0xfe, 
   0x00, 0x7d, 0xf6, 0x45, 0xcb, 0xd2, 0x73, 0xc9, 
@@ -561,6 +594,7 @@ int vxeddsa_slow_test(int silent, int iterations)
   0x7b, 0x26, 0xf2, 0xa2, 0x2b, 0x02, 0x58, 0xca, 
   0xbd, 0x2c, 0x2b, 0xf7, 0x77, 0x58, 0xfe, 0x09,
   };
+  */
 
   int count;  
   const int MSG_LEN  = 200;
@@ -601,8 +635,6 @@ int vxeddsa_slow_test(int silent, int iterations)
     if (vxed25519_verify(vrf_out, signature, pubkey, msg, MSG_LEN) == 0)
       ERROR("VXEdDSA verify failure #2 %d\n", count);
 
-    if (count == 10000)
-      print_bytes("10K VXEdDSA", signature, 96);
     if (count == 100000)
       print_bytes("100K VXEdDSA", signature, 96);
     if (count == 1000000)
@@ -616,6 +648,7 @@ int vxeddsa_slow_test(int silent, int iterations)
       if (memcmp(signature, signature_10k_correct, 96) != 0)
         ERROR("VXEDDSA 10K doesn't match %d\n", count);
     }
+    /*
     if (count == 100000) {
       if (memcmp(signature, signature_100k_correct, 96) != 0)
         ERROR("VXEDDSA 100K doesn't match %d\n", count);
@@ -628,7 +661,6 @@ int vxeddsa_slow_test(int silent, int iterations)
       if (memcmp(signature, signature_10m_correct, 96) != 0)
         ERROR("VXEDDSA 10m doesn't match %d\n", count);
     }
-    /*
     if (count == 100000000) {
       if (memcmp(signature, signature_100m_correct, 96) != 0)
         ERROR("VXEDDSA 100m doesn't match %d\n", count);
@@ -643,6 +675,8 @@ int all_fast_tests(int silent)
 {
   int result;
   if ((result = sha512_fast_test(silent)) != 0)
+    return result;
+  if ((result = strict_fast_test(silent)) != 0)
     return result;
   if ((result = elligator_fast_test(silent)) != 0)
     return result;

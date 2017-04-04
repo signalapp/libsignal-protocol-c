@@ -67,12 +67,11 @@ set(ed25519_SRCS
     ed25519/additions/curve_sigs.c
     ed25519/additions/elligator.c
     ed25519/additions/fe_isequal.c
+    ed25519/additions/fe_isreduced.c
     ed25519/additions/fe_mont_rhs.c
     ed25519/additions/fe_montx_to_edy.c
     ed25519/additions/fe_sqrt.c
-    ed25519/additions/ge_is_small_order.c
     ed25519/additions/ge_isneutral.c
-    ed25519/additions/ge_montx_to_p2.c
     ed25519/additions/ge_montx_to_p3.c
     ed25519/additions/ge_neg.c
     ed25519/additions/ge_p3_to_montx.c
@@ -84,8 +83,6 @@ set(ed25519_SRCS
     ed25519/additions/sc_cmov.c
     ed25519/additions/sc_neg.c
     ed25519/additions/sign_modified.c
-    ed25519/additions/uopen_modified.c
-    ed25519/additions/usign_modified.c
     ed25519/additions/utility.c
     ed25519/additions/vopen_modified.c
     ed25519/additions/vsign_modified.c
