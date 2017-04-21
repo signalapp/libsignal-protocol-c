@@ -4,6 +4,7 @@
 #include "crypto_verify_32.h"
 #include "ge.h"
 #include "sc.h"
+#include "axolotl_internal.h"
 
 int crypto_sign_open(
   unsigned char *m,unsigned long long *mlen,
@@ -36,13 +37,13 @@ int crypto_sign_open(
   ge_tobytes(rcheck,&R);
   if (crypto_verify_32(rcheck,rcopy) == 0) {
     memmove(m,m + 64,smlen - 64);
-    memset(m + smlen - 64,0,64);
+    axolotl_explicit_bzero(m +smlen -64, 64);
     *mlen = smlen - 64;
     return 0;
   }
 
 badsig:
   *mlen = -1;
-  memset(m,0,smlen);
+  axolotl_explicit_bzero(m, smlen);
   return -1;
 }
