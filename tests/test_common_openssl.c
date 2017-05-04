@@ -1,5 +1,6 @@
 #include "test_common.h"
 
+#include <openssl/opensslv.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/rand.h>
@@ -17,11 +18,19 @@ int test_random_generator(uint8_t *data, size_t len, void *user_data)
 
 int test_hmac_sha256_init(void **hmac_context, const uint8_t *key, size_t key_len, void *user_data)
 {
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+    HMAC_CTX *ctx = HMAC_CTX_new();
+    if(!ctx) {
+        return SG_ERR_NOMEM;
+    }
+#else
     HMAC_CTX *ctx = malloc(sizeof(HMAC_CTX));
     if(!ctx) {
         return SG_ERR_NOMEM;
     }
     HMAC_CTX_init(ctx);
+#endif
+
     *hmac_context = ctx;
 
     if(HMAC_Init_ex(ctx, key, key_len, EVP_sha256(), 0) != 1) {
@@ -65,8 +74,12 @@ void test_hmac_sha256_cleanup(void *hmac_context, void *user_data)
 {
     if(hmac_context) {
         HMAC_CTX *ctx = hmac_context;
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+        HMAC_CTX_free(ctx);
+#else
         HMAC_CTX_cleanup(ctx);
         free(ctx);
+#endif
     }
 }
 
@@ -188,6 +201,7 @@ int test_encrypt(signal_buffer **output,
         void *user_data)
 {
     int result = 0;
+    EVP_CIPHER_CTX *ctx = 0;
     uint8_t *out_buf = 0;
 
     const EVP_CIPHER *evp_cipher = aes_cipher(cipher, key_len);
@@ -206,10 +220,22 @@ int test_encrypt(signal_buffer **output,
         return SG_ERR_UNKNOWN;
     }
 
-    EVP_CIPHER_CTX ctx;
-    EVP_CIPHER_CTX_init(&ctx);
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+    ctx = EVP_CIPHER_CTX_new();
+    if(!ctx) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+#else
+    ctx = malloc(sizeof(EVP_CIPHER_CTX));
+    if(!ctx) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+    EVP_CIPHER_CTX_init(ctx);
+#endif
 
-    result = EVP_EncryptInit_ex(&ctx, evp_cipher, 0, key, iv);
+    result = EVP_EncryptInit_ex(ctx, evp_cipher, 0, key, iv);
     if(!result) {
         fprintf(stderr, "cannot initialize cipher\n");
         result = SG_ERR_UNKNOWN;
@@ -217,7 +243,7 @@ int test_encrypt(signal_buffer **output,
     }
 
     if(cipher == SG_CIPHER_AES_CTR_NOPADDING) {
-        result = EVP_CIPHER_CTX_set_padding(&ctx, 0);
+        result = EVP_CIPHER_CTX_set_padding(ctx, 0);
         if(!result) {
             fprintf(stderr, "cannot set padding\n");
             result = SG_ERR_UNKNOWN;
@@ -233,7 +259,7 @@ int test_encrypt(signal_buffer **output,
     }
 
     int out_len = 0;
-    result = EVP_EncryptUpdate(&ctx,
+    result = EVP_EncryptUpdate(ctx,
         out_buf, &out_len, plaintext, plaintext_len);
     if(!result) {
         fprintf(stderr, "cannot encrypt plaintext\n");
@@ -242,7 +268,7 @@ int test_encrypt(signal_buffer **output,
     }
 
     int final_len = 0;
-    result = EVP_EncryptFinal_ex(&ctx, out_buf + out_len, &final_len);
+    result = EVP_EncryptFinal_ex(ctx, out_buf + out_len, &final_len);
     if(!result) {
         fprintf(stderr, "cannot finish encrypting plaintext\n");
         result = SG_ERR_UNKNOWN;
@@ -252,7 +278,13 @@ int test_encrypt(signal_buffer **output,
     *output = signal_buffer_create(out_buf, out_len + final_len);
 
 complete:
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    if(ctx) {
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+        EVP_CIPHER_CTX_free(ctx);
+#else
+        free(ctx);
+#endif
+    }
     if(out_buf) {
         free(out_buf);
     }
@@ -267,6 +299,7 @@ int test_decrypt(signal_buffer **output,
         void *user_data)
 {
     int result = 0;
+    EVP_CIPHER_CTX *ctx = 0;
     uint8_t *out_buf = 0;
 
     const EVP_CIPHER *evp_cipher = aes_cipher(cipher, key_len);
@@ -285,10 +318,22 @@ int test_decrypt(signal_buffer **output,
         return SG_ERR_UNKNOWN;
     }
 
-    EVP_CIPHER_CTX ctx;
-    EVP_CIPHER_CTX_init(&ctx);
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+    ctx = EVP_CIPHER_CTX_new();
+    if(!ctx) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+#else
+    ctx = malloc(sizeof(EVP_CIPHER_CTX));
+    if(!ctx) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+    EVP_CIPHER_CTX_init(ctx);
+#endif
 
-    result = EVP_DecryptInit_ex(&ctx, evp_cipher, 0, key, iv);
+    result = EVP_DecryptInit_ex(ctx, evp_cipher, 0, key, iv);
     if(!result) {
         fprintf(stderr, "cannot initialize cipher\n");
         result = SG_ERR_UNKNOWN;
@@ -296,7 +341,7 @@ int test_decrypt(signal_buffer **output,
     }
 
     if(cipher == SG_CIPHER_AES_CTR_NOPADDING) {
-        result = EVP_CIPHER_CTX_set_padding(&ctx, 0);
+        result = EVP_CIPHER_CTX_set_padding(ctx, 0);
         if(!result) {
             fprintf(stderr, "cannot set padding\n");
             result = SG_ERR_UNKNOWN;
@@ -312,7 +357,7 @@ int test_decrypt(signal_buffer **output,
     }
 
     int out_len = 0;
-    result = EVP_DecryptUpdate(&ctx,
+    result = EVP_DecryptUpdate(ctx,
         out_buf, &out_len, ciphertext, ciphertext_len);
     if(!result) {
         fprintf(stderr, "cannot decrypt ciphertext\n");
@@ -321,7 +366,7 @@ int test_decrypt(signal_buffer **output,
     }
 
     int final_len = 0;
-    result = EVP_DecryptFinal_ex(&ctx, out_buf + out_len, &final_len);
+    result = EVP_DecryptFinal_ex(ctx, out_buf + out_len, &final_len);
     if(!result) {
         fprintf(stderr, "cannot finish decrypting ciphertext\n");
         result = SG_ERR_UNKNOWN;
@@ -331,7 +376,13 @@ int test_decrypt(signal_buffer **output,
     *output = signal_buffer_create(out_buf, out_len + final_len);
 
 complete:
-    EVP_CIPHER_CTX_cleanup(&ctx);
+    if(ctx) {
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+        EVP_CIPHER_CTX_free(ctx);
+#else
+        free(ctx);
+#endif
+    }
     if(out_buf) {
         free(out_buf);
     }
