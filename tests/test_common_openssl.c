@@ -282,6 +282,7 @@ complete:
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
         EVP_CIPHER_CTX_free(ctx);
 #else
+        EVP_CIPHER_CTX_cleanup(ctx);
         free(ctx);
 #endif
     }
@@ -380,6 +381,7 @@ complete:
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
         EVP_CIPHER_CTX_free(ctx);
 #else
+        EVP_CIPHER_CTX_cleanup(ctx);
         free(ctx);
 #endif
     }
