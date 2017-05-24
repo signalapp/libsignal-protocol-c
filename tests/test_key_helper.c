@@ -200,43 +200,6 @@ START_TEST(test_generate_pre_keys)
 }
 END_TEST
 
-START_TEST(test_generate_last_resort_pre_key)
-{
-    uint8_t lastResortPreKey[] = {
-            0x08, 0xff, 0xff, 0xff, 0x07, 0x12, 0x21, 0x05,
-            0x8f, 0x40, 0xc5, 0xad, 0xb6, 0x8f, 0x25, 0x62,
-            0x4a, 0xe5, 0xb2, 0x14, 0xea, 0x76, 0x7a, 0x6e,
-            0xc9, 0x4d, 0x82, 0x9d, 0x3d, 0x7b, 0x5e, 0x1a,
-            0xd1, 0xba, 0x6f, 0x3e, 0x21, 0x38, 0x28, 0x5f,
-            0x1a, 0x20, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
-            0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
-            0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
-            0x1e, 0x5f
-    };
-
-    int result = 0;
-    session_pre_key *pre_key = 0;
-    signal_buffer *buffer = 0;
-
-    result = signal_protocol_key_helper_generate_last_resort_pre_key(&pre_key, global_context);
-    ck_assert_int_eq(result, 0);
-
-    result = session_pre_key_serialize(&buffer, pre_key);
-    ck_assert_int_ge(result, 0);
-
-    uint8_t *data = signal_buffer_data(buffer);
-    size_t len = signal_buffer_len(buffer);
-
-    ck_assert_int_eq(len, sizeof(lastResortPreKey));
-    ck_assert_int_eq(memcmp(lastResortPreKey, data, len), 0);
-
-    /* Cleanup */
-    SIGNAL_UNREF(pre_key);
-    signal_buffer_free(buffer);
-}
-END_TEST
-
 START_TEST(test_generate_signed_pre_key)
 {
     int64_t timestamp = 1411152577000LL;
@@ -299,7 +262,6 @@ Suite *key_helper_suite(void)
     tcase_add_checked_fixture(tcase, test_setup, test_teardown);
     tcase_add_test(tcase, test_generate_identity_key_pair);
     tcase_add_test(tcase, test_generate_pre_keys);
-    tcase_add_test(tcase, test_generate_last_resort_pre_key);
     tcase_add_test(tcase, test_generate_signed_pre_key);
     suite_add_tcase(suite, tcase);
 
