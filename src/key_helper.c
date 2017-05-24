@@ -201,29 +201,6 @@ void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key
     }
 }
 
-int signal_protocol_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context)
-{
-    int result = 0;
-    session_pre_key *result_pre_key = 0;
-    ec_key_pair *ec_pair = 0;
-
-    assert(global_context);
-
-    result = curve_generate_key_pair(global_context, &ec_pair);
-    if(result < 0) {
-        goto complete;
-    }
-
-    result = session_pre_key_create(&result_pre_key, PRE_KEY_MEDIUM_MAX_VALUE, ec_pair);
-
-complete:
-    SIGNAL_UNREF(ec_pair);
-    if(result >= 0) {
-        *pre_key = result_pre_key;
-    }
-    return result;
-}
-
 int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
         const ratchet_identity_key_pair *identity_key_pair,
         uint32_t signed_pre_key_id,

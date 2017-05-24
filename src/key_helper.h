@@ -84,15 +84,6 @@ signal_protocol_key_helper_pre_key_list_node *signal_protocol_key_helper_key_lis
 void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key_list_node *head);
 
 /**
- * Generate the last resort pre key.  Clients should do this only once, at
- * install time, and durably store it for the length of the install.
- *
- * @param pre_key set to the generated pre key
- * @return 0 on success, or negative on failure
- */
-int signal_protocol_key_helper_generate_last_resort_pre_key(session_pre_key **pre_key, signal_context *global_context);
-
-/**
  * Generate a signed pre key
  *
  * @param signed_pre_key set to the generated pre key
