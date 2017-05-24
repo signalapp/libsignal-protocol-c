@@ -12,8 +12,8 @@ SET(SIGNAL_PROTOCOL_C_VERSION_PATCH 1)
 SET(SIGNAL_PROTOCOL_C_VERSION ${SIGNAL_PROTOCOL_C_VERSION_MAJOR}.${SIGNAL_PROTOCOL_C_VERSION_MINOR}.${SIGNAL_PROTOCOL_C_VERSION_PATCH})
 
 SET(LIB_SUFFIX "" CACHE STRING "Define suffix of directory name (32/64)")
-set(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "Directory where binary will install")
-SET(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "Directory where lib will install")
+SET(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "The directory the binaries are installed in")
+SET(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "The directory the libraries are installed in")
 SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "The directory the headers are installed in")
 
 INCLUDE(CheckSymbolExists)
