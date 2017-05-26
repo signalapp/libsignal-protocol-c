@@ -45,6 +45,9 @@ struct fingerprint_generator
 static int fingerprint_generator_create_display_string(fingerprint_generator *generator, char **display_string,
         const char *local_stable_identifier, ec_public_key *identity_key);
 
+static int fingerprint_generator_create_display_string_list(fingerprint_generator *generator, char **display_string,
+                                                            const char *stable_identifier, ec_public_key_list *identity_key_list);
+
 int fingerprint_generator_create(fingerprint_generator **generator, int iterations, signal_context *global_context)
 {
     fingerprint_generator *result_generator;
@@ -102,6 +105,72 @@ int fingerprint_generator_create_for(fingerprint_generator *generator,
 
     result = fingerprint_create(&result_fingerprint, displayable, scannable);
 
+complete:
+    if(displayable_local) {
+        free(displayable_local);
+    }
+    if(displayable_remote) {
+        free(displayable_remote);
+    }
+    SIGNAL_UNREF(displayable);
+    SIGNAL_UNREF(scannable);
+    if(result >= 0) {
+        *fingerprint_val = result_fingerprint;
+    }
+    return result;
+}
+
+int fingerprint_generator_create_for_list(fingerprint_generator *generator,
+                                          const char *local_stable_identifier, ec_public_key_list *local_identity_key_list,
+                                          const char *remote_stable_identifier, ec_public_key_list *remote_identity_key_list,
+                                          fingerprint **fingerprint_val)
+{
+    int result = 0;
+    int local_key_count = ec_public_key_list_size(local_identity_key_list);
+    int remote_key_count = ec_public_key_list_size(remote_identity_key_list);
+
+    if (local_key_count == 0 || remote_key_count == 0) {
+        return SG_ERR_INVAL;
+    }
+    
+    fingerprint *result_fingerprint = 0;
+    displayable_fingerprint *displayable = 0;
+    char *displayable_local = 0;
+    char *displayable_remote = 0;
+    scannable_fingerprint *scannable = 0;
+    
+    ec_public_key_list_sort(local_identity_key_list);
+    ec_public_key_list_sort(remote_identity_key_list);
+    
+    ec_public_key *local_identity_key = ec_public_key_list_at(local_identity_key_list, 0);
+    ec_public_key *remote_identity_key = ec_public_key_list_at(remote_identity_key_list, 0);
+    
+    result = fingerprint_generator_create_display_string_list(generator, &displayable_local,
+                                                         local_stable_identifier, local_identity_key_list);
+    if(result < 0) {
+        goto complete;
+    }
+    
+    result = fingerprint_generator_create_display_string_list(generator, &displayable_remote,
+                                                         remote_stable_identifier, remote_identity_key_list);
+    if(result < 0) {
+        goto complete;
+    }
+    
+    result = displayable_fingerprint_create(&displayable, displayable_local, displayable_remote);
+    if(result < 0) {
+        goto complete;
+    }
+    
+    result = scannable_fingerprint_create(&scannable, VERSION,
+                                          local_stable_identifier, local_identity_key,
+                                          remote_stable_identifier, remote_identity_key);
+    if(result < 0) {
+        goto complete;
+    }
+    
+    result = fingerprint_create(&result_fingerprint, displayable, scannable);
+    
 complete:
     if(displayable_local) {
         free(displayable_local);
@@ -217,6 +286,119 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
 #endif
     }
 
+complete:
+    if(digest_context) {
+        signal_sha512_digest_cleanup(generator->global_context, digest_context);
+    }
+    signal_buffer_free(identity_buffer);
+    signal_buffer_free(hash_buffer);
+    signal_buffer_free(hash_out_buffer);
+    if(result >= 0) {
+        *display_string = result_string;
+    }
+    return result;
+}
+
+int fingerprint_generator_create_display_string_list(fingerprint_generator *generator, char **display_string,
+                                                const char *stable_identifier, ec_public_key_list *identity_key_list)
+{
+    int result = 0;
+    char *result_string = 0;
+    void *digest_context = 0;
+    signal_buffer *identity_buffer = 0;
+    signal_buffer *hash_buffer = 0;
+    signal_buffer *hash_out_buffer = 0;
+    uint8_t *data = 0;
+    size_t len = 0;
+    int i = 0;
+    
+    assert(generator);
+    assert(stable_identifier);
+    assert(identity_key);
+    
+    result = signal_sha512_digest_init(generator->global_context, &digest_context);
+    if(result < 0) {
+        goto complete;
+    }
+    
+    result = ec_public_key_list_serialize(&identity_buffer, identity_key_list);
+    if(result < 0) {
+        goto complete;
+    }
+    
+    len = 2 + signal_buffer_len(identity_buffer) + strlen(stable_identifier);
+    
+    hash_buffer = signal_buffer_alloc(len);
+    if(!hash_buffer) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+    
+    data = signal_buffer_data(hash_buffer);
+    
+    memset(data, 0, len);
+    
+    data[0] = 0;
+    data[1] = (uint8_t)VERSION;
+    memcpy(data + 2, signal_buffer_data(identity_buffer), signal_buffer_len(identity_buffer));
+    memcpy(data + 2 + signal_buffer_len(identity_buffer), stable_identifier, strlen(stable_identifier));
+    
+    for(i = 0; i < generator->iterations; i++) {
+        data = signal_buffer_data(hash_buffer);
+        len = signal_buffer_len(hash_buffer);
+        
+        result = signal_sha512_digest_update(generator->global_context,
+                                             digest_context, data, len);
+        if(result < 0) {
+            goto complete;
+        }
+        
+        result = signal_sha512_digest_update(generator->global_context,
+                                             digest_context,
+                                             signal_buffer_data(identity_buffer),
+                                             signal_buffer_len(identity_buffer));
+        if(result < 0) {
+            goto complete;
+        }
+        
+        result = signal_sha512_digest_final(generator->global_context,
+                                            digest_context, &hash_out_buffer);
+        if(result < 0) {
+            goto complete;
+        }
+        
+        signal_buffer_free(hash_buffer);
+        hash_buffer = hash_out_buffer;
+        hash_out_buffer = 0;
+    }
+    
+    data = signal_buffer_data(hash_buffer);
+    len = signal_buffer_len(hash_buffer);
+    
+    if(len < 30) {
+        result = SG_ERR_UNKNOWN;
+        goto complete;
+    }
+    
+    result_string = malloc(31);
+    if(!result_string) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+    
+    for(i = 0; i < 30; i += 5) {
+        uint64_t chunk = ((uint64_t)data[i] & 0xFFL) << 32 |
+        ((uint64_t)data[i + 1] & 0xFFL) << 24 |
+        ((uint64_t)data[i + 2] & 0xFFL) << 16 |
+        ((uint64_t)data[i + 3] & 0xFFL) << 8 |
+        ((uint64_t)data[i + 4] & 0xFFL);
+#if _WINDOWS
+        sprintf_s(result_string + i, 6, "%05d", (int)(chunk % 100000));
+#else
+        snprintf(result_string + i, 6, "%05d", (int)(chunk % 100000));
+#endif
+    }
+    
 complete:
     if(digest_context) {
         signal_sha512_digest_cleanup(generator->global_context, digest_context);
