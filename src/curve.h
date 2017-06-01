@@ -29,6 +29,19 @@ int ec_public_key_memcmp(const ec_public_key *key1, const ec_public_key *key2);
  */
 int ec_public_key_serialize(signal_buffer **buffer, const ec_public_key *key);
 
+/**
+ * Serialize the public key list into a buffer that can be stored.
+ * The format of this data is compatible with the input format of
+ * curve_decode_point().
+ *
+ * @param buffer Pointer to a buffer that will be allocated by this function
+ *     and filled with the contents of the key. The caller is responsible for
+ *     freeing this buffer with signal_buffer_free().
+ * @param key_list Key list to serialize
+ * @return 0 on success, negative on failure
+ */
+int ec_public_key_list_serialize(signal_buffer **buffer, const ec_public_key_list *key_list);
+    
 void ec_public_key_destroy(signal_type_base *type);
 
 int curve_decode_private_point(ec_private_key **private_key, const uint8_t *key_data, size_t key_len, signal_context *global_context);

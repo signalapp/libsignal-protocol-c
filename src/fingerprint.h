@@ -40,6 +40,21 @@ int fingerprint_generator_create_for(fingerprint_generator *generator,
         const char *remote_stable_identifier, ec_public_key *remote_identity_key,
         fingerprint **fingerprint_val);
 
+/**
+ * Generate a scannable and displayble fingerprint.
+ *
+ * @param local_stable_identifier The client's "stable" identifier.
+ * @param local_identity_key_list The client's identity key list.
+ * @param remote_stable_identifier The remote party's "stable" identifier.
+ * @param remote_identity_key_list The remote party's identity key list.
+ * @param fingerprint Set to a freshly allocated unique fingerprint for this conversation
+ * @return 0 on success, or negative on failure
+ */
+int fingerprint_generator_create_for_list(fingerprint_generator *generator,
+                                     const char *local_stable_identifier, ec_public_key_list *local_identity_key_list,
+                                     const char *remote_stable_identifier, ec_public_key_list *remote_identity_key_list,
+                                     fingerprint **fingerprint_val);
+    
 void fingerprint_generator_free(fingerprint_generator *generator);
 
 int fingerprint_create(fingerprint **fingerprint_val, displayable_fingerprint *displayable, scannable_fingerprint *scannable);

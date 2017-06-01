@@ -122,6 +122,43 @@ int ec_public_key_serialize(signal_buffer **buffer, const ec_public_key *key)
     return 0;
 }
 
+int ec_public_key_list_serialize(signal_buffer **buffer, const ec_public_key_list *key_list)
+{
+    signal_buffer *buf = 0;
+    uint8_t *data = 0;
+    int length = 0;
+    const int size_per_key = (DJB_KEY_LEN + 1);
+    int i = 0;
+    
+    if(!key_list) {
+        return SG_ERR_INVAL;
+    }
+    
+    length = ec_public_key_list_size(key_list);
+
+    if(!length) {
+        return SG_ERR_INVAL;
+    }
+
+    buf = signal_buffer_alloc(sizeof(uint8_t) * length * size_per_key);
+    if(!buf) {
+        return SG_ERR_NOMEM;
+    }
+    
+    data = signal_buffer_data(buf);
+    
+    for (i = 0; i < length; i++) {
+        ec_public_key *key = ec_public_key_list_at(key_list, i);
+        int start_location = size_per_key * i;
+        data[start_location] = DJB_TYPE;
+        memcpy(data + start_location + 1, key->data, size_per_key);
+    }
+    
+    *buffer = buf;
+    
+    return 0;
+}
+
 int ec_public_key_serialize_protobuf(ProtobufCBinaryData *buffer, const ec_public_key *key)
 {
     size_t len = 0;
