@@ -149,9 +149,9 @@ int ec_public_key_list_serialize(signal_buffer **buffer, const ec_public_key_lis
     
     for (i = 0; i < length; i++) {
         ec_public_key *key = ec_public_key_list_at(key_list, i);
-        int start_location = DJB_KEY_LEN * i;
+        int start_location = size_per_key * i;
         data[start_location] = DJB_TYPE;
-        memcpy(data + start_location + 1, key->data, DJB_KEY_LEN);
+        memcpy(data + start_location + 1, key->data, size_per_key);
     }
     
     *buffer = buf;
