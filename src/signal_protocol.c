@@ -20,6 +20,8 @@ int type_ref_count = 0;
 int type_unref_count = 0;
 #endif
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+
 struct signal_protocol_store_context {
     signal_context *global_context;
     signal_protocol_session_store session_store;
@@ -105,6 +107,12 @@ signal_buffer *signal_buffer_create(const uint8_t *data, size_t len)
 signal_buffer *signal_buffer_copy(const signal_buffer *buffer)
 {
     return signal_buffer_create(buffer->data, buffer->len);
+}
+
+signal_buffer *signal_buffer_n_copy(const signal_buffer *buffer, size_t n)
+{
+    size_t len = MIN(buffer->len, n);
+    return signal_buffer_create(buffer->data, len);
 }
 
 signal_buffer *signal_buffer_append(signal_buffer *buffer, const uint8_t *data, size_t len)
