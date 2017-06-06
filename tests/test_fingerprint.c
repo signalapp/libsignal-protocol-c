@@ -26,19 +26,27 @@ START_TEST(test_scannable_fingerprint_serialize)
     int result = 0;
     ec_public_key *alice_identity_key = create_test_ec_public_key(global_context);
     ec_public_key *bob_identity_key = create_test_ec_public_key(global_context);
+    signal_buffer *alice_identity_buffer = 0;
+    signal_buffer *bob_identity_buffer = 0;
     scannable_fingerprint *alice_scannable = 0;
     scannable_fingerprint *bob_scannable = 0;
     signal_buffer *buffer = 0;
     scannable_fingerprint *bob_deserialized = 0;
 
+    result = ec_public_key_serialize(&alice_identity_buffer, alice_identity_key);
+    ck_assert_int_eq(result, 0);
+
+    result = ec_public_key_serialize(&bob_identity_buffer, bob_identity_key);
+    ck_assert_int_eq(result, 0);
+
     result = scannable_fingerprint_create(&alice_scannable, 1,
-            "+14152222222", alice_identity_key,
-            "+14153333333", bob_identity_key);
+            "+14152222222", alice_identity_buffer,
+            "+14153333333", bob_identity_buffer);
     ck_assert_int_eq(result, 0);
 
     result = scannable_fingerprint_create(&bob_scannable, 1,
-            "+14153333333", bob_identity_key,
-            "+14152222222", alice_identity_key);
+            "+14153333333", bob_identity_buffer,
+            "+14152222222", alice_identity_buffer);
     ck_assert_int_eq(result, 0);
 
     ck_assert_int_eq(scannable_fingerprint_compare(alice_scannable, bob_scannable), 1);
@@ -60,6 +68,8 @@ START_TEST(test_scannable_fingerprint_serialize)
     SIGNAL_UNREF(alice_scannable);
     SIGNAL_UNREF(bob_scannable);
     SIGNAL_UNREF(bob_deserialized);
+    signal_buffer_free(alice_identity_buffer);
+    signal_buffer_free(bob_identity_buffer);
     signal_buffer_free(buffer);
 }
 END_TEST
