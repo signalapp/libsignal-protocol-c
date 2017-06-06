@@ -125,12 +125,21 @@ signal_buffer *signal_buffer_append(signal_buffer *buffer, const uint8_t *data, 
 uint8_t *signal_buffer_data(signal_buffer *buffer);
 
 /**
+ * Gets the data pointer for the buffer.
+ * This can be used to read and write data stored in the buffer.
+ *
+ * @param buffer pointer to the buffer instance
+ * @return data pointer
+ */
+const uint8_t *signal_buffer_const_data(const signal_buffer *buffer);
+
+/**
  * Gets the length of the data stored within the buffer.
  *
  * @param buffer pointer to the buffer instance
  * @return data length
  */
-size_t signal_buffer_len(signal_buffer *buffer);
+size_t signal_buffer_len(const signal_buffer *buffer);
 
 /**
  * Compare two buffers.

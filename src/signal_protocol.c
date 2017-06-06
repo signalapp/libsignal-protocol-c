@@ -132,7 +132,12 @@ uint8_t *signal_buffer_data(signal_buffer *buffer)
     return buffer->data;
 }
 
-size_t signal_buffer_len(signal_buffer *buffer)
+const uint8_t *signal_buffer_const_data(const signal_buffer *buffer)
+{
+    return buffer->data;
+}
+
+size_t signal_buffer_len(const signal_buffer *buffer)
 {
     return buffer->len;
 }

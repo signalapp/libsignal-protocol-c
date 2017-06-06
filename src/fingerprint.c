@@ -5,6 +5,7 @@
 
 #include "FingerprintProtocol.pb-c.h"
 #include "signal_protocol_internal.h"
+#include "vpool.h"
 
 #define VERSION 0
 #define SHA512_DIGEST_LENGTH 64
@@ -31,9 +32,9 @@ struct scannable_fingerprint
     signal_type_base base;
     uint32_t version;
     char *local_stable_identifier;
-    ec_public_key *local_identity_key;
+    signal_buffer *local_fingerprint;
     char *remote_stable_identifier;
-    ec_public_key *remote_identity_key;
+    signal_buffer *remote_fingerprint;
 };
 
 struct fingerprint_generator
@@ -42,8 +43,16 @@ struct fingerprint_generator
     signal_context *global_context;
 };
 
+static int fingerprint_generator_get_logical_key_bytes(signal_buffer **key_bytes,
+        const ec_public_key_list *unsorted_key_list);
+
+static int fingerprint_generator_create_for_impl(fingerprint_generator *generator,
+        const char *local_stable_identifier, const signal_buffer *local_identity_buffer,
+        const char *remote_stable_identifier, const signal_buffer *remote_identity_buffer,
+        fingerprint **fingerprint_val);
+
 static int fingerprint_generator_create_display_string(fingerprint_generator *generator, char **display_string,
-        const char *local_stable_identifier, ec_public_key *identity_key);
+        const char *local_stable_identifier, const signal_buffer *identity_buffer);
 
 int fingerprint_generator_create(fingerprint_generator **generator, int iterations, signal_context *global_context)
 {
@@ -65,8 +74,68 @@ int fingerprint_generator_create(fingerprint_generator **generator, int iteratio
 }
 
 int fingerprint_generator_create_for(fingerprint_generator *generator,
-        const char *local_stable_identifier, ec_public_key *local_identity_key,
-        const char *remote_stable_identifier, ec_public_key *remote_identity_key,
+        const char *local_stable_identifier, const ec_public_key *local_identity_key,
+        const char *remote_stable_identifier, const ec_public_key *remote_identity_key,
+        fingerprint **fingerprint_val)
+{
+    int result = 0;
+    signal_buffer *local_key_buffer = 0;
+    signal_buffer *remote_key_buffer = 0;
+
+    result = ec_public_key_serialize(&local_key_buffer, local_identity_key);
+    if(result < 0) {
+        goto complete;
+    }
+
+    result = ec_public_key_serialize(&remote_key_buffer, remote_identity_key);
+    if(result < 0) {
+        goto complete;
+    }
+
+    result = fingerprint_generator_create_for_impl(generator,
+            local_stable_identifier, local_key_buffer,
+            remote_stable_identifier, remote_key_buffer,
+            fingerprint_val);
+
+complete:
+    signal_buffer_free(local_key_buffer);
+    signal_buffer_free(remote_key_buffer);
+    return result;
+}
+
+int fingerprint_generator_create_for_list(fingerprint_generator *generator,
+        const char *local_stable_identifier, const ec_public_key_list *local_identity_key_list,
+        const char *remote_stable_identifier, const ec_public_key_list *remote_identity_key_list,
+        fingerprint **fingerprint_val)
+{
+    int result = 0;
+    signal_buffer *local_key_buffer = 0;
+    signal_buffer *remote_key_buffer = 0;
+
+    result = fingerprint_generator_get_logical_key_bytes(&local_key_buffer, local_identity_key_list);
+    if(result < 0) {
+        goto complete;
+    }
+
+    result = fingerprint_generator_get_logical_key_bytes(&remote_key_buffer, remote_identity_key_list);
+    if(result < 0) {
+        goto complete;
+    }
+
+    result = fingerprint_generator_create_for_impl(generator,
+            local_stable_identifier, local_key_buffer,
+            remote_stable_identifier, remote_key_buffer,
+            fingerprint_val);
+
+complete:
+    signal_buffer_free(local_key_buffer);
+    signal_buffer_free(remote_key_buffer);
+    return result;
+}
+
+int fingerprint_generator_create_for_impl(fingerprint_generator *generator,
+        const char *local_stable_identifier, const signal_buffer *local_identity_buffer,
+        const char *remote_stable_identifier, const signal_buffer *remote_identity_buffer,
         fingerprint **fingerprint_val)
 {
     int result = 0;
@@ -77,13 +146,13 @@ int fingerprint_generator_create_for(fingerprint_generator *generator,
     scannable_fingerprint *scannable = 0;
 
     result = fingerprint_generator_create_display_string(generator, &displayable_local,
-            local_stable_identifier, local_identity_key);
+            local_stable_identifier, local_identity_buffer);
     if(result < 0) {
         goto complete;
     }
 
     result = fingerprint_generator_create_display_string(generator, &displayable_remote,
-            remote_stable_identifier, remote_identity_key);
+            remote_stable_identifier, remote_identity_buffer);
     if(result < 0) {
         goto complete;
     }
@@ -94,8 +163,8 @@ int fingerprint_generator_create_for(fingerprint_generator *generator,
     }
 
     result = scannable_fingerprint_create(&scannable, VERSION,
-            local_stable_identifier, local_identity_key,
-            remote_stable_identifier, remote_identity_key);
+            local_stable_identifier, local_identity_buffer,
+            remote_stable_identifier, remote_identity_buffer);
     if(result < 0) {
         goto complete;
     }
@@ -117,13 +186,70 @@ complete:
     return result;
 }
 
+int fingerprint_generator_get_logical_key_bytes(signal_buffer **key_bytes,
+        const ec_public_key_list *unsorted_key_list)
+{
+    int result = 0;
+    ec_public_key_list *sorted_key_list = 0;
+    ec_public_key *key_element = 0;
+    unsigned int list_size = 0;
+    unsigned int i = 0;
+    struct vpool vp;
+    signal_buffer *buffer = 0;
+
+    vpool_init(&vp, 1024, 0);
+
+    sorted_key_list = ec_public_key_list_copy(unsorted_key_list);
+    if(!sorted_key_list) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+
+    ec_public_key_list_sort(sorted_key_list);
+    list_size = ec_public_key_list_size(sorted_key_list);
+
+    for(i = 0; i < list_size; i++) {
+        key_element = ec_public_key_list_at(sorted_key_list, i);
+
+        result = ec_public_key_serialize(&buffer, key_element);
+        if (result < 0) {
+            goto complete;
+        }
+
+        if(!vpool_insert(&vp, vpool_get_length(&vp),
+                signal_buffer_data(buffer), signal_buffer_len(buffer))) {
+            result = SG_ERR_NOMEM;
+            goto complete;
+        }
+
+        signal_buffer_free(buffer);
+        buffer = 0;
+    }
+
+    buffer = signal_buffer_create(vpool_get_buf(&vp), vpool_get_length(&vp));
+    if(!buffer) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
+
+complete:
+    ec_public_key_list_free(sorted_key_list);
+    vpool_final(&vp);
+    if(result >= 0) {
+        *key_bytes = buffer;
+    }
+    else {
+        signal_buffer_free(buffer);
+    }
+    return result;
+}
+
 int fingerprint_generator_create_display_string(fingerprint_generator *generator, char **display_string,
-        const char *stable_identifier, ec_public_key *identity_key)
+        const char *stable_identifier, const signal_buffer *identity_buffer)
 {
     int result = 0;
     char *result_string = 0;
     void *digest_context = 0;
-    signal_buffer *identity_buffer = 0;
     signal_buffer *hash_buffer = 0;
     signal_buffer *hash_out_buffer = 0;
     uint8_t *data = 0;
@@ -132,14 +258,9 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
 
     assert(generator);
     assert(stable_identifier);
-    assert(identity_key);
+    assert(identity_buffer);
 
     result = signal_sha512_digest_init(generator->global_context, &digest_context);
-    if(result < 0) {
-        goto complete;
-    }
-
-    result = ec_public_key_serialize(&identity_buffer, identity_key);
     if(result < 0) {
         goto complete;
     }
@@ -158,7 +279,7 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
 
     data[0] = 0;
     data[1] = (uint8_t)VERSION;
-    memcpy(data + 2, signal_buffer_data(identity_buffer), signal_buffer_len(identity_buffer));
+    memcpy(data + 2, signal_buffer_const_data(identity_buffer), signal_buffer_len(identity_buffer));
     memcpy(data + 2 + signal_buffer_len(identity_buffer), stable_identifier, strlen(stable_identifier));
 
     for(i = 0; i < generator->iterations; i++) {
@@ -173,7 +294,7 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
 
         result = signal_sha512_digest_update(generator->global_context,
                 digest_context,
-                signal_buffer_data(identity_buffer),
+                signal_buffer_const_data(identity_buffer),
                 signal_buffer_len(identity_buffer));
         if(result < 0) {
             goto complete;
@@ -221,7 +342,6 @@ complete:
     if(digest_context) {
         signal_sha512_digest_cleanup(generator->global_context, digest_context);
     }
-    signal_buffer_free(identity_buffer);
     signal_buffer_free(hash_buffer);
     signal_buffer_free(hash_out_buffer);
     if(result >= 0) {
@@ -260,13 +380,13 @@ int fingerprint_create(fingerprint **fingerprint_val, displayable_fingerprint *d
     return 0;
 }
 
-displayable_fingerprint *fingerprint_get_displayable(fingerprint *fingerprint_val)
+displayable_fingerprint *fingerprint_get_displayable(const fingerprint *fingerprint_val)
 {
     assert(fingerprint_val);
     return fingerprint_val->displayable;
 }
 
-scannable_fingerprint *fingerprint_get_scannable(fingerprint *fingerprint_val)
+scannable_fingerprint *fingerprint_get_scannable(const fingerprint *fingerprint_val)
 {
     assert(fingerprint_val);
     return fingerprint_val->scannable;
@@ -343,19 +463,19 @@ complete:
     return result;
 }
 
-const char *displayable_fingerprint_local(displayable_fingerprint *displayable)
+const char *displayable_fingerprint_local(const displayable_fingerprint *displayable)
 {
     assert(displayable);
     return displayable->local_fingerprint;
 }
 
-const char *displayable_fingerprint_remote(displayable_fingerprint *displayable)
+const char *displayable_fingerprint_remote(const displayable_fingerprint *displayable)
 {
     assert(displayable);
     return displayable->remote_fingerprint;
 }
 
-const char *displayable_fingerprint_text(displayable_fingerprint *displayable)
+const char *displayable_fingerprint_text(const displayable_fingerprint *displayable)
 {
     assert(displayable);
     return displayable->display_text;
@@ -378,14 +498,14 @@ void displayable_fingerprint_destroy(signal_type_base *type)
 
 int scannable_fingerprint_create(scannable_fingerprint **scannable,
         uint32_t version,
-        const char *local_stable_identifier, ec_public_key *local_identity_key,
-        const char *remote_stable_identifier, ec_public_key *remote_identity_key)
+        const char *local_stable_identifier, const signal_buffer *local_fingerprint,
+        const char *remote_stable_identifier, const signal_buffer *remote_fingerprint)
 {
     int result = 0;
     scannable_fingerprint *result_scannable = 0;
 
-    if(!local_stable_identifier || !local_identity_key ||
-            !remote_stable_identifier || !remote_identity_key) {
+    if(!local_stable_identifier || !local_fingerprint ||
+            !remote_stable_identifier || !remote_fingerprint) {
         return SG_ERR_INVAL;
     }
 
@@ -405,8 +525,11 @@ int scannable_fingerprint_create(scannable_fingerprint **scannable,
         goto complete;
     }
 
-    result_scannable->local_identity_key = local_identity_key;
-    SIGNAL_REF(local_identity_key);
+    result_scannable->local_fingerprint = signal_buffer_copy(local_fingerprint);
+    if(!result_scannable->local_fingerprint) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
 
     result_scannable->remote_stable_identifier = strdup(remote_stable_identifier);
     if(!result_scannable->remote_stable_identifier) {
@@ -414,8 +537,11 @@ int scannable_fingerprint_create(scannable_fingerprint **scannable,
         goto complete;
     }
 
-    result_scannable->remote_identity_key = remote_identity_key;
-    SIGNAL_REF(remote_identity_key);
+    result_scannable->remote_fingerprint = signal_buffer_copy(remote_fingerprint);
+    if(!result_scannable->remote_fingerprint) {
+        result = SG_ERR_NOMEM;
+        goto complete;
+    }
 
 complete:
     if(result < 0) {
@@ -442,27 +568,23 @@ int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fing
     combined_fingerprint.version = scannable->version;
     combined_fingerprint.has_version = 1;
 
-    if(scannable->local_stable_identifier && scannable->local_identity_key) {
+    if(scannable->local_stable_identifier && scannable->local_fingerprint) {
         signal_protocol_str_serialize_protobuf(&local_fingerprint.identifier, scannable->local_stable_identifier);
         local_fingerprint.has_identifier = 1;
 
-        result = ec_public_key_serialize_protobuf(&local_fingerprint.publickey, scannable->local_identity_key);
-        if(result < 0) {
-            goto complete;
-        }
+        local_fingerprint.publickey.data = signal_buffer_data(scannable->local_fingerprint);
+        local_fingerprint.publickey.len = signal_buffer_len(scannable->local_fingerprint);
         local_fingerprint.has_publickey = 1;
 
         combined_fingerprint.localfingerprint = &local_fingerprint;
     }
 
-    if(scannable->remote_stable_identifier && scannable->remote_identity_key) {
+    if(scannable->remote_stable_identifier && scannable->remote_fingerprint) {
         signal_protocol_str_serialize_protobuf(&remote_fingerprint.identifier, scannable->remote_stable_identifier);
         remote_fingerprint.has_identifier = 1;
 
-        result = ec_public_key_serialize_protobuf(&remote_fingerprint.publickey, scannable->remote_identity_key);
-        if(result < 0) {
-            goto complete;
-        }
+        remote_fingerprint.publickey.data = signal_buffer_data(scannable->remote_fingerprint);
+        remote_fingerprint.publickey.len = signal_buffer_len(scannable->remote_fingerprint);
         remote_fingerprint.has_publickey = 1;
 
         combined_fingerprint.remotefingerprint = &remote_fingerprint;
@@ -486,12 +608,6 @@ int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fing
     }
 
 complete:
-    if(local_fingerprint.publickey.data) {
-        free(local_fingerprint.publickey.data);
-    }
-    if(remote_fingerprint.publickey.data) {
-        free(remote_fingerprint.publickey.data);
-    }
     if(result >= 0) {
         *buffer = result_buf;
     }
@@ -504,9 +620,9 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
     Textsecure__CombinedFingerprint *combined_fingerprint = 0;
     uint32_t version = 0;
     char *local_stable_identifier = 0;
-    ec_public_key *local_identity_key = 0;
+    signal_buffer *local_fingerprint = 0;
     char *remote_stable_identifier = 0;
-    ec_public_key *remote_identity_key = 0;
+    signal_buffer *remote_fingerprint = 0;
 
     combined_fingerprint = textsecure__combined_fingerprint__unpack(0, len, data);
     if(!combined_fingerprint) {
@@ -527,11 +643,11 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
             }
         }
         if(combined_fingerprint->localfingerprint->has_publickey) {
-            result = curve_decode_point(&local_identity_key,
+            local_fingerprint = signal_buffer_create(
                     combined_fingerprint->localfingerprint->publickey.data,
-                    combined_fingerprint->localfingerprint->publickey.len,
-                    global_context);
-            if(result < 0) {
+                    combined_fingerprint->localfingerprint->publickey.len);
+            if(!local_fingerprint) {
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
         }
@@ -546,19 +662,19 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
             }
         }
         if(combined_fingerprint->remotefingerprint->has_publickey) {
-            result = curve_decode_point(&remote_identity_key,
+            remote_fingerprint = signal_buffer_create(
                     combined_fingerprint->remotefingerprint->publickey.data,
-                    combined_fingerprint->remotefingerprint->publickey.len,
-                    global_context);
-            if(result < 0) {
+                    combined_fingerprint->remotefingerprint->publickey.len);
+            if(!remote_fingerprint) {
+                result = SG_ERR_NOMEM;
                 goto complete;
             }
         }
     }
 
     result = scannable_fingerprint_create(scannable, version,
-            local_stable_identifier, local_identity_key,
-            remote_stable_identifier, remote_identity_key);
+            local_stable_identifier, local_fingerprint,
+            remote_stable_identifier, remote_fingerprint);
 
 complete:
     if(combined_fingerprint) {
@@ -567,51 +683,47 @@ complete:
     if(local_stable_identifier) {
         free(local_stable_identifier);
     }
-    if(local_identity_key) {
-        SIGNAL_UNREF(local_identity_key);
-    }
     if(remote_stable_identifier) {
         free(remote_stable_identifier);
     }
-    if(remote_identity_key) {
-        SIGNAL_UNREF(remote_identity_key);
-    }
+    signal_buffer_free(local_fingerprint);
+    signal_buffer_free(remote_fingerprint);
     return result;
 }
 
-uint32_t scannable_fingerprint_get_version(scannable_fingerprint *scannable)
+uint32_t scannable_fingerprint_get_version(const scannable_fingerprint *scannable)
 {
     assert(scannable);
     return scannable->version;
 }
 
-const char *scannable_fingerprint_get_local_stable_identifier(scannable_fingerprint *scannable)
+const char *scannable_fingerprint_get_local_stable_identifier(const scannable_fingerprint *scannable)
 {
     assert(scannable);
     return scannable->local_stable_identifier;
 }
 
-ec_public_key *scannable_fingerprint_get_local_identity_key(scannable_fingerprint *scannable)
+signal_buffer *scannable_fingerprint_get_local_fingerprint(const scannable_fingerprint *scannable)
 {
     assert(scannable);
-    return scannable->local_identity_key;
+    return scannable->local_fingerprint;
 }
 
-const char *scannable_fingerprint_get_remote_stable_identifier(scannable_fingerprint *scannable)
+const char *scannable_fingerprint_get_remote_stable_identifier(const scannable_fingerprint *scannable)
 {
     assert(scannable);
     return scannable->remote_stable_identifier;
 }
 
-ec_public_key *scannable_fingerprint_get_remote_identity_key(scannable_fingerprint *scannable)
+signal_buffer *scannable_fingerprint_get_remote_fingerprint(const scannable_fingerprint *scannable)
 {
     assert(scannable);
-    return scannable->remote_identity_key;
+    return scannable->remote_fingerprint;
 }
 
-int scannable_fingerprint_compare(scannable_fingerprint *scannable, const scannable_fingerprint *other_scannable)
+int scannable_fingerprint_compare(const scannable_fingerprint *scannable, const scannable_fingerprint *other_scannable)
 {
-    if(!other_scannable->remote_identity_key || !other_scannable->local_identity_key ||
+    if(!other_scannable->remote_fingerprint || !other_scannable->local_fingerprint ||
             other_scannable->version != scannable->version) {
         return SG_ERR_FP_VERSION_MISMATCH;
     }
@@ -624,11 +736,11 @@ int scannable_fingerprint_compare(scannable_fingerprint *scannable, const scanna
         return SG_ERR_FP_IDENT_MISMATCH;
     }
 
-    if(ec_public_key_compare(scannable->local_identity_key, other_scannable->remote_identity_key) != 0) {
+    if(signal_buffer_compare(scannable->local_fingerprint, other_scannable->remote_fingerprint) != 0) {
         return 0;
     }
 
-    if(ec_public_key_compare(scannable->remote_identity_key, other_scannable->local_identity_key) != 0) {
+    if(signal_buffer_compare(scannable->remote_fingerprint, other_scannable->local_fingerprint) != 0) {
         return 0;
     }
 
@@ -642,14 +754,12 @@ void scannable_fingerprint_destroy(signal_type_base *type)
     if(scannable->local_stable_identifier) {
         free(scannable->local_stable_identifier);
     }
-
-    SIGNAL_UNREF(scannable->local_identity_key);
-
     if(scannable->remote_stable_identifier) {
         free(scannable->remote_stable_identifier);
     }
 
-    SIGNAL_UNREF(scannable->remote_identity_key);
+    signal_buffer_free(scannable->local_fingerprint);
+    signal_buffer_free(scannable->remote_fingerprint);
 
     free(scannable);
 }
