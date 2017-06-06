@@ -559,9 +559,9 @@ int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fing
     int result = 0;
     size_t result_size = 0;
     signal_buffer *result_buf = 0;
-    Textsecure__CombinedFingerprint combined_fingerprint = TEXTSECURE__COMBINED_FINGERPRINT__INIT;
-    Textsecure__FingerprintData local_fingerprint = TEXTSECURE__FINGERPRINT_DATA__INIT;
-    Textsecure__FingerprintData remote_fingerprint = TEXTSECURE__FINGERPRINT_DATA__INIT;
+    Textsecure__CombinedFingerprints combined_fingerprint = TEXTSECURE__COMBINED_FINGERPRINTS__INIT;
+    Textsecure__LogicalFingerprint local_fingerprint = TEXTSECURE__LOGICAL_FINGERPRINT__INIT;
+    Textsecure__LogicalFingerprint remote_fingerprint = TEXTSECURE__LOGICAL_FINGERPRINT__INIT;
     size_t len = 0;
     uint8_t *data = 0;
 
@@ -572,9 +572,9 @@ int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fing
         signal_protocol_str_serialize_protobuf(&local_fingerprint.identifier, scannable->local_stable_identifier);
         local_fingerprint.has_identifier = 1;
 
-        local_fingerprint.publickey.data = signal_buffer_data(scannable->local_fingerprint);
-        local_fingerprint.publickey.len = signal_buffer_len(scannable->local_fingerprint);
-        local_fingerprint.has_publickey = 1;
+        local_fingerprint.content.data = signal_buffer_data(scannable->local_fingerprint);
+        local_fingerprint.content.len = signal_buffer_len(scannable->local_fingerprint);
+        local_fingerprint.has_content = 1;
 
         combined_fingerprint.localfingerprint = &local_fingerprint;
     }
@@ -583,14 +583,14 @@ int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fing
         signal_protocol_str_serialize_protobuf(&remote_fingerprint.identifier, scannable->remote_stable_identifier);
         remote_fingerprint.has_identifier = 1;
 
-        remote_fingerprint.publickey.data = signal_buffer_data(scannable->remote_fingerprint);
-        remote_fingerprint.publickey.len = signal_buffer_len(scannable->remote_fingerprint);
-        remote_fingerprint.has_publickey = 1;
+        remote_fingerprint.content.data = signal_buffer_data(scannable->remote_fingerprint);
+        remote_fingerprint.content.len = signal_buffer_len(scannable->remote_fingerprint);
+        remote_fingerprint.has_content = 1;
 
         combined_fingerprint.remotefingerprint = &remote_fingerprint;
     }
 
-    len = textsecure__combined_fingerprint__get_packed_size(&combined_fingerprint);
+    len = textsecure__combined_fingerprints__get_packed_size(&combined_fingerprint);
 
     result_buf = signal_buffer_alloc(len);
     if(!result_buf) {
@@ -599,7 +599,7 @@ int scannable_fingerprint_serialize(signal_buffer **buffer, const scannable_fing
     }
 
     data = signal_buffer_data(result_buf);
-    result_size = textsecure__combined_fingerprint__pack(&combined_fingerprint, data);
+    result_size = textsecure__combined_fingerprints__pack(&combined_fingerprint, data);
     if(result_size != len) {
         signal_buffer_free(result_buf);
         result = SG_ERR_INVALID_PROTO_BUF;
@@ -617,14 +617,14 @@ complete:
 int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const uint8_t *data, size_t len, signal_context *global_context)
 {
     int result = 0;
-    Textsecure__CombinedFingerprint *combined_fingerprint = 0;
+    Textsecure__CombinedFingerprints *combined_fingerprint = 0;
     uint32_t version = 0;
     char *local_stable_identifier = 0;
     signal_buffer *local_fingerprint = 0;
     char *remote_stable_identifier = 0;
     signal_buffer *remote_fingerprint = 0;
 
-    combined_fingerprint = textsecure__combined_fingerprint__unpack(0, len, data);
+    combined_fingerprint = textsecure__combined_fingerprints__unpack(0, len, data);
     if(!combined_fingerprint) {
         result = SG_ERR_INVALID_PROTO_BUF;
         goto complete;
@@ -642,10 +642,10 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
                 goto complete;
             }
         }
-        if(combined_fingerprint->localfingerprint->has_publickey) {
+        if(combined_fingerprint->localfingerprint->has_content) {
             local_fingerprint = signal_buffer_create(
-                    combined_fingerprint->localfingerprint->publickey.data,
-                    combined_fingerprint->localfingerprint->publickey.len);
+                    combined_fingerprint->localfingerprint->content.data,
+                    combined_fingerprint->localfingerprint->content.len);
             if(!local_fingerprint) {
                 result = SG_ERR_NOMEM;
                 goto complete;
@@ -661,10 +661,10 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
                 goto complete;
             }
         }
-        if(combined_fingerprint->remotefingerprint->has_publickey) {
+        if(combined_fingerprint->remotefingerprint->has_content) {
             remote_fingerprint = signal_buffer_create(
-                    combined_fingerprint->remotefingerprint->publickey.data,
-                    combined_fingerprint->remotefingerprint->publickey.len);
+                    combined_fingerprint->remotefingerprint->content.data,
+                    combined_fingerprint->remotefingerprint->content.len);
             if(!remote_fingerprint) {
                 result = SG_ERR_NOMEM;
                 goto complete;
@@ -678,7 +678,7 @@ int scannable_fingerprint_deserialize(scannable_fingerprint **scannable, const u
 
 complete:
     if(combined_fingerprint) {
-        textsecure__combined_fingerprint__free_unpacked(combined_fingerprint, 0);
+        textsecure__combined_fingerprints__free_unpacked(combined_fingerprint, 0);
     }
     if(local_stable_identifier) {
         free(local_stable_identifier);
