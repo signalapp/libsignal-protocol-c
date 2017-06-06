@@ -16,14 +16,16 @@ extern "C" {
  *                   across all clients.
  *
  *                   The higher the iteration count, the higher the security level:
- *
  *                   - 1024 ~ 109.7 bits
  *                   - 1400 > 110 bits
  *                   - 5200 > 112 bits
+ * @param scannable_version The format version for the scannable fingerprint (0 or 1)
  * @param global_context the global library context
  * @return 0 on success, or negative on failure
  */
-int fingerprint_generator_create(fingerprint_generator **generator, int iterations, signal_context *global_context);
+int fingerprint_generator_create(fingerprint_generator **generator,
+        int iterations, int scannable_version,
+        signal_context *global_context);
 
 /**
  * Generate a scannable and displayble fingerprint.

@@ -103,6 +103,15 @@ signal_buffer *signal_buffer_create(const uint8_t *data, size_t len);
 signal_buffer *signal_buffer_copy(const signal_buffer *buffer);
 
 /**
+ * Create a copy of an existing buffer.
+ *
+ * @param buffer the existing buffer to copy
+ * @param n the maximum number of bytes to copy
+ * @return pointer to the updated buffer, or 0 on failure
+ */
+signal_buffer *signal_buffer_n_copy(const signal_buffer *buffer, size_t n);
+
+/**
  * Append the provided data to an existing buffer.
  * Note: The underlying buffer is only expanded by an amount sufficient
  * to hold the data being appended. There is no additional reserved space
