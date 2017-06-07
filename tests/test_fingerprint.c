@@ -310,6 +310,90 @@ START_TEST(test_matching_fingerprints_v1)
 }
 END_TEST
 
+START_TEST(test_matching_list_fingerprints)
+{
+    int result = 0;
+    ec_public_key *alice_identity_key1 = create_test_ec_public_key(global_context);
+    ec_public_key *alice_identity_key2 = create_test_ec_public_key(global_context);
+    ec_public_key *alice_identity_key3 = create_test_ec_public_key(global_context);
+    ec_public_key *alice_identity_key4 = create_test_ec_public_key(global_context);
+    ec_public_key *bob_identity_key1 = create_test_ec_public_key(global_context);
+    ec_public_key *bob_identity_key2 = create_test_ec_public_key(global_context);
+    ec_public_key *bob_identity_key3 = create_test_ec_public_key(global_context);
+    ec_public_key *bob_identity_key4 = create_test_ec_public_key(global_context);
+    fingerprint_generator *generator = 0;
+    fingerprint *alice_fingerprint = 0;
+    fingerprint *bob_fingerprint = 0;
+
+    ec_public_key_list *alice_key_list = ec_public_key_list_alloc();
+    ck_assert_ptr_ne(alice_key_list, 0);
+    result = ec_public_key_list_push_back(alice_key_list, alice_identity_key1);
+    ck_assert_int_eq(result, 0);
+    result = ec_public_key_list_push_back(alice_key_list, alice_identity_key2);
+    ck_assert_int_eq(result, 0);
+    result = ec_public_key_list_push_back(alice_key_list, alice_identity_key3);
+    ck_assert_int_eq(result, 0);
+    result = ec_public_key_list_push_back(alice_key_list, alice_identity_key4);
+    ck_assert_int_eq(result, 0);
+
+    ec_public_key_list *bob_key_list = ec_public_key_list_alloc();
+    ck_assert_ptr_ne(bob_key_list, 0);
+    result = ec_public_key_list_push_back(bob_key_list, bob_identity_key1);
+    ck_assert_int_eq(result, 0);
+    result = ec_public_key_list_push_back(bob_key_list, bob_identity_key2);
+    ck_assert_int_eq(result, 0);
+    result = ec_public_key_list_push_back(bob_key_list, bob_identity_key3);
+    ck_assert_int_eq(result, 0);
+    result = ec_public_key_list_push_back(bob_key_list, bob_identity_key4);
+    ck_assert_int_eq(result, 0);
+
+    result = fingerprint_generator_create(&generator, 1024, 1, global_context);
+    ck_assert_int_eq(result, 0);
+
+    result = fingerprint_generator_create_for_list(generator,
+            "+14152222222", alice_key_list,
+            "+14153333333", bob_key_list,
+            &alice_fingerprint);
+    ck_assert_int_eq(result, 0);
+
+    result = fingerprint_generator_create_for_list(generator,
+            "+14153333333", bob_key_list,
+            "+14152222222", alice_key_list,
+            &bob_fingerprint);
+    ck_assert_int_eq(result, 0);
+
+    displayable_fingerprint *alice_displayable = fingerprint_get_displayable(alice_fingerprint);
+    displayable_fingerprint *bob_displayable = fingerprint_get_displayable(bob_fingerprint);
+
+    ck_assert_str_eq(
+            displayable_fingerprint_text(alice_displayable),
+            displayable_fingerprint_text(bob_displayable));
+
+    scannable_fingerprint *alice_scannable = fingerprint_get_scannable(alice_fingerprint);
+    scannable_fingerprint *bob_scannable = fingerprint_get_scannable(bob_fingerprint);
+
+    ck_assert_int_eq(scannable_fingerprint_compare(alice_scannable, bob_scannable), 1);
+    ck_assert_int_eq(scannable_fingerprint_compare(bob_scannable, alice_scannable), 1);
+
+    ck_assert_int_eq(strlen(displayable_fingerprint_text(alice_displayable)), 60);
+
+    /* Cleanup */
+    fingerprint_generator_free(generator);
+    SIGNAL_UNREF(alice_identity_key1);
+    SIGNAL_UNREF(alice_identity_key2);
+    SIGNAL_UNREF(alice_identity_key3);
+    SIGNAL_UNREF(alice_identity_key4);
+    SIGNAL_UNREF(bob_identity_key1);
+    SIGNAL_UNREF(bob_identity_key2);
+    SIGNAL_UNREF(bob_identity_key3);
+    SIGNAL_UNREF(bob_identity_key4);
+    ec_public_key_list_free(alice_key_list);
+    ec_public_key_list_free(bob_key_list);
+    SIGNAL_UNREF(alice_fingerprint);
+    SIGNAL_UNREF(bob_fingerprint);
+}
+END_TEST
+
 static void test_mismatching_fingerprints_impl(int version)
 {
     int result = 0;
@@ -480,6 +564,7 @@ Suite *fingerprint_suite(void)
     tcase_add_test(tcase, test_vectors_v1);
     tcase_add_test(tcase, test_matching_fingerprints_v0);
     tcase_add_test(tcase, test_matching_fingerprints_v1);
+    tcase_add_test(tcase, test_matching_list_fingerprints);
     tcase_add_test(tcase, test_mismatching_fingerprints_v0);
     tcase_add_test(tcase, test_mismatching_fingerprints_v1);
     tcase_add_test(tcase, test_mismatching_identifiers);
