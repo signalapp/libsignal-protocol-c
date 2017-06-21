@@ -7,7 +7,8 @@
 
 #include "curve25519/curve25519-donna.h"
 #include "curve25519/ed25519/additions/curve_sigs.h"
-#include "curve25519/ed25519/additions/vxeddsa.h"
+#include "curve25519/ed25519/additions/generalized/gen_x.h"
+#include "curve25519/ed25519/tests/internal_fast_tests.h"
 #include "signal_protocol_internal.h"
 #include "signal_utarray.h"
 
@@ -38,6 +39,13 @@ struct ec_public_key_list
 {
     UT_array *values;
 };
+
+int curve_internal_fast_tests()
+{
+    if (all_fast_tests(1) != 0)
+        return SG_ERR_UNKNOWN;
+    return 0;
+}
 
 int curve_decode_point(ec_public_key **public_key, const uint8_t *key_data, size_t key_len, signal_context *global_context)
 {
@@ -600,9 +608,9 @@ int curve_verify_vrf_signature(signal_context *context,
         goto complete;
     }
 
-    result = vxed25519_verify(signal_buffer_data(buffer),
+    result = generalized_xveddsa_25519_verify(signal_buffer_data(buffer),
             signature_data, signing_key->data,
-            message_data, message_len);
+            message_data, message_len, NULL, 0);
     if(result != 0) {
         signal_log(context, SG_LOG_ERROR, "Invalid signature");
         result = SG_ERR_VRF_SIG_VERIF_FAILED;
@@ -638,9 +646,9 @@ int curve_calculate_vrf_signature(signal_context *context,
         goto complete;
     }
 
-    result = vxed25519_sign(signal_buffer_data(buffer),
+    result = generalized_xveddsa_25519_sign(signal_buffer_data(buffer),
             signing_key->data,
-            message_data, message_len, random_data);
+            message_data, message_len, random_data, NULL, 0);
     if(result != 0) {
         signal_log(context, SG_LOG_ERROR, "Signature failed!");
         result = SG_ERR_UNKNOWN;

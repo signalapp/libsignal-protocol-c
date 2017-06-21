@@ -16,7 +16,9 @@ ENDIF(CMAKE_C_COMPILER_ID MATCHES "Clang")
 include_directories(
     ed25519/nacl_includes
     ed25519/additions
+    ed25519/additions/generalized
     ed25519/sha512
+    ed25519/tests
     ed25519
 )
 
@@ -84,13 +86,18 @@ set(ed25519_SRCS
     ed25519/additions/sc_neg.c
     ed25519/additions/sign_modified.c
     ed25519/additions/utility.c
-    ed25519/additions/vopen_modified.c
-    ed25519/additions/vsign_modified.c
-    ed25519/additions/vxeddsa.c
+    ed25519/additions/generalized/ge_p3_add.c
+    ed25519/additions/generalized/gen_eddsa.c
+    ed25519/additions/generalized/gen_labelset.c
+    ed25519/additions/generalized/gen_veddsa.c
+    ed25519/additions/generalized/gen_x.c
+    ed25519/additions/generalized/point_isreduced.c
+    ed25519/additions/generalized/sc_isreduced.c
     ed25519/additions/xeddsa.c
     ed25519/additions/zeroize.c
     ed25519/nacl_sha512/blocks.c
     ed25519/nacl_sha512/hash.c
+    ed25519/tests/internal_fast_tests.c
 )
 
 add_library(curve25519 OBJECT ${curve25519_SRCS} ${ed25519_SRCS})
