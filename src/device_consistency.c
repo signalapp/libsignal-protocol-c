@@ -641,8 +641,8 @@ int device_consistency_signature_list_sort_comparator(const void *a, const void 
     int result;
     const device_consistency_signature *sig1 = *((const device_consistency_signature **)a);
     const device_consistency_signature *sig2 = *((const device_consistency_signature **)b);
-    signal_buffer *buf1 = device_consistency_signature_get_signature(sig1);
-    signal_buffer *buf2 = device_consistency_signature_get_signature(sig2);
+    signal_buffer *buf1 = device_consistency_signature_get_vrf_output(sig1);
+    signal_buffer *buf2 = device_consistency_signature_get_vrf_output(sig2);
     size_t len1 = signal_buffer_len(buf1);
     size_t len2 = signal_buffer_len(buf2);
 
