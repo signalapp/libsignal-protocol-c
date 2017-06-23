@@ -26,16 +26,6 @@ void ge_scalarmult_cofactor(ge_p3 *q, const ge_p3 *p);
 
 void elligator(fe u, const fe r);
 void hash_to_point(ge_p3* p, const unsigned char* msg, const unsigned long in_len);
-void calculate_Bv(ge_p3* Bv,
-                  unsigned char* buf,
-                  const unsigned char* A,
-                  const unsigned char* msg, const unsigned long msg_len);
-void calculate_Bv_and_V(ge_p3* Bv,
-                        unsigned char* V,
-                        unsigned char* buf,
-                        const unsigned char* a,
-                        const unsigned char* A,
-                        const unsigned char* msg, const unsigned long msg_len);
 
 int crypto_sign_modified(
   unsigned char *sm,
@@ -50,20 +40,6 @@ int crypto_sign_open_modified(
   const unsigned char *sm,unsigned long long smlen,
   const unsigned char *pk
   );
-
-int crypto_vsign_modified(
-  unsigned char *sm,
-  const unsigned char *M,unsigned long Mlen,
-  const unsigned char *a, 
-  const unsigned char *A,
-  const unsigned char *random,
-  const ge_p3 *Bu,
-  const unsigned char *U);
-
-int crypto_vsign_open_modified(
-  unsigned char *m,
-  const unsigned char *sm,unsigned long long smlen,
-  const unsigned char *pk, const ge_p3* Bu);
 
 
 #endif

@@ -35,6 +35,7 @@ set(LIBS ${LIBS}
 	${CHECK_LDFLAGS}
 	${OPENSSL_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
+	${CMAKE_DL_LIBS}
 	signal-protocol-c
 )
 
