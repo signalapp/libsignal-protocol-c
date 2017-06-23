@@ -78,34 +78,3 @@ void hash_to_point(ge_p3* p, const unsigned char* in, const unsigned long in_len
 }
 
 
-void calculate_Bv(ge_p3* Bv, 
-                 unsigned char* buf,
-                 const unsigned char* A,
-                 const unsigned char* msg, const unsigned long msg_len)
-{
-  int count;
-
-  /* Calculate SHA512(label(2) || A || msg) */
-  buf[0] = 0xFD;
-  for (count = 1; count < 32; count++)
-    buf[count] = 0xFF;
-  memmove(buf+32, A, 32);
-  memmove(buf+64, msg, msg_len); 
-
-  hash_to_point(Bv, buf, 64 + msg_len);
-}
-
-
-void calculate_Bv_and_V(ge_p3* Bv, 
-                       unsigned char* V, 
-                       unsigned char* buf,
-                       const unsigned char* a,
-                       const unsigned char* A,
-                       const unsigned char* msg, const unsigned long msg_len)
-{
-  ge_p3 p3;
-
-  calculate_Bv(Bv, buf, A, msg, msg_len);
-  ge_scalarmult(&p3, a, Bv);
-  ge_p3_tobytes(V, &p3);
-}
