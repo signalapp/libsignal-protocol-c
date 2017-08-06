@@ -406,6 +406,60 @@ typedef struct signal_crypto_provider {
             const uint8_t *ciphertext, size_t ciphertext_len,
             void *user_data);
 
+    /**
+     * Callback for calculation of curve25519
+     *
+     * This is optional function callback, if not set embedded implementation of curve25519-donna will be
+     * used
+     *
+     * @param output The buffer where the calculated output will be filled (must be 32 bytes)
+     * @param input1 The first input buffer for cuver25519 calculation (must be 32 bytes)
+     * @param input2 The second input buffer for cuver25519 calculation (must be 32 bytes)
+     * @param user_data The user data
+     * @return 0 on success, negative on failure
+     */
+    int (*curve25519_func)(uint8_t *output,
+            const uint8_t *input1,
+            const uint8_t *input2,
+            void *user_data);
+
+    /**
+     * Callback for signature calculation based on curve25519
+     *
+     * This is optional function callback, if not set embedded implementation of curve25519-donna/ed25519
+     * will be used
+     *
+     * @param signature_out The buffer where the calculated signature will be filled (must be 64 bytes)
+     * @param curve25519_privkey The private key (must be 32 bytes)
+     * @param msg The message buffer, which will be signed (must be <= 256 bytes)
+     * @param msg_len The message buffer length
+     * @param random The random buffer (must be 64 bytes)
+     * @param user_data The user data
+     * @return 0 on success, negative on failure
+     */
+    int (*curve25519_sign_func)(uint8_t *signature_out,
+                     const uint8_t *curve25519_privkey,
+                     const uint8_t *msg, const unsigned long msg_len,
+                     const uint8_t *random, void *user_data);
+
+    /**
+     * Callback for signature verification based on curve25519
+     *
+     * This is optional function callback, if not set embedded implementation of curve25519-donna/ed25519
+     * will be used
+     *
+     * @param signature The signature buffer (must be 64 bytes)
+     * @param curve25519_pubkey The public key (must be 32 bytes)
+     * @param msg The message buffer, which will be signed (must be <= 256 bytes)
+     * @param msg_len The message buffer length
+     * @param user_data The user data
+     * @return 0 on success, negative on failure
+     */
+    int (*curve25519_verify_func)(const uint8_t *signature,
+                      const uint8_t *curve25519_pubkey,
+                      const uint8_t *msg, const unsigned long msg_len,
+                      void *user_data);
+
     /** User data pointer */
     void *user_data;
 } signal_crypto_provider;

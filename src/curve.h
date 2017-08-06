@@ -57,7 +57,7 @@ ec_private_key *ec_key_pair_get_private(const ec_key_pair *key_pair);
 void ec_key_pair_destroy(signal_type_base *type);
 
 int curve_generate_private_key(signal_context *context, ec_private_key **private_key);
-int curve_generate_public_key(ec_public_key **public_key, const ec_private_key *private_key);
+int curve_generate_public_key(signal_context *context, ec_public_key **public_key, const ec_private_key *private_key);
 
 /**
  * Generates a Curve25519 keypair.
@@ -123,16 +123,18 @@ void ec_public_key_list_free(ec_public_key_list *list);
 /**
  * Calculates an ECDH agreement.
  *
+ * @param context The valid context
  * @param shared_key_data Set to a 32-byte shared secret on success.
  * @param public_key The Curve25519 (typically remote party's) public key.
  * @param private_key The Curve25519 (typically yours) private key.
  * @return 0 on success, negative on failure
  */
-int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *public_key, const ec_private_key *private_key);
+int curve_calculate_agreement(signal_context *context, uint8_t **shared_key_data, const ec_public_key *public_key, const ec_private_key *private_key);
 
 /**
  * Verify a Curve25519 signature.
  *
+ * @param context The valid context
  * @param signing_key The Curve25519 public key the signature belongs to.
  * @param message_data The message that was signed.
  * @param message_len The length of the message that was signed.
@@ -140,7 +142,8 @@ int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *pu
  * @param signature_len The length of the signature to verify.
  * @return 1 if valid, 0 if invalid, negative on failure
  */
-int curve_verify_signature(const ec_public_key *signing_key,
+int curve_verify_signature(signal_context *context,
+        const ec_public_key *signing_key,
         const uint8_t *message_data, size_t message_len,
         const uint8_t *signature_data, size_t signature_len);
 
