@@ -1138,7 +1138,7 @@ int sender_key_message_verify_signature(sender_key_message *message, ec_public_k
     data = signal_buffer_data(message->base_message.serialized);
     data_len = signal_buffer_len(message->base_message.serialized) - SIGNATURE_LENGTH;
 
-    result = curve_verify_signature(signature_key, data, data_len, data + data_len, SIGNATURE_LENGTH);
+    result = curve_verify_signature(message->base_message.global_context, signature_key, data, data_len, data + data_len, SIGNATURE_LENGTH);
 
     if(result == 0) {
         signal_log(message->base_message.global_context, SG_LOG_ERROR, "Invalid signature!");

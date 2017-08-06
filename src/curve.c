@@ -316,7 +316,7 @@ complete:
     return result;
 }
 
-int curve_generate_public_key(ec_public_key **public_key, const ec_private_key *private_key)
+int curve_generate_public_key(signal_context *context, ec_public_key **public_key, const ec_private_key *private_key)
 {
     static const uint8_t basepoint[32] = {9};
     int result = 0;
@@ -328,7 +328,16 @@ int curve_generate_public_key(ec_public_key **public_key, const ec_private_key *
 
     SIGNAL_INIT(key, ec_public_key_destroy);
 
-    result = curve25519_donna(key->data, private_key->data, basepoint);
+    assert(context);
+    if (context->crypto_provider.curve25519_func)
+    {
+        result = context->crypto_provider.curve25519_func(key->data,
+                private_key->data, basepoint, context->crypto_provider.user_data);
+    }
+    else
+    {
+        result = curve25519_donna(key->data, private_key->data, basepoint);
+    }
 
     if(result == 0) {
         *public_key = key;
@@ -356,7 +365,7 @@ int curve_generate_key_pair(signal_context *context, ec_key_pair **key_pair)
         goto complete;
     }
 
-    result = curve_generate_public_key(&key_public, key_private);
+    result = curve_generate_public_key(context, &key_public, key_private);
     if(result < 0) {
         goto complete;
     }
@@ -511,7 +520,7 @@ void ec_public_key_list_free(ec_public_key_list *list)
     }
 }
 
-int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *public_key, const ec_private_key *private_key)
+int curve_calculate_agreement(signal_context *context, uint8_t **shared_key_data, const ec_public_key *public_key, const ec_private_key *private_key)
 {
     uint8_t *key = 0;
     int result = 0;
@@ -525,7 +534,17 @@ int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *pu
         return SG_ERR_NOMEM;
     }
 
-    result = curve25519_donna(key, private_key->data, public_key->data);
+    assert(context);
+    if (context->crypto_provider.curve25519_func)
+    {
+        result = context->crypto_provider.curve25519_func(key,
+                private_key->data, public_key->data,
+                context->crypto_provider.user_data);
+    }
+    else
+    {
+        result = curve25519_donna(key, private_key->data, public_key->data);
+    }
 
     if(result == 0) {
         *shared_key_data = key;
@@ -539,7 +558,8 @@ int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *pu
     }
 }
 
-int curve_verify_signature(const ec_public_key *signing_key,
+int curve_verify_signature(signal_context *context,
+        const ec_public_key *signing_key,
         const uint8_t *message_data, size_t message_len,
         const uint8_t *signature_data, size_t signature_len)
 {
@@ -547,7 +567,18 @@ int curve_verify_signature(const ec_public_key *signing_key,
         return SG_ERR_INVAL;
     }
 
-    return curve25519_verify(signature_data, signing_key->data, message_data, message_len) == 0;
+    assert(context);
+    if (context->crypto_provider.curve25519_verify_func)
+    {
+        return context->crypto_provider.curve25519_verify_func(signature_data,
+              signing_key->data, message_data, message_len,
+              context->crypto_provider.user_data) == 0;
+    }
+    else
+    {
+        return curve25519_verify(signature_data, signing_key->data, message_data,
+              message_len) == 0;
+    }
 }
 
 int curve_calculate_signature(signal_context *context,
@@ -570,7 +601,17 @@ int curve_calculate_signature(signal_context *context,
         goto complete;
     }
 
-    result = curve25519_sign(signal_buffer_data(buffer), signing_key->data, message_data, message_len, random_data);
+    if (context->crypto_provider.curve25519_sign_func)
+    {
+        result = context->crypto_provider.curve25519_sign_func(
+                signal_buffer_data(buffer), signing_key->data, message_data,
+                message_len, random_data, context->crypto_provider.user_data);
+    }
+    else
+    {
+        result = curve25519_sign(signal_buffer_data(buffer), signing_key->data,
+                message_data, message_len, random_data);
+    }
 
 complete:
     if(result < 0) {
