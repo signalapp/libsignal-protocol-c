@@ -108,12 +108,12 @@ START_TEST(test_curve25519_agreement)
     ck_assert_ptr_ne(bob_private_key, 0);
 
     /* Calculate key agreement one */
-    result = curve_calculate_agreement(&shared_one, alice_public_key, bob_private_key);
+    result = curve_calculate_agreement(global_context, &shared_one, alice_public_key, bob_private_key);
     ck_assert_int_eq(result, 32);
     ck_assert_ptr_ne(shared_one, 0);
 
     /* Calculate key agreement two */
-    result = curve_calculate_agreement(&shared_two, bob_public_key, alice_private_key);
+    result = curve_calculate_agreement(global_context ,&shared_two, bob_public_key, alice_private_key);
     ck_assert_int_eq(result, 32);
     ck_assert_ptr_ne(shared_two, 0);
 
@@ -168,7 +168,7 @@ START_TEST(test_curve25519_generate_public)
     ck_assert_ptr_ne(alice_expected_public_key, 0);
 
     /* Generate Alice's actual public key */
-    result = curve_generate_public_key(&alice_public_key, alice_private_key);
+    result = curve_generate_public_key(global_context, &alice_public_key, alice_private_key);
     ck_assert_int_eq(result, 0);
     ck_assert_ptr_ne(alice_public_key, 0);
 
@@ -218,12 +218,12 @@ START_TEST(test_curve25519_random_agreements)
         ck_assert_ptr_ne(bob_private_key, 0);
 
         /* Calculate Alice's key agreement */
-        result = curve_calculate_agreement(&shared_alice, bob_public_key, alice_private_key);
+        result = curve_calculate_agreement(global_context ,&shared_alice, bob_public_key, alice_private_key);
         ck_assert_int_eq(result, 32);
         ck_assert_ptr_ne(shared_alice, 0);
 
         /* Calculate Bob's key agreement */
-        result = curve_calculate_agreement(&shared_bob, alice_public_key, bob_private_key);
+        result = curve_calculate_agreement(global_context ,&shared_bob, alice_public_key, bob_private_key);
         ck_assert_int_eq(result, 32);
         ck_assert_ptr_ne(shared_bob, 0);
 
@@ -302,7 +302,7 @@ START_TEST(test_curve25519_signature)
     ck_assert_int_eq(result, 0);
     ck_assert_ptr_ne(alice_ephemeral, 0);
 
-    result = curve_verify_signature(alice_public_key,
+    result = curve_verify_signature(global_context, alice_public_key,
             aliceEphemeralPublic, sizeof(aliceEphemeralPublic),
             aliceSignature, sizeof(aliceSignature));
     ck_assert_msg(result == 1, "signature verification failed");
@@ -314,7 +314,7 @@ START_TEST(test_curve25519_signature)
         memcpy(modifiedSignature, aliceSignature, sizeof(aliceSignature));
         modifiedSignature[i] ^= 0x01;
 
-        result = curve_verify_signature(alice_public_key,
+        result = curve_verify_signature(global_context, alice_public_key,
                 aliceEphemeralPublic, sizeof(aliceEphemeralPublic),
                 modifiedSignature, sizeof(modifiedSignature));
         ck_assert_msg(result != 1, "signature verification succeeded");
@@ -347,13 +347,13 @@ START_TEST(test_curve25519_large_signatures)
     uint8_t *data = signal_buffer_data(signature);
     size_t len = signal_buffer_len(signature);
 
-    result = curve_verify_signature(ec_key_pair_get_public(keys),
+    result = curve_verify_signature(global_context, ec_key_pair_get_public(keys),
             message, sizeof(message), data, len);
     ck_assert_int_eq(result, 1);
 
     data[0] ^= 0x01;
 
-    result = curve_verify_signature(ec_key_pair_get_public(keys),
+    result = curve_verify_signature(global_context, ec_key_pair_get_public(keys),
             message, sizeof(message), data, len);
     ck_assert_int_eq(result, 0);
 
@@ -394,7 +394,7 @@ START_TEST(test_unique_signatures)
                 signal_buffer_data(signature), signal_buffer_len(signature));
         ck_assert_int_eq(result, 0);
 
-        result = curve_verify_signature(
+        result = curve_verify_signature(global_context,
                 ec_key_pair_get_public(key_pair), message, i,
                 signal_buffer_data(signature), signal_buffer_len(signature));
         ck_assert_int_ne(result, 0);

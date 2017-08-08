@@ -234,7 +234,8 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
             goto complete;
         }
 
-        result = curve_verify_signature(identity_key,
+        result = curve_verify_signature(builder->global_context,
+                identity_key,
                 signal_buffer_data(serialized_signed_pre_key),
                 signal_buffer_len(serialized_signed_pre_key),
                 signal_buffer_data(signature),
