@@ -315,7 +315,7 @@ int ratchet_root_key_create_chain(ratchet_root_key *root_key,
         return SG_ERR_INVAL;
     }
 
-    result = curve_calculate_agreement(&shared_secret, their_ratchet_key, our_ratchet_key_private);
+    result = curve_calculate_agreement(root_key->global_context, &shared_secret, their_ratchet_key, our_ratchet_key_private);
     if(result < 0) {
         signal_log(root_key->global_context, SG_LOG_WARNING, "curve_calculate_agreement failed");
         goto complete;
@@ -1007,7 +1007,7 @@ int ratcheting_session_alice_initialize(
         goto complete;
     }
 
-    agreement_len = curve_calculate_agreement(&agreement,
+    agreement_len = curve_calculate_agreement(global_context, &agreement,
             parameters->their_signed_pre_key, parameters->our_identity_key->private_key);
     if(agreement_len < 0) {
         result = agreement_len;
@@ -1021,7 +1021,7 @@ int ratcheting_session_alice_initialize(
         goto complete;
     }
 
-    agreement_len = curve_calculate_agreement(&agreement,
+    agreement_len = curve_calculate_agreement(global_context, &agreement,
             parameters->their_identity_key, ec_key_pair_get_private(parameters->our_base_key));
     if(agreement_len < 0) {
         result = agreement_len;
@@ -1035,7 +1035,7 @@ int ratcheting_session_alice_initialize(
         goto complete;
     }
 
-    agreement_len = curve_calculate_agreement(&agreement,
+    agreement_len = curve_calculate_agreement(global_context, &agreement,
             parameters->their_signed_pre_key, ec_key_pair_get_private(parameters->our_base_key));
     if(agreement_len < 0) {
         result = agreement_len;
@@ -1050,7 +1050,7 @@ int ratcheting_session_alice_initialize(
     }
 
     if(parameters->their_one_time_pre_key) {
-        agreement_len = curve_calculate_agreement(&agreement,
+        agreement_len = curve_calculate_agreement(global_context, &agreement,
                 parameters->their_one_time_pre_key, ec_key_pair_get_private(parameters->our_base_key));
         if(agreement_len < 0) {
             result = agreement_len;
@@ -1148,7 +1148,7 @@ int ratcheting_session_bob_initialize(
         goto complete;
     }
 
-    agreement_len = curve_calculate_agreement(&agreement,
+    agreement_len = curve_calculate_agreement(global_context, &agreement,
             parameters->their_identity_key, ec_key_pair_get_private(parameters->our_signed_pre_key));
     if(agreement_len < 0) {
         result = agreement_len;
@@ -1162,7 +1162,7 @@ int ratcheting_session_bob_initialize(
         goto complete;
     }
 
-    agreement_len = curve_calculate_agreement(&agreement,
+    agreement_len = curve_calculate_agreement(global_context, &agreement,
             parameters->their_base_key, parameters->our_identity_key->private_key);
     if(agreement_len < 0) {
         result = agreement_len;
@@ -1176,7 +1176,7 @@ int ratcheting_session_bob_initialize(
         goto complete;
     }
 
-    agreement_len = curve_calculate_agreement(&agreement,
+    agreement_len = curve_calculate_agreement(global_context, &agreement,
             parameters->their_base_key, ec_key_pair_get_private(parameters->our_signed_pre_key));
     if(agreement_len < 0) {
         result = agreement_len;
@@ -1191,7 +1191,7 @@ int ratcheting_session_bob_initialize(
     }
 
     if(parameters->our_one_time_pre_key) {
-        agreement_len = curve_calculate_agreement(&agreement,
+        agreement_len = curve_calculate_agreement(global_context, &agreement,
                 parameters->their_base_key, ec_key_pair_get_private(parameters->our_one_time_pre_key));
         if(agreement_len < 0) {
             result = agreement_len;
