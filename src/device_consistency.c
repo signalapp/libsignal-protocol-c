@@ -649,8 +649,10 @@ int device_consistency_signature_list_sort_comparator(const void *a, const void 
     if(len1 == len2) {
         result = memcmp(signal_buffer_data(buf1), signal_buffer_data(buf2), len1);
     }
-    else {
-        result = (int)(len1 - len2);
+    else if (len1 < len2) {
+        result = -1;
+    } else {
+        result = 1;
     }
 
     return result;
