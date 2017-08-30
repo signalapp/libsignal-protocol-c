@@ -13,6 +13,8 @@
  * @param message The received pre_key_signal_message.
  * @param unsigned_pre_key_id set to the unsigned pre key ID, if available.
  *     Return value indicates whether or not this value is available.
+ * @param identity_key_changed set to 1 if identity key was changed during processing,
+ *     otherwise 0.
  * @retval 0 Success, no unsigned pre key value available
  * @retval 1 Success, an unsigned pre key is available
  * @retval SG_ERR_INVALID_KEY_ID when there is no local pre_key_record that
@@ -21,6 +23,7 @@
  * @retval SG_ERR_UNTRUSTED_IDENTITY when the identity key of the sender is untrusted.
  */
 int session_builder_process_pre_key_signal_message(session_builder *builder,
-        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id);
+        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id,
+        uint8_t *identity_key_changed);
 
 #endif /* SESSION_BUILDER_INTERNAL_H */

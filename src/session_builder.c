@@ -45,11 +45,13 @@ int session_builder_create(session_builder **builder,
 }
 
 int session_builder_process_pre_key_signal_message(session_builder *builder,
-        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id)
+        session_record *record, pre_key_signal_message *message, uint32_t *unsigned_pre_key_id,
+        uint8_t *identity_key_changed)
 {
     int result = 0;
     int has_unsigned_pre_key_id_result = 0;
     uint32_t unsigned_pre_key_id_result = 0;
+    *identity_key_changed = 0;
     ec_public_key *their_identity_key = pre_key_signal_message_get_identity_key(message);
 
     result = signal_protocol_identity_is_trusted_identity(builder->store,
@@ -74,6 +76,9 @@ int session_builder_process_pre_key_signal_message(session_builder *builder,
             their_identity_key);
     if(result < 0) {
         goto complete;
+    }
+    else if(result == 0) {
+        *identity_key_changed = 1;
     }
 
     result = has_unsigned_pre_key_id_result;
