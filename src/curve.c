@@ -543,7 +543,7 @@ int curve_verify_signature(const ec_public_key *signing_key,
         const uint8_t *message_data, size_t message_len,
         const uint8_t *signature_data, size_t signature_len)
 {
-    if(signature_len != 64) {
+    if(signature_len != CURVE_SIGNATURE_LEN) {
         return SG_ERR_INVAL;
     }
 
