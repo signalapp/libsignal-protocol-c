@@ -597,7 +597,7 @@ int curve_verify_vrf_signature(signal_context *context,
         return SG_ERR_INVAL;
     }
 
-    if(!message_data || !signature_data || signature_len != VRF_SIGNATURE_LEN) {
+    if(!message_data || !signature_data || signature_len != 96) {
         signal_log(context, SG_LOG_ERROR, "Invalid message or signature format");
         return SG_ERR_VRF_SIG_VERIF_FAILED;
     }
