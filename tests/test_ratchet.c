@@ -583,10 +583,6 @@ START_TEST(test_ratcheting_session_as_alice)
     result = curve_decode_point(&bob_signed_pre_key, bobSignedPreKeyPublic, sizeof(bobSignedPreKeyPublic), global_context);
     ck_assert_int_eq(result, 0);
 
-    /* Create Bob's base public key */
-    ec_public_key *bob_base_key_public = bob_ephemeral_key_public;
-    SIGNAL_REF(bob_base_key_public);
-
     /* Create Alice's base public key */
     ec_public_key *alice_base_public_key;
     result = curve_decode_point(&alice_base_public_key, aliceBasePublic, sizeof(aliceBasePublic), global_context);
@@ -678,7 +674,6 @@ START_TEST(test_ratcheting_session_as_alice)
     /* Cleanup */
     SIGNAL_UNREF(bob_identity_key_public);
     SIGNAL_UNREF(bob_ephemeral_key_public);
-    SIGNAL_UNREF(bob_base_key_public);
     SIGNAL_UNREF(bob_signed_pre_key);
     SIGNAL_UNREF(alice_base_key);
     SIGNAL_UNREF(alice_ephemeral_key);
