@@ -420,10 +420,6 @@ START_TEST(test_ratcheting_session_as_bob)
     SIGNAL_UNREF(bob_ephemeral_key_public);
     SIGNAL_UNREF(bob_ephemeral_key_private);
 
-    /* Assign Bob's base key pair as the same as the ephemeral key pair */
-    ec_key_pair *bob_base_key_pair = bob_ephemeral_key_pair;
-    SIGNAL_REF(bob_ephemeral_key_pair);
-
     /* Create Bob's public signed pre key */
     ec_public_key *bob_signed_pre_key_public;
     result = curve_decode_point(&bob_signed_pre_key_public, bobSignedPreKeyPublic, sizeof(bobSignedPreKeyPublic), global_context);
@@ -466,7 +462,6 @@ START_TEST(test_ratcheting_session_as_bob)
             alice_identity_key_public,
             alice_base_key_public);
     ck_assert_int_eq(result, 0);
-    SIGNAL_UNREF(bob_base_key_pair);
     SIGNAL_UNREF(bob_signed_pre_key_pair);
     SIGNAL_UNREF(bob_ephemeral_key_pair);
     SIGNAL_UNREF(alice_base_key_public);
