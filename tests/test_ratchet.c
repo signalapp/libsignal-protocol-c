@@ -536,19 +536,6 @@ START_TEST(test_ratcheting_session_as_alice)
             0x39, 0x1c, 0xae, 0x66, 0xed, 0xbf, 0xcf, 0x07,
             0x3b, 0x4d, 0xa8, 0x05, 0x16, 0xa4, 0x74, 0x49};
 
-    uint8_t aliceEphemeralPublic[] = {
-            0x05, 0x6c, 0x3e, 0x0d, 0x1f, 0x52, 0x02, 0x83,
-            0xef, 0xcc, 0x55, 0xfc, 0xa5, 0xe6, 0x70, 0x75,
-            0xb9, 0x04, 0x00, 0x7f, 0x18, 0x81, 0xd1, 0x51,
-            0xaf, 0x76, 0xdf, 0x18, 0xc5, 0x1d, 0x29, 0xd3,
-            0x4b};
-
-    uint8_t aliceEphemeralPrivate[] = {
-            0xd1, 0xba, 0x38, 0xce, 0xa9, 0x17, 0x43, 0xd3,
-            0x39, 0x39, 0xc3, 0x3c, 0x84, 0x98, 0x65, 0x09,
-            0x28, 0x01, 0x61, 0xb8, 0xb6, 0x0f, 0xc7, 0x87,
-            0x0c, 0x59, 0x9c, 0x1d, 0x46, 0x20, 0x12, 0x48};
-
     uint8_t aliceIdentityPublic[] = {
             0x05, 0xb4, 0xa8, 0x45, 0x56, 0x60, 0xad, 0xa6,
             0x5b, 0x40, 0x10, 0x07, 0xf6, 0x15, 0xe6, 0x54,
@@ -599,23 +586,6 @@ START_TEST(test_ratcheting_session_as_alice)
     ck_assert_int_eq(result, 0);
     SIGNAL_UNREF(alice_base_public_key);
     SIGNAL_UNREF(alice_base_private_key);
-
-    /* Create Alice's ephemeral public key */
-    ec_public_key *alice_ephemeral_public_key;
-    result = curve_decode_point(&alice_ephemeral_public_key, aliceEphemeralPublic, sizeof(aliceEphemeralPublic), global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Create Alice's ephemeral private key */
-    ec_private_key *alice_ephemeral_private_key;
-    result = curve_decode_private_point(&alice_ephemeral_private_key, aliceEphemeralPrivate, sizeof(aliceEphemeralPrivate), global_context);
-    ck_assert_int_eq(result, 0);
-
-    /* Create Alice's ephemeral key pair */
-    ec_key_pair *alice_ephemeral_key;
-    result = ec_key_pair_create(&alice_ephemeral_key, alice_ephemeral_public_key, alice_ephemeral_private_key);
-    ck_assert_int_eq(result, 0);
-    SIGNAL_UNREF(alice_ephemeral_public_key);
-    SIGNAL_UNREF(alice_ephemeral_private_key);
 
     /* Create Alice's identity public key */
     ec_public_key *alice_identity_public_key;
@@ -676,7 +646,6 @@ START_TEST(test_ratcheting_session_as_alice)
     SIGNAL_UNREF(bob_ephemeral_key_public);
     SIGNAL_UNREF(bob_signed_pre_key);
     SIGNAL_UNREF(alice_base_key);
-    SIGNAL_UNREF(alice_ephemeral_key);
     SIGNAL_UNREF(alice_identity_key_pair);
     SIGNAL_UNREF(alice_parameters);
     SIGNAL_UNREF(test_session_state);
