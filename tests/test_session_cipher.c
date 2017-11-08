@@ -183,7 +183,7 @@ void generate_test_message_collections(session_cipher *cipher, signal_buffer **p
 
     int result = 0;
     int i;
-    for(i = 0; i < 50; i++) {
+    for(i = 0; i < size; i++) {
         /* Generate the plaintext */
         signal_buffer *plain_buf = signal_buffer_create(testMessage, sizeof(testMessage));
         uint8_t *plain_buf_data = signal_buffer_data(plain_buf);
@@ -207,9 +207,9 @@ void generate_test_message_collections(session_cipher *cipher, signal_buffer **p
     /* Randomize the two arrays using the same seed */
     time_t seed = time(0);
     srand(seed);
-    shuffle_buffers(plaintext_messages, 50);
+    shuffle_buffers(plaintext_messages, size);
     srand(seed);
-    shuffle_buffers(ciphertext_messages, 50);
+    shuffle_buffers(ciphertext_messages, size);
 }
 
 void decrypt_and_compare_messages(session_cipher *cipher, signal_buffer *ciphertext, signal_buffer *plaintext)
