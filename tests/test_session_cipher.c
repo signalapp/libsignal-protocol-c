@@ -290,15 +290,8 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the test message */
-    signal_buffer *bob_plaintext = 0;
-    result = session_cipher_decrypt_signal_message(bob_cipher, alice_message_deserialized, 0, &bob_plaintext);
-    ck_assert_int_eq(result, 0);
-
-    uint8_t *bob_plaintext_data = signal_buffer_data(bob_plaintext);
-    size_t bob_plaintext_len = signal_buffer_len(bob_plaintext);
-
-    ck_assert_int_eq(alice_plaintext_len, bob_plaintext_len);
-    ck_assert_int_eq(memcmp(alice_plaintext, bob_plaintext_data, bob_plaintext_len), 0);
+    signal_buffer *alice_plaintext_buffer = signal_buffer_create((uint8_t*) alice_plaintext, alice_plaintext_len);
+    decrypt_and_compare_messages(bob_cipher, alice_message_serialized, alice_plaintext_buffer);
 
     fprintf(stderr, "Interaction complete: Alice -> Bob\n");
 
@@ -389,7 +382,7 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     SIGNAL_UNREF(alice_message_deserialized);
     SIGNAL_UNREF(reply_message_deserialized);
     signal_buffer_free(reply_plaintext);
-    signal_buffer_free(bob_plaintext);
+    signal_buffer_free(alice_plaintext_buffer);
     session_cipher_free(alice_cipher);
     session_cipher_free(bob_cipher);
     signal_protocol_store_context_destroy(alice_store);
