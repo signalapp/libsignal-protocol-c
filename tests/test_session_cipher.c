@@ -102,11 +102,6 @@ void initialize_sessions_v3(session_state *alice_state, session_state *bob_state
     result = curve_generate_key_pair(global_context, &alice_base_key);
     ck_assert_int_eq(result, 0);
 
-    /* Generate Alice's ephemeral key */
-    ec_key_pair *alice_ephemeral_key = 0;
-    result = curve_generate_key_pair(global_context, &alice_ephemeral_key);
-    ck_assert_int_eq(result, 0);
-
     /* Generate Alice's pre-key */
     ec_key_pair *alice_pre_key = alice_base_key;
     SIGNAL_REF(alice_base_key);
@@ -163,7 +158,6 @@ void initialize_sessions_v3(session_state *alice_state, session_state *bob_state
     /* Unref cleanup */
     SIGNAL_UNREF(alice_identity_key);
     SIGNAL_UNREF(alice_base_key);
-    SIGNAL_UNREF(alice_ephemeral_key);
     SIGNAL_UNREF(alice_pre_key);
     SIGNAL_UNREF(bob_identity_key);
     SIGNAL_UNREF(bob_base_key);
