@@ -278,16 +278,9 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     result = session_cipher_encrypt(alice_cipher, (uint8_t *)alice_plaintext, alice_plaintext_len, &alice_message);
     ck_assert_int_eq(result, 0);
 
-    /* Serialize and deserialize the test message to create a fresh instance */
+    /* Serialize the test message to create a fresh instance */
     signal_buffer *alice_message_serialized = ciphertext_message_get_serialized(alice_message);
     ck_assert_ptr_ne(alice_message_serialized, 0);
-
-    signal_message *alice_message_deserialized = 0;
-    result = signal_message_deserialize(&alice_message_deserialized,
-            signal_buffer_data(alice_message_serialized),
-            signal_buffer_len(alice_message_serialized),
-            global_context);
-    ck_assert_int_eq(result, 0);
 
     /* Have Bob decrypt the test message */
     signal_buffer *alice_plaintext_buffer = signal_buffer_create((uint8_t*) alice_plaintext, alice_plaintext_len);
@@ -302,28 +295,13 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     result = session_cipher_encrypt(bob_cipher, (uint8_t *)bob_reply, bob_reply_len, &reply_message);
     ck_assert_int_eq(result, 0);
 
-    /* Serialize and deserialize the reply message to create a fresh instance */
+    /* Serialize the reply message to create a fresh instance */
     signal_buffer *reply_message_serialized = ciphertext_message_get_serialized(reply_message);
     ck_assert_ptr_ne(reply_message_serialized, 0);
 
-    signal_message *reply_message_deserialized = 0;
-    result = signal_message_deserialize(&reply_message_deserialized,
-            signal_buffer_data(reply_message_serialized),
-            signal_buffer_len(reply_message_serialized),
-            global_context);
-    ck_assert_int_eq(result, 0);
-
     /* Have Alice decrypt the reply message */
-
-    signal_buffer *reply_plaintext = 0;
-    result = session_cipher_decrypt_signal_message(alice_cipher, reply_message_deserialized, 0, &reply_plaintext);
-    ck_assert_int_eq(result, 0);
-
-    uint8_t *reply_plaintext_data = signal_buffer_data(reply_plaintext);
-    size_t reply_plaintext_len = signal_buffer_len(reply_plaintext);
-
-    ck_assert_int_eq(bob_reply_len, reply_plaintext_len);
-    ck_assert_int_eq(memcmp(bob_reply, reply_plaintext_data, reply_plaintext_len), 0);
+    signal_buffer *bob_plaintext_buffer = signal_buffer_create((uint8_t*) bob_reply, bob_reply_len);
+    decrypt_and_compare_messages(alice_cipher, reply_message_serialized, bob_plaintext_buffer);
 
     fprintf(stderr, "Interaction complete: Bob -> Alice\n");
 
@@ -379,10 +357,8 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
 
     SIGNAL_UNREF(alice_message);
     SIGNAL_UNREF(reply_message);
-    SIGNAL_UNREF(alice_message_deserialized);
-    SIGNAL_UNREF(reply_message_deserialized);
-    signal_buffer_free(reply_plaintext);
     signal_buffer_free(alice_plaintext_buffer);
+    signal_buffer_free(bob_plaintext_buffer);
     session_cipher_free(alice_cipher);
     session_cipher_free(bob_cipher);
     signal_protocol_store_context_destroy(alice_store);
