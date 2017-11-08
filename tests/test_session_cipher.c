@@ -132,11 +132,6 @@ void initialize_sessions_v3(session_state *alice_state, session_state *bob_state
     ec_key_pair *bob_ephemeral_key = bob_base_key;
     SIGNAL_REF(bob_base_key);
 
-    /* Generate Bob's pre-key */
-    ec_key_pair *bob_pre_key;
-    result = curve_generate_key_pair(global_context, &bob_pre_key);
-    ck_assert_int_eq(result, 0);
-
     /* Create Alice's parameters */
     alice_signal_protocol_parameters *alice_parameters = 0;
     result = alice_signal_protocol_parameters_create(&alice_parameters,
@@ -173,7 +168,6 @@ void initialize_sessions_v3(session_state *alice_state, session_state *bob_state
     SIGNAL_UNREF(bob_identity_key);
     SIGNAL_UNREF(bob_base_key);
     SIGNAL_UNREF(bob_ephemeral_key);
-    SIGNAL_UNREF(bob_pre_key);
     SIGNAL_UNREF(alice_parameters);
     SIGNAL_UNREF(bob_parameters);
 }
