@@ -257,18 +257,18 @@ void run_interaction(session_record *alice_session_record, session_record *bob_s
     setup_test_store_context(&bob_store, global_context);
 
     /* Store the two sessions in their data stores */
-    result = signal_protocol_session_store_session(alice_store, &alice_address, alice_session_record);
+    result = signal_protocol_session_store_session(alice_store, &bob_address, alice_session_record);
     ck_assert_int_eq(result, 0);
-    result = signal_protocol_session_store_session(bob_store, &bob_address, bob_session_record);
+    result = signal_protocol_session_store_session(bob_store, &alice_address, bob_session_record);
     ck_assert_int_eq(result, 0);
 
     /* Create two session cipher instances */
     session_cipher *alice_cipher = 0;
-    result = session_cipher_create(&alice_cipher, alice_store, &alice_address, global_context);
+    result = session_cipher_create(&alice_cipher, alice_store, &bob_address, global_context);
     ck_assert_int_eq(result, 0);
 
     session_cipher *bob_cipher = 0;
-    result = session_cipher_create(&bob_cipher, bob_store, &bob_address, global_context);
+    result = session_cipher_create(&bob_cipher, bob_store, &alice_address, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Encrypt a test message from Alice */
