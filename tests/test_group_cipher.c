@@ -336,7 +336,7 @@ START_TEST(test_late_join)
     signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
-    /* Create Alice's the session builder */
+    /* Create Alice's session builder */
     group_session_builder *alice_session_builder = 0;
     result = group_session_builder_create(&alice_session_builder, alice_store, global_context);
     ck_assert_int_eq(result, 0);
