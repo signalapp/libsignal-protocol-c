@@ -8,7 +8,7 @@
 #include "vpool.h"
 
 #define FINGERPRINT_VERSION 0
-#define SHA512_DIGEST_LENGTH 64
+#define FINGERPRINT_LENGTH 30
 
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
@@ -349,7 +349,7 @@ int fingerprint_generator_get_fingerprint(fingerprint_generator *generator, sign
 
     len = signal_buffer_len(hash_buffer);
 
-    if(len < 30) {
+    if(len < FINGERPRINT_LENGTH) {
         result = SG_ERR_UNKNOWN;
         goto complete;
     }
@@ -382,18 +382,18 @@ int fingerprint_generator_create_display_string(fingerprint_generator *generator
     data = signal_buffer_data(fingerprint_buffer);
     len = signal_buffer_len(fingerprint_buffer);
 
-    if(len < 30) {
+    if(len < FINGERPRINT_LENGTH) {
         result = SG_ERR_UNKNOWN;
         goto complete;
     }
 
-    result_string = malloc(31);
+    result_string = malloc(FINGERPRINT_LENGTH+1);
     if(!result_string) {
         result = SG_ERR_NOMEM;
         goto complete;
     }
 
-    for(i = 0; i < 30; i += 5) {
+    for(i = 0; i < FINGERPRINT_LENGTH; i += 5) {
         uint64_t chunk = ((uint64_t)data[i] & 0xFFL) << 32 |
                 ((uint64_t)data[i + 1] & 0xFFL) << 24 |
                 ((uint64_t)data[i + 2] & 0xFFL) << 16 |
