@@ -2,7 +2,11 @@ enable_testing()
 find_library(M_LIB m)
 find_package(Check REQUIRED)
 IF(NOT(APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
-  find_package(OpenSSL 1.0 REQUIRED)
+  IF(WOLFSSL)
+    find_library(WOLFSSL_LIB wolfssl)
+  ELSE()
+    find_package(OpenSSL 1.0 REQUIRED)
+  ENDIF()
 ENDIF()
 find_package(Threads)
 include_directories(${CHECK_INCLUDE_DIRS})
@@ -30,14 +34,27 @@ else()
   set(TEST_PATH ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-set(LIBS ${LIBS}
-	${M_LIB}
-	${CHECK_LDFLAGS}
-	${OPENSSL_LIBRARIES}
-	${CMAKE_THREAD_LIBS_INIT}
-	${CMAKE_DL_LIBS}
-	signal-protocol-c
-)
+# set(WOLFSSL_LIBRARIES "-L/usr/local/lib -lwolfssl")
+
+IF (WOLFSSL)
+  set(LIBS ${LIBS}
+    ${M_LIB}
+    ${CHECK_LDFLAGS}
+    ${WOLFSSL_LIB}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
+    signal-protocol-c
+  )
+ELSE ()
+  set(LIBS ${LIBS}
+    ${M_LIB}
+    ${CHECK_LDFLAGS}
+    ${OPENSSL_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
+    signal-protocol-c
+  )
+ENDIF()
 
 set(common_SRCS
 	test_common.c
@@ -45,7 +62,6 @@ set(common_SRCS
 )
 
 include_directories(. ../src)
-
 IF(APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(common_SRCS ${common_SRCS}
 		test_common_ccrypto.c
@@ -54,7 +70,12 @@ ELSE()
 	set(common_SRCS ${common_SRCS}
 		test_common_openssl.c
 	)
-	include_directories(${OPENSSL_INCLUDE_DIR})
+  IF(WOLFSSL)
+    include_directories(${WOLFSSL}/include/wolfssl)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-conversion -include ${WOLFSSL}/include/wolfssl/options.h")
+  ELSE(WOLFSSL)
+    include_directories(${OPENSSL_INCLUDE_DIR})
+  ENDIF(WOLFSSL)
 ENDIF()
 
 add_executable(test_curve25519 test_curve25519.c ${common_SRCS})

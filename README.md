@@ -13,6 +13,7 @@ environments. See the [Java library](https://github.com/whispersystems/libsignal
 * [Check *1](https://libcheck.github.io/check/)
 * [OpenSSL *1](https://www.openssl.org/) 1.0 or higher
  * On MacOS X, [Common Crypto](https://developer.apple.com/library/content/documentation/Security/Conceptual/cryptoservices/GeneralPurposeCrypto/GeneralPurposeCrypto.html) is used instead of OpenSSL
+ * You can choose [WolfSSL](https://github.com/wolfSSL/wolfssl/releases) (3.13.0 or higher) instead of OpenSSL
 * [LCOV *2](http://ltp.sourceforge.net/coverage/lcov.php)
 
 Most of these dependencies are required just for the unit test suite and
@@ -29,7 +30,7 @@ Items marked with *1 are required for tests, with *2 are additionally required f
     $ cmake -DCMAKE_BUILD_TYPE=Debug ..
     $ make
 
-### Running the unit tests
+### Running the unit tests with OpenSSL
 
     $ cd /path/to/libsignal-protocol-c/build
     $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 ..
@@ -38,6 +39,17 @@ Items marked with *1 are required for tests, with *2 are additionally required f
     $ cd ..
     $ ctest
 
+### Running the unit tests with WolfSSL
+Note: You need to build wolfssl library with these configure options.  
+    $ configure --enable-opensslextra --enable-signal
+  
+    $ cd /path/to/libsignal-protocol-c/build
+    $ cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 -DWOLFSSL=<wolfssl installed directory> ..
+    $ cd tests
+    $ make
+    $ cd ..
+    $ ctest
+    
 ### Creating the code coverage report
 
     $ cd /path/to/libsignal-protocol-c/build
