@@ -24,7 +24,6 @@ typedef struct session_state_sender_chain
 {
     ec_key_pair *sender_ratchet_key_pair;
     ratchet_chain_key *chain_key;
-    message_keys_node *message_keys_head;
 } session_state_sender_chain;
 
 typedef struct session_state_receiver_chain
@@ -400,13 +399,6 @@ static int session_state_serialize_prepare_sender_chain(
 
     if(chain->chain_key) {
         result = session_state_serialize_prepare_chain_chain_key(chain->chain_key, chain_structure);
-        if(result < 0) {
-            goto complete;
-        }
-    }
-
-    if(chain->message_keys_head) {
-        result = session_state_serialize_prepare_chain_message_keys_list(chain->message_keys_head, chain_structure);
         if(result < 0) {
             goto complete;
         }
@@ -1789,17 +1781,6 @@ static void session_state_free_sender_chain(session_state *state)
     if(state->sender_chain.chain_key) {
         SIGNAL_UNREF(state->sender_chain.chain_key);
         state->sender_chain.chain_key = 0;
-    }
-
-    if(state->sender_chain.message_keys_head) {
-        message_keys_node *cur_node;
-        message_keys_node *tmp_node;
-        DL_FOREACH_SAFE(state->sender_chain.message_keys_head, cur_node, tmp_node) {
-            DL_DELETE(state->sender_chain.message_keys_head, cur_node);
-            signal_explicit_bzero(&cur_node->message_key, sizeof(ratchet_message_keys));
-            free(cur_node);
-        }
-        state->sender_chain.message_keys_head = 0;
     }
 }
 
