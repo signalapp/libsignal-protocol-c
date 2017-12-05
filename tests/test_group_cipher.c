@@ -63,13 +63,9 @@ START_TEST(test_no_session)
     signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
-    /* Create the session builders */
+    /* Create the session builder */
     group_session_builder *alice_session_builder = 0;
     result = group_session_builder_create(&alice_session_builder, alice_store, global_context);
-    ck_assert_int_eq(result, 0);
-
-    group_session_builder *bob_session_builder = 0;
-    result = group_session_builder_create(&bob_session_builder, bob_store, global_context);
     ck_assert_int_eq(result, 0);
 
     /* Create the group ciphers */
@@ -116,7 +112,6 @@ START_TEST(test_no_session)
     SIGNAL_UNREF(sent_alice_distribution_message);
     group_cipher_free(bob_group_cipher);
     group_cipher_free(alice_group_cipher);
-    group_session_builder_free(bob_session_builder);
     group_session_builder_free(alice_session_builder);
     signal_protocol_store_context_destroy(bob_store);
     signal_protocol_store_context_destroy(alice_store);
@@ -341,7 +336,7 @@ START_TEST(test_late_join)
     signal_protocol_store_context *bob_store = 0;
     setup_test_store_context(&bob_store, global_context);
 
-    /* Create Alice's the session builder */
+    /* Create Alice's session builder */
     group_session_builder *alice_session_builder = 0;
     result = group_session_builder_create(&alice_session_builder, alice_store, global_context);
     ck_assert_int_eq(result, 0);

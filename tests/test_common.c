@@ -800,7 +800,7 @@ int test_sender_key_store_load_sender_key(signal_buffer **record, const signal_p
     test_sender_key_store_record *s;
 
     test_sender_key_store_record l;
-    memset(&l, 0, sizeof(test_session_store_session));
+    memset(&l, 0, sizeof(test_sender_key_store_record));
     l.key.group_id = jenkins_hash(sender_key_name->group_id, sender_key_name->group_id_len);
     l.key.recipient_id = jenkins_hash(sender_key_name->sender.name, sender_key_name->sender.name_len);
     l.key.device_id = sender_key_name->sender.device_id;

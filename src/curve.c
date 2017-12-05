@@ -543,7 +543,7 @@ int curve_verify_signature(const ec_public_key *signing_key,
         const uint8_t *message_data, size_t message_len,
         const uint8_t *signature_data, size_t signature_len)
 {
-    if(signature_len != 64) {
+    if(signature_len != CURVE_SIGNATURE_LEN) {
         return SG_ERR_INVAL;
     }
 
@@ -597,7 +597,7 @@ int curve_verify_vrf_signature(signal_context *context,
         return SG_ERR_INVAL;
     }
 
-    if(!message_data || !signature_data || signature_len != 96) {
+    if(!message_data || !signature_data || signature_len != VRF_SIGNATURE_LEN) {
         signal_log(context, SG_LOG_ERROR, "Invalid message or signature format");
         return SG_ERR_VRF_SIG_VERIF_FAILED;
     }
