@@ -49,16 +49,6 @@ int session_state_add_receiver_chain(session_state *state, ec_public_key *sender
 int session_state_set_receiver_chain_key(session_state *state, ec_public_key *sender_ephemeral, ratchet_chain_key *chain_key);
 ratchet_chain_key *session_state_get_receiver_chain_key(session_state *state, ec_public_key *sender_ephemeral);
 
-void session_state_set_pending_key_exchange(session_state *state,
-        uint32_t sequence,
-        ec_key_pair *our_base_key, ec_key_pair *our_ratchet_key,
-        ratchet_identity_key_pair *our_identity_key);
-uint32_t session_state_get_pending_key_exchange_sequence(session_state *state);
-ec_key_pair *session_state_get_pending_key_exchange_base_key(const session_state *state);
-ec_key_pair *session_state_get_pending_key_exchange_ratchet_key(const session_state *state);
-ratchet_identity_key_pair *session_state_get_pending_key_exchange_identity_key(const session_state *state);
-int session_state_has_pending_key_exchange(const session_state *state);
-
 void session_state_set_unacknowledged_pre_key_message(session_state *state,
         const uint32_t *pre_key_id, uint32_t signed_pre_key_id, ec_public_key *base_key);
 int session_state_unacknowledged_pre_key_message_has_pre_key_id(const session_state *state);
