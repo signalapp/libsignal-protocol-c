@@ -126,7 +126,7 @@ void ec_public_key_list_free(ec_public_key_list *list);
  * @param shared_key_data Set to a 32-byte shared secret on success.
  * @param public_key The Curve25519 (typically remote party's) public key.
  * @param private_key The Curve25519 (typically yours) private key.
- * @return 0 on success, negative on failure
+ * @return length of the shared secret on success, negative on failure
  */
 int curve_calculate_agreement(uint8_t **shared_key_data, const ec_public_key *public_key, const ec_private_key *private_key);
 
