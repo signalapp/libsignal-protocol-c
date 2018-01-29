@@ -45,7 +45,7 @@ if (CMAKE_UNAME)
 	string (REGEX REPLACE "^([0-9]+)\\.([0-9]+).*$" "\\1" DARWIN_MAJOR_VERSION "${CMAKE_HOST_SYSTEM_VERSION}")
 endif (CMAKE_UNAME)
 
-# Force the compilers to gcc for iOS
+# Force the compilers to clang for iOS
 include (CMakeForceCompiler)
 CMAKE_FORCE_C_COMPILER (/usr/bin/clang Apple)
 CMAKE_FORCE_CXX_COMPILER (/usr/bin/clang++ Apple)

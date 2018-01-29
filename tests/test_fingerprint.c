@@ -202,14 +202,14 @@ static void test_vectors_impl(int version)
     scannable_fingerprint_serialize(&alice_buffer, alice_scannable);
     ck_assert_int_eq(result, 0);
 
+    scannable_fingerprint *bob_scannable = fingerprint_get_scannable(bob_fingerprint);
+    scannable_fingerprint_serialize(&bob_buffer, bob_scannable);
+    ck_assert_int_eq(result, 0);
+
     if(version == 0) {
         ck_assert_int_eq(signal_buffer_len(alice_buffer), sizeof(ALICE_SCANNABLE_FINGERPRINT_V0));
         ck_assert_int_eq(memcmp(signal_buffer_data(alice_buffer),
                 ALICE_SCANNABLE_FINGERPRINT_V0, sizeof(ALICE_SCANNABLE_FINGERPRINT_V0)), 0);
-
-        scannable_fingerprint *bob_scannable = fingerprint_get_scannable(bob_fingerprint);
-        scannable_fingerprint_serialize(&bob_buffer, bob_scannable);
-        ck_assert_int_eq(result, 0);
 
         ck_assert_int_eq(signal_buffer_len(bob_buffer), sizeof(BOB_SCANNABLE_FINGERPRINT_V0));
         ck_assert_int_eq(memcmp(signal_buffer_data(bob_buffer),
@@ -219,11 +219,7 @@ static void test_vectors_impl(int version)
         ck_assert_int_eq(signal_buffer_len(alice_buffer), sizeof(ALICE_SCANNABLE_FINGERPRINT_V1));
         ck_assert_int_eq(memcmp(signal_buffer_data(alice_buffer),
                 ALICE_SCANNABLE_FINGERPRINT_V1, sizeof(ALICE_SCANNABLE_FINGERPRINT_V1)), 0);
-
-        scannable_fingerprint *bob_scannable = fingerprint_get_scannable(bob_fingerprint);
-        scannable_fingerprint_serialize(&bob_buffer, bob_scannable);
-        ck_assert_int_eq(result, 0);
-
+        
         ck_assert_int_eq(signal_buffer_len(bob_buffer), sizeof(BOB_SCANNABLE_FINGERPRINT_V1));
         ck_assert_int_eq(memcmp(signal_buffer_data(bob_buffer),
                 BOB_SCANNABLE_FINGERPRINT_V1, sizeof(BOB_SCANNABLE_FINGERPRINT_V1)), 0);
