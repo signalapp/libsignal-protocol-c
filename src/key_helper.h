@@ -32,10 +32,10 @@ int signal_protocol_key_helper_generate_identity_key_pair(ratchet_identity_key_p
 int signal_protocol_key_helper_generate_registration_id(uint32_t *registration_id, int extended_range, signal_context *global_context);
 
 /**
- * Generate a random number bounded by the provided maximum
+ * Generate a random number between 0 (inclusive) and the provided maximum (exclusive).
  *
  * @param value set to the next random number
- * @param max the maximum value of the random number
+ * @param max the maximum bound on the value of the random number
  * @return 0 on success, or negative on failure
  */
 int signal_protocol_key_helper_get_random_sequence(int *value, int max, signal_context *global_context);
