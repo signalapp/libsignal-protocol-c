@@ -242,7 +242,7 @@ signal_buffer_list *signal_buffer_list_copy(const signal_buffer_list *list)
     for(i = 0; i < list_size; i++) {
         signal_buffer **buffer = (signal_buffer**)utarray_eltptr(list->values, i);
         buffer_copy = signal_buffer_copy(*buffer);
-        utarray_push_back(list->values, &buffer_copy);
+        utarray_push_back(result_list->values, &buffer_copy);
         buffer_copy = 0;
     }
 
