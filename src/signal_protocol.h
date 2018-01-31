@@ -418,10 +418,14 @@ typedef struct signal_protocol_session_store {
      * @param record pointer to a freshly allocated buffer containing the
      *     serialized session record. Unset if no record was found.
      *     The Signal Protocol library is responsible for freeing this buffer.
+     * @param user_record pointer to a freshly allocated buffer containing
+     *     application specific data stored alongside the serialized session
+     *     record. If no such data exists, then this pointer may be left unset.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @param address the address of the remote client
      * @return 1 if the session was loaded, 0 if the session was not found, negative on failure
      */
-    int (*load_session_func)(signal_buffer **record, const signal_protocol_address *address, void *user_data);
+    int (*load_session_func)(signal_buffer **record, signal_buffer **user_record, const signal_protocol_address *address, void *user_data);
 
     /**
      * Returns all known devices with active sessions for a recipient
@@ -441,9 +445,13 @@ typedef struct signal_protocol_session_store {
      * @param record pointer to a buffer containing the serialized session
      *     record for the remote client
      * @param record_len length of the serialized session record
+     * @param user_record pointer to a buffer containing application specific
+     *     data to be stored alongside the serialized session record for the
+     *     remote client. If no such data exists, then this pointer will be null.
+     * @param user_record_len length of the application specific data
      * @return 0 on success, negative on failure
      */
-    int (*store_session_func)(const signal_protocol_address *address, uint8_t *record, size_t record_len, void *user_data);
+    int (*store_session_func)(const signal_protocol_address *address, uint8_t *record, size_t record_len, uint8_t *user_record, size_t user_record_len, void *user_data);
 
     /**
      * Determine whether there is a committed session record for a
@@ -658,9 +666,13 @@ typedef struct signal_protocol_sender_key_store {
      * @param sender_key_name the (groupId + senderId + deviceId) tuple
      * @param record pointer to a buffer containing the serialized record
      * @param record_len length of the serialized record
+     * @param user_record pointer to a buffer containing application specific
+     *     data to be stored alongside the serialized record. If no such
+     *     data exists, then this pointer will be null.
+     * @param user_record_len length of the application specific data
      * @return 0 on success, negative on failure
      */
-    int (*store_sender_key)(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, void *user_data);
+    int (*store_sender_key)(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, uint8_t *user_record, size_t user_record_len, void *user_data);
 
     /**
      * Returns a copy of the sender key record corresponding to the
@@ -669,10 +681,14 @@ typedef struct signal_protocol_sender_key_store {
      * @param record pointer to a newly allocated buffer containing the record,
      *     if found. Unset if no record was found.
      *     The Signal Protocol library is responsible for freeing this buffer.
+     * @param user_record pointer to a newly allocated buffer containing
+     *     application-specific data stored alongside the record. If no such
+     *     data exists, then this pointer may be left unset.
+     *     The Signal Protocol library is responsible for freeing this buffer.
      * @param sender_key_name the (groupId + senderId + deviceId) tuple
      * @return 1 if the record was loaded, 0 if the record was not found, negative on failure
      */
-    int (*load_sender_key)(signal_buffer **record, const signal_protocol_sender_key_name *sender_key_name, void *user_data);
+    int (*load_sender_key)(signal_buffer **record, signal_buffer **user_record, const signal_protocol_sender_key_name *sender_key_name, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being

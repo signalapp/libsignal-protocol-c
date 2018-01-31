@@ -197,7 +197,7 @@ typedef struct {
     test_session_store_session *sessions;
 } test_session_store_data;
 
-int test_session_store_load_session(signal_buffer **record, const signal_protocol_address *address, void *user_data)
+int test_session_store_load_session(signal_buffer **record, signal_buffer **user_record, const signal_protocol_address *address, void *user_data)
 {
     test_session_store_data *data = user_data;
 
@@ -242,7 +242,7 @@ int test_session_store_get_sub_device_sessions(signal_int_list **sessions, const
     return 0;
 }
 
-int test_session_store_store_session(const signal_protocol_address *address, uint8_t *record, size_t record_len, void *user_data)
+int test_session_store_store_session(const signal_protocol_address *address, uint8_t *record, size_t record_len, uint8_t *user_record_data, size_t user_record_len, void *user_data)
 {
     test_session_store_data *data = user_data;
 
@@ -753,7 +753,7 @@ typedef struct {
     test_sender_key_store_record *records;
 } test_sender_key_store_data;
 
-int test_sender_key_store_store_sender_key(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, void *user_data)
+int test_sender_key_store_store_sender_key(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, uint8_t *user_record_data, size_t user_record_len, void *user_data)
 {
     test_sender_key_store_data *data = user_data;
 
@@ -793,7 +793,7 @@ int test_sender_key_store_store_sender_key(const signal_protocol_sender_key_name
     return 0;
 }
 
-int test_sender_key_store_load_sender_key(signal_buffer **record, const signal_protocol_sender_key_name *sender_key_name, void *user_data)
+int test_sender_key_store_load_sender_key(signal_buffer **record, signal_buffer **user_record, const signal_protocol_sender_key_name *sender_key_name, void *user_data)
 {
     test_sender_key_store_data *data = user_data;
 
