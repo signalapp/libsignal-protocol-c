@@ -81,31 +81,35 @@ of functions used across the library that need client-specific implementations.
 Refer to "signal_protocol.h" for detailed documentation on these functions, and the unit
 tests for example implementations.
 
-    signal_context *global_context;    
-    signal_context_create(&global_context, user_data);
-    signal_context_set_crypto_provider(global_context, &provider);
-    signal_context_set_locking_functions(global_context, lock_function, unlock_function);
+```c
+signal_context *global_context;
+signal_context_create(&global_context, user_data);
+signal_context_set_crypto_provider(global_context, &provider);
+signal_context_set_locking_functions(global_context, lock_function, unlock_function);
+```
 
 ## Client install time
 
 At install time, a libsignal-protocol-c client needs to generate its identity keys,
 registration id, and prekeys.
 
-    ratchet_identity_key_pair *identity_key_pair;
-    uint32_t registration_id;
-    signal_protocol_key_helper_pre_key_list_node *pre_keys_head;
-    session_signed_pre_key *signed_pre_key;
+```c
+ratchet_identity_key_pair *identity_key_pair;
+uint32_t registration_id;
+signal_protocol_key_helper_pre_key_list_node *pre_keys_head;
+session_signed_pre_key *signed_pre_key;
 
-    signal_protocol_key_helper_generate_identity_key_pair(&identity_key_pair, global_context);
-    signal_protocol_key_helper_generate_registration_id(&registration_id, 0, global_context);
-    signal_protocol_key_helper_generate_pre_keys(&pre_keys_head, start_id, 100, global_context);
-    signal_protocol_key_helper_generate_signed_pre_key(&signed_pre_key, identity_key_pair, 5, timestamp, global_context);
+signal_protocol_key_helper_generate_identity_key_pair(&identity_key_pair, global_context);
+signal_protocol_key_helper_generate_registration_id(&registration_id, 0, global_context);
+signal_protocol_key_helper_generate_pre_keys(&pre_keys_head, start_id, 100, global_context);
+signal_protocol_key_helper_generate_signed_pre_key(&signed_pre_key, identity_key_pair, 5, timestamp, global_context);
 
-    /* Store identity_key_pair somewhere durable and safe. */
-    /* Store registration_id somewhere durable and safe. */
+/* Store identity_key_pair somewhere durable and safe. */
+/* Store registration_id somewhere durable and safe. */
 
-    /* Store pre keys in the pre key store. */
-    /* Store signed pre key in the signed pre key store. */
+/* Store pre keys in the pre key store. */
+/* Store signed pre key in the signed pre key store. */
+```
 
 The above example is simplified for the sake of clarity. All of these functions return errors
 on failure, and those errors should be checked for in real usage.
@@ -131,41 +135,43 @@ declared in "signal_protocol.h" for these data stores.
 Once the callbacks for these data stores are implemented, building a session
 is fairly straightforward:
 
-    /* Create the data store context, and add all the callbacks to it */
-    signal_protocol_store_context *store_context;
-    signal_protocol_store_context_create(&store_context, context);
-    signal_protocol_store_context_set_session_store(store_context, &session_store);
-    signal_protocol_store_context_set_pre_key_store(store_context, &pre_key_store);
-    signal_protocol_store_context_set_signed_pre_key_store(store_context, &signed_pre_key_store);
-    signal_protocol_store_context_set_identity_key_store(store_context, &identity_key_store);
+```c
+/* Create the data store context, and add all the callbacks to it */
+signal_protocol_store_context *store_context;
+signal_protocol_store_context_create(&store_context, context);
+signal_protocol_store_context_set_session_store(store_context, &session_store);
+signal_protocol_store_context_set_pre_key_store(store_context, &pre_key_store);
+signal_protocol_store_context_set_signed_pre_key_store(store_context, &signed_pre_key_store);
+signal_protocol_store_context_set_identity_key_store(store_context, &identity_key_store);
 
-    /* Instantiate a session_builder for a recipient address. */
-    signal_protocol_address address = {
-        "+14159998888", 12, 1
-    };
-    session_builder *builder;
-    session_builder_create(&builder, store_context, &address, global_context);
+/* Instantiate a session_builder for a recipient address. */
+signal_protocol_address address = {
+    "+14159998888", 12, 1
+};
+session_builder *builder;
+session_builder_create(&builder, store_context, &address, global_context);
 
-    /* Build a session with a pre key retrieved from the server. */
-    session_builder_process_pre_key_bundle(builder, retrieved_pre_key);
+/* Build a session with a pre key retrieved from the server. */
+session_builder_process_pre_key_bundle(builder, retrieved_pre_key);
 
-    /* Create the session cipher and encrypt the message */
-    session_cipher *cipher;
-    session_cipher_create(&cipher, store_context, &address, global_context);
-    
-    ciphertext_message *encrypted_message;
-    session_cipher_encrypt(cipher, message, message_len, &encrypted_message);
+/* Create the session cipher and encrypt the message */
+session_cipher *cipher;
+session_cipher_create(&cipher, store_context, &address, global_context);
 
-    /* Get the serialized content and deliver it */
-    signal_buffer *serialized = ciphertext_message_get_serialized(encrypted_message);
-    
-    deliver(signal_buffer_data(serialized), signal_buffer_len(serialized));
+ciphertext_message *encrypted_message;
+session_cipher_encrypt(cipher, message, message_len, &encrypted_message);
 
-    /* Cleanup */
-    SIGNAL_UNREF(encrypted_message);
-    session_cipher_free(cipher);
-    session_builder_free(builder);
-    signal_protocol_store_context_destroy(store_context);
+/* Get the serialized content and deliver it */
+signal_buffer *serialized = ciphertext_message_get_serialized(encrypted_message);
+
+deliver(signal_buffer_data(serialized), signal_buffer_len(serialized));
+
+/* Cleanup */
+SIGNAL_UNREF(encrypted_message);
+session_cipher_free(cipher);
+session_builder_free(builder);
+signal_protocol_store_context_destroy(store_context);
+```
 
 The above example is simplified for the sake of clarity. All of these functions return errors
 on failure, and those errors should be checked for in real usage.
