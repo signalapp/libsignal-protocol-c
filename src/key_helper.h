@@ -63,7 +63,7 @@ int signal_protocol_key_helper_generate_pre_keys(signal_protocol_key_helper_pre_
 /**
  * Get the pre key element for the current node in the key list.
  *
- * @param current list node
+ * @param node current list node
  * @return pre key element
  */
 session_pre_key *signal_protocol_key_helper_key_list_element(const signal_protocol_key_helper_pre_key_list_node *node);
@@ -71,7 +71,7 @@ session_pre_key *signal_protocol_key_helper_key_list_element(const signal_protoc
 /**
  * Get the next element in the key list.
  *
- * @param current list node
+ * @param node current list node
  * @return next list node, or 0 if at the end of the list
  */
 signal_protocol_key_helper_pre_key_list_node *signal_protocol_key_helper_key_list_next(const signal_protocol_key_helper_pre_key_list_node *node);

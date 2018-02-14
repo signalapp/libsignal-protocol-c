@@ -273,16 +273,6 @@ div_by_2_25(const limb v)
   return (v + roundoff) >> 25;
 }
 
-/* return v / (2^25), using only shifts and adds.
- *
- * On entry: v can take any value. */
-static inline s32
-div_s32_by_2_25(const s32 v)
-{
-   const s32 roundoff = ((uint32_t)(v >> 31)) >> 7;
-   return (v + roundoff) >> 25;
-}
-
 /* Reduce all coefficients of the short form input so that |x| < 2^26.
  *
  * On entry: |output[i]| < 280*2^54 */
