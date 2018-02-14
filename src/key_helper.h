@@ -22,7 +22,7 @@ int signal_protocol_key_helper_generate_identity_key_pair(ratchet_identity_key_p
  * at install time.
  *
  * @param registration_id set to the generated registration ID
- * @param extendedRange By default (0), the generated registration
+ * @param extended_range By default (0), the generated registration
  *                      ID is sized to require the minimal possible protobuf
  *                      encoding overhead. Specify true (1) if the caller needs
  *                      the full range of MAX_INT at the cost of slightly

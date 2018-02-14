@@ -444,16 +444,16 @@ required_field_get_packed_size(const ProtobufCFieldDescriptor *field,
 	case PROTOBUF_C_TYPE_STRING: {
 		const char *str = *(char * const *) member;
 		size_t len = str ? strlen(str) : 0;
-		return rv + uint32_size(len) + len;
+		return rv + uint32_size((uint32_t) len) + len;
 	}
 	case PROTOBUF_C_TYPE_BYTES: {
 		size_t len = ((const ProtobufCBinaryData *) member)->len;
-		return rv + uint32_size(len) + len;
+		return rv + uint32_size((uint32_t) len) + len;
 	}
 	case PROTOBUF_C_TYPE_MESSAGE: {
 		const ProtobufCMessage *msg = *(ProtobufCMessage * const *) member;
 		size_t subrv = msg ? protobuf_c_message_get_packed_size(msg) : 0;
-		return rv + uint32_size(subrv) + subrv;
+		return rv + uint32_size((uint32_t) subrv) + subrv;
 	}
 	}
 	PROTOBUF_C__ASSERT_NOT_REACHED();

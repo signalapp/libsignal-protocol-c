@@ -487,7 +487,7 @@ fcontract(u8 *output, limb *input_limbs) {
 
   /* |input_limbs[i]| < 2^26, so it's valid to convert to an s32. */
   for (i = 0; i < 10; i++) {
-    input[i] = input_limbs[i];
+    input[i] = (s32) input_limbs[i];
   }
 
   for (j = 0; j < 2; ++j) {
