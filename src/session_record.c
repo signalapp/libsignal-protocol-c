@@ -23,6 +23,7 @@ struct session_record
     session_state *state;
     session_record_state_node *previous_states_head;
     int is_fresh;
+    signal_buffer *user_record;
     signal_context *global_context;
 };
 
@@ -239,6 +240,7 @@ complete:
 int session_record_copy(session_record **record, session_record *other_record, signal_context *global_context)
 {
     int result = 0;
+    session_record *result_record;
     signal_buffer *buffer = 0;
     size_t len = 0;
     uint8_t *data = 0;
@@ -254,14 +256,27 @@ int session_record_copy(session_record **record, session_record *other_record, s
     data = signal_buffer_data(buffer);
     len = signal_buffer_len(buffer);
 
-    result = session_record_deserialize(record, data, len, global_context);
+    result = session_record_deserialize(&result_record, data, len, global_context);
     if(result < 0) {
         goto complete;
+    }
+    if(other_record->user_record) {
+        result_record->user_record = signal_buffer_copy(other_record->user_record);
+        if(!result_record->user_record) {
+            result = SG_ERR_NOMEM;
+            goto complete;
+        }
     }
 
 complete:
     if(buffer) {
         signal_buffer_free(buffer);
+    }
+    if(result >= 0) {
+        *record = result_record;
+    }
+    else {
+        SIGNAL_UNREF(result_record);
     }
     return result;
 }
@@ -419,6 +434,21 @@ static void session_record_free_previous_states(session_record *record)
     record->previous_states_head = 0;
 }
 
+signal_buffer *session_record_get_user_record(const session_record *record)
+{
+    assert(record);
+    return record->user_record;
+}
+
+void session_record_set_user_record(session_record *record, signal_buffer *user_record)
+{
+    assert(record);
+    if(record->user_record) {
+        signal_buffer_free(record->user_record);
+    }
+    record->user_record = user_record;
+}
+
 void session_record_destroy(signal_type_base *type)
 {
     session_record *record = (session_record *)type;
@@ -427,6 +457,10 @@ void session_record_destroy(signal_type_base *type)
         SIGNAL_UNREF(record->state);
     }
     session_record_free_previous_states(record);
+
+    if(record->user_record) {
+        signal_buffer_free(record->user_record);
+    }
 
     free(record);
 }

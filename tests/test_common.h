@@ -45,9 +45,9 @@ void setup_test_crypto_provider(signal_context *context);
 void setup_test_store_context(signal_protocol_store_context **context, signal_context *global_context);
 
 /* Test session store */
-int test_session_store_load_session(signal_buffer **record, const signal_protocol_address *address, void *user_data);
+int test_session_store_load_session(signal_buffer **record, signal_buffer **user_record, const signal_protocol_address *address, void *user_data);
 int test_session_store_get_sub_device_sessions(signal_int_list **sessions, const char *name, size_t name_len, void *user_data);
-int test_session_store_store_session(const signal_protocol_address *address, uint8_t *record, size_t record_len, void *user_data);
+int test_session_store_store_session(const signal_protocol_address *address, uint8_t *record, size_t record_len, uint8_t *user_record_data, size_t user_record_len, void *user_data);
 int test_session_store_contains_session(const signal_protocol_address *address, void *user_data);
 int test_session_store_delete_session(const signal_protocol_address *address, void *user_data);
 int test_session_store_delete_all_sessions(const char *name, size_t name_len, void *user_data);
@@ -79,8 +79,8 @@ void test_identity_key_store_destroy(void *user_data);
 void setup_test_identity_key_store(signal_protocol_store_context *context, signal_context *global_context);
 
 /* Test sender key store */
-int test_sender_key_store_store_sender_key(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, void *user_data);
-int test_sender_key_store_load_sender_key(signal_buffer **record, const signal_protocol_sender_key_name *sender_key_name, void *user_data);
+int test_sender_key_store_store_sender_key(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, uint8_t *user_record_data, size_t user_record_len, void *user_data);
+int test_sender_key_store_load_sender_key(signal_buffer **record, signal_buffer **user_record, const signal_protocol_sender_key_name *sender_key_name, void *user_data);
 void test_sender_key_store_destroy(void *user_data);
 void setup_test_sender_key_store(signal_protocol_store_context *context, signal_context *global_context);
 

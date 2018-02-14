@@ -41,6 +41,9 @@ int session_record_archive_current_state(session_record *record);
 
 int session_record_promote_state(session_record *record, session_state *promoted_state);
 
+signal_buffer *session_record_get_user_record(const session_record *record);
+void session_record_set_user_record(session_record *record, signal_buffer *user_record);
+
 void session_record_destroy(signal_type_base *type);
 
 #ifdef __cplusplus
