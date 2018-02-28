@@ -1,6 +1,6 @@
 enable_testing()
 find_library(M_LIB m)
-find_package(Check REQUIRED)
+find_package(Check 0.9.10 REQUIRED)
 IF(NOT(APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
   find_package(OpenSSL 1.0 REQUIRED)
 ENDIF()
