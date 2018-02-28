@@ -69,7 +69,6 @@ void *session_cipher_get_user_data(session_cipher *cipher);
  * before they're able to successfully store the plaintext to disk.
  *
  * @param callback the callback function to set
- * @param user_data user data pointer provided to the callback
  */
 void session_cipher_set_decryption_callback(session_cipher *cipher,
         int (*callback)(session_cipher *cipher, signal_buffer *plaintext, void *decrypt_context));
