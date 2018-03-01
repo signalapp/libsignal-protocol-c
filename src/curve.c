@@ -40,9 +40,9 @@ struct ec_public_key_list
     UT_array *values;
 };
 
-int curve_internal_fast_tests()
+int curve_internal_fast_tests(int silent)
 {
-    if (all_fast_tests(1) != 0)
+    if (all_fast_tests(silent) != 0)
         return SG_ERR_UNKNOWN;
     return 0;
 }

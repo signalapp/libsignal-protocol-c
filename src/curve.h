@@ -12,7 +12,7 @@ extern "C" {
 #define CURVE_SIGNATURE_LEN 64
 #define VRF_SIGNATURE_LEN 96
 
-int curve_internal_fast_tests();
+int curve_internal_fast_tests(int silent);
 
 int curve_decode_point(ec_public_key **public_key, const uint8_t *key_data, size_t key_len, signal_context *global_context);
 int ec_public_key_compare(const ec_public_key *key1, const ec_public_key *key2);

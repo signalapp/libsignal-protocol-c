@@ -240,7 +240,7 @@ complete:
 int session_record_copy(session_record **record, session_record *other_record, signal_context *global_context)
 {
     int result = 0;
-    session_record *result_record;
+    session_record *result_record = 0;
     signal_buffer *buffer = 0;
     size_t len = 0;
     uint8_t *data = 0;
