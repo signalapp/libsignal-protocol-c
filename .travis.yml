@@ -51,4 +51,4 @@ before_install:
 
 script:
     - cmake . && make
-    - cd tests && make && cd .. && ctest
+    - cd tests && cmake . && make && cd .. && ctest
