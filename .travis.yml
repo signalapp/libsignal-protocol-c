@@ -50,5 +50,5 @@ before_install:
     - eval "${MATRIX_EVAL}"
 
 script:
-    - cmake . && make
-    - cd tests && cmake . && make && cd .. && ctest
+    - cmake -DBUILD_TESTING=1 . && make
+    - cd tests && make && cd .. && ctest
