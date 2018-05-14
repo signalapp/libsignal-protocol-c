@@ -9,6 +9,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - check
             - g++-4.9
       env:
          - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
@@ -20,6 +21,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - check
             - g++-5
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
@@ -31,6 +33,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - check
             - g++-6
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
@@ -42,6 +45,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - check
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
