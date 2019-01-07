@@ -847,7 +847,8 @@ void setup_test_sender_key_store(signal_protocol_store_context *context, signal_
 }
 
 #ifndef __OpenBSD__
-void srand_deterministic(unsigned int seed) {
+void srand_deterministic(unsigned int seed)
+{
     srand(seed);
 }
 #endif
