@@ -1426,9 +1426,9 @@ void run_interaction(signal_protocol_store_context *alice_store, signal_protocol
     }
 
     time_t seed = time(0);
-    srand(seed);
+    srand_deterministic(seed);
     shuffle_buffers(alice_ooo_plaintext, 10);
-    srand(seed);
+    srand_deterministic(seed);
     shuffle_buffers(alice_ooo_ciphertext, 10);
     fprintf(stderr, "Shuffled Alice->Bob messages created\n");
 
