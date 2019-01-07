@@ -1,5 +1,6 @@
 #include "test_common.h"
 
+#include <limits.h>
 #include <openssl/opensslv.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
