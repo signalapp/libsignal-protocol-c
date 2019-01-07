@@ -84,4 +84,10 @@ int test_sender_key_store_load_sender_key(signal_buffer **record, signal_buffer 
 void test_sender_key_store_destroy(void *user_data);
 void setup_test_sender_key_store(signal_protocol_store_context *context, signal_context *global_context);
 
+/* Portability */
+#ifndef __OpenBSD__
+/* OpenBSD extension */
+void srand_deterministic(unsigned int seed);
+#endif
+
 #endif /* TEST_COMMON_H */

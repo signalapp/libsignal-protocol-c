@@ -206,9 +206,9 @@ void generate_test_message_collections(session_cipher *cipher, signal_buffer **p
 
     /* Randomize the two arrays using the same seed */
     time_t seed = time(0);
-    srand(seed);
+    srand_deterministic(seed);
     shuffle_buffers(plaintext_messages, size);
-    srand(seed);
+    srand_deterministic(seed);
     shuffle_buffers(ciphertext_messages, size);
 }
 
