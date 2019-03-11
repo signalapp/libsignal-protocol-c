@@ -17,6 +17,9 @@ set(protobuf_SRCS
 	FingerprintProtocol.pb-c.c
 )
 
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+		${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
+
 set(signal_protocol_SRCS
 	vpool.c
 	vpool.h
@@ -59,6 +62,7 @@ set(signal_protocol_SRCS
 	fingerprint.h
 	device_consistency.c
 	device_consistency.h
+	version.h
 )
 
 add_subdirectory(curve25519)
@@ -100,6 +104,7 @@ INSTALL(
 	group_cipher.h
 	fingerprint.h
 	device_consistency.h
+	${CMAKE_CURRENT_BINARY_DIR}/version.h
 	DESTINATION ${INCLUDE_INSTALL_DIR}/signal
 )
 
