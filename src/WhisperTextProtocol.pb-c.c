@@ -10,7 +10,7 @@
 void   textsecure__signal_message__init
                      (Textsecure__SignalMessage         *message)
 {
-  static Textsecure__SignalMessage init_value = TEXTSECURE__SIGNAL_MESSAGE__INIT;
+  static const Textsecure__SignalMessage init_value = TEXTSECURE__SIGNAL_MESSAGE__INIT;
   *message = init_value;
 }
 size_t textsecure__signal_message__get_packed_size
@@ -47,13 +47,15 @@ void   textsecure__signal_message__free_unpacked
                      (Textsecure__SignalMessage *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__signal_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__pre_key_signal_message__init
                      (Textsecure__PreKeySignalMessage         *message)
 {
-  static Textsecure__PreKeySignalMessage init_value = TEXTSECURE__PRE_KEY_SIGNAL_MESSAGE__INIT;
+  static const Textsecure__PreKeySignalMessage init_value = TEXTSECURE__PRE_KEY_SIGNAL_MESSAGE__INIT;
   *message = init_value;
 }
 size_t textsecure__pre_key_signal_message__get_packed_size
@@ -90,13 +92,15 @@ void   textsecure__pre_key_signal_message__free_unpacked
                      (Textsecure__PreKeySignalMessage *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__pre_key_signal_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__key_exchange_message__init
                      (Textsecure__KeyExchangeMessage         *message)
 {
-  static Textsecure__KeyExchangeMessage init_value = TEXTSECURE__KEY_EXCHANGE_MESSAGE__INIT;
+  static const Textsecure__KeyExchangeMessage init_value = TEXTSECURE__KEY_EXCHANGE_MESSAGE__INIT;
   *message = init_value;
 }
 size_t textsecure__key_exchange_message__get_packed_size
@@ -133,13 +137,15 @@ void   textsecure__key_exchange_message__free_unpacked
                      (Textsecure__KeyExchangeMessage *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__key_exchange_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__sender_key_message__init
                      (Textsecure__SenderKeyMessage         *message)
 {
-  static Textsecure__SenderKeyMessage init_value = TEXTSECURE__SENDER_KEY_MESSAGE__INIT;
+  static const Textsecure__SenderKeyMessage init_value = TEXTSECURE__SENDER_KEY_MESSAGE__INIT;
   *message = init_value;
 }
 size_t textsecure__sender_key_message__get_packed_size
@@ -176,13 +182,15 @@ void   textsecure__sender_key_message__free_unpacked
                      (Textsecure__SenderKeyMessage *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__sender_key_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__sender_key_distribution_message__init
                      (Textsecure__SenderKeyDistributionMessage         *message)
 {
-  static Textsecure__SenderKeyDistributionMessage init_value = TEXTSECURE__SENDER_KEY_DISTRIBUTION_MESSAGE__INIT;
+  static const Textsecure__SenderKeyDistributionMessage init_value = TEXTSECURE__SENDER_KEY_DISTRIBUTION_MESSAGE__INIT;
   *message = init_value;
 }
 size_t textsecure__sender_key_distribution_message__get_packed_size
@@ -219,13 +227,15 @@ void   textsecure__sender_key_distribution_message__free_unpacked
                      (Textsecure__SenderKeyDistributionMessage *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__sender_key_distribution_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__device_consistency_code_message__init
                      (Textsecure__DeviceConsistencyCodeMessage         *message)
 {
-  static Textsecure__DeviceConsistencyCodeMessage init_value = TEXTSECURE__DEVICE_CONSISTENCY_CODE_MESSAGE__INIT;
+  static const Textsecure__DeviceConsistencyCodeMessage init_value = TEXTSECURE__DEVICE_CONSISTENCY_CODE_MESSAGE__INIT;
   *message = init_value;
 }
 size_t textsecure__device_consistency_code_message__get_packed_size
@@ -262,6 +272,8 @@ void   textsecure__device_consistency_code_message__free_unpacked
                      (Textsecure__DeviceConsistencyCodeMessage *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__device_consistency_code_message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
