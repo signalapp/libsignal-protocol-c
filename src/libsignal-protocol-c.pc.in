@@ -9,5 +9,5 @@ Description: Signal Protocol C Library
 Version: @SIGNAL_PROTOCOL_C_VERSION@
 
 Requires:
-Libs: -L${libdir} -L${sharedlibdir} -l@PROJECT_NAME@
+Libs: -L${libdir} -L${sharedlibdir} -l@PROJECT_NAME@ -lprotobuf-c
 Cflags: -I${includedir}/signal
