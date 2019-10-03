@@ -1,64 +1,109 @@
-cmake_minimum_required(VERSION 2.8.4)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
-project(signal-protocol-c)
+cmake_minimum_required(VERSION 3.4)
+project(signal-protocol-c
+  VERSION 2.3.2
+  LANGUAGES C)
 
-if(POLICY CMP0042)
-	cmake_policy(SET CMP0042 NEW)
-endif()
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 
-SET(SIGNAL_PROTOCOL_C_VERSION_MAJOR 2)
-SET(SIGNAL_PROTOCOL_C_VERSION_MINOR 3)
-SET(SIGNAL_PROTOCOL_C_VERSION_PATCH 2)
-SET(SIGNAL_PROTOCOL_C_VERSION ${SIGNAL_PROTOCOL_C_VERSION_MAJOR}.${SIGNAL_PROTOCOL_C_VERSION_MINOR}.${SIGNAL_PROTOCOL_C_VERSION_PATCH})
+include(CMakePackageConfigHelpers)
+include(CMakeDependentOption)
+include(CheckCCompilerFlag)
+include(CheckSymbolExists)
+include(GNUInstallDirs)
+include(TestBigEndian)
+include(CTest)
 
-SET(LIB_SUFFIX "" CACHE STRING "Define suffix of directory name (32/64)")
-SET(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE STRING "The directory the binaries are installed in")
-SET(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "The directory the libraries are installed in")
-SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "The directory the headers are installed in")
-SET(INSTALL_PKGCONFIG_DIR "${LIB_INSTALL_DIR}/pkgconfig" CACHE PATH "Installation directory for pkgconfig (.pc) files")
+include(SignalCheck)
 
-INCLUDE(CheckSymbolExists)
-INCLUDE(CheckCCompilerFlag)
-INCLUDE(TestBigEndian)
+signal_check_lint(missing-field-initializers)
+signal_check_lint(sign-conversion)
+signal_check_lint(sign-compare)
+signal_check_lint(parentheses)
+signal_check_lint(all)
 
-CHECK_SYMBOL_EXISTS(memset_s "string.h" HAVE_MEMSET_S)
+signal_check_lint(shorten-64-to-32)
+signal_check_lint(unused-variable)
+signal_check_lint(int-conversion)
+signal_check_lint(unused-value)
+signal_check_lint(pointer-sign)
+signal_check_lint(protocol)
+signal_check_lint(shadow)
+signal_check_lint(switch)
 
-IF(CMAKE_SYSTEM_NAME MATCHES "Windows")
-	CHECK_SYMBOL_EXISTS(SecureZeroMemory "Windows.h;WinBase.h" HAVE_SECUREZEROMEMORY)
-ENDIF(CMAKE_SYSTEM_NAME MATCHES "Windows")
+signal_check_lint(missing-braces)
 
-IF(BUILD_TESTING)
-	enable_testing()
-ENDIF(BUILD_TESTING)
+check_c_compiler_flag(-fmessage-length=0 SIGNAL_CODEGEN_MESSAGE_LENGTH)
 
-IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0 -Wall -Wmissing-field-initializers -Wno-missing-braces -Wparentheses")
-ENDIF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+check_symbol_exists(memset_s "string.h" SIGNAL_HAVE_MEMset_S)
+check_symbol_exists(SecureZeroMemory
+  "Windows.h;WinBase.h"
+  SIGNAL_HAVE_SECUREZEROMEMORY)
 
-IF(CMAKE_COMPILER_IS_GNUCC)
-	CHECK_C_COMPILER_FLAG("-Wsign-conversion" GCC_WARN_SIGN_CONVERSION)
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wsign-compare")
-	IF(GCC_WARN_SIGN_CONVERSION)
-		SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wsign-conversion")
-	ENDIF(GCC_WARN_SIGN_CONVERSION)
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
+test_big_endian(SIGNAL_BIG_ENDIAN)
 
-IF(CMAKE_C_COMPILER_ID MATCHES "Clang")
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wswitch -Wunused-variable -Wunused-value -Wshadow -Wint-conversion -Wpointer-sign -Wprotocol -Wshorten-64-to-32")
-ENDIF(CMAKE_C_COMPILER_ID MATCHES "Clang")
+# Setting generator expressions like this make them a bit easier to read
+set(codegen-message-length
+  $<$<BOOL:${SIGNAL_CODEGEN_MESSAGE_LENGTH}>:-fmessage-length=0>)
 
-IF(HAVE_MEMSET_S)
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_MEMSET_S=1")
-ENDIF(HAVE_MEMSET_S)
+add_compile_options(
+  ${codegen-message-length}
 
-TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
-IF(WORDS_BIGENDIAN)
-	ADD_DEFINITIONS(-DWORDS_BIGENDIAN)
-ENDIF(WORDS_BIGENDIAN)
+  ${lint-allow-missing-braces}
 
-IF(COVERAGE)
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
-	SET(LINK_FLAGS "${LINK_FLAGS} -fprofile-arcs -ftest-coverage")
+  ${lint-deny-missing-field-initializers}
+  ${lint-deny-sign-conversion}
+  ${lint-deny-sign-compare}
+  ${lint-deny-parentheses}
+  ${lint-deny-default}
+
+  ${lint-deny-shorten-64-to-32}
+  ${lint-deny-unused-variable}
+  ${lint-deny-int-conversion}
+  ${lint-deny-unused-value}
+  ${lint-deny-pointer-sign}
+  ${lint-deny-protocol}
+  ${lint-deny-shadow}
+  ${lint-deny-switch})
+
+add_compile_definitions(
+  HAVE_MEMset_S=$<BOOL:${SIGNAL_HAVE_MEMset_S}>
+  $<$<BOOL:${SIGNAL_BIG_ENDIAN}>:WORDS_BIGENDIAN>)
+
+configure_file(src/libsignal-protocol-c.pc.in libsignal-protocol-c.pc @ONLY)
+configure_package_config_file(
+  ${PROJECT_SOURCE_DIR}/CMakeModules/signal-protocol-config.cmake.in
+  ${PROJECT_BINARY_DIR}/signal-protocol-config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/signal-protocol
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+  NO_SET_AND_CHECK_MACRO)
+
+write_basic_package_version_file(signal-protocol-config-version.cmake
+  COMPATIBILITY SameMajorVersion)
+
+add_subdirectory(src)
+
+install(TARGETS signal-protocol-c EXPORT signal-protocol-targets
+  PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/signal"
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(EXPORT signal-protocol-targets
+  NAMESPACE signal::
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/signal-protocol)
+
+install(FILES ${PROJECT_BINARY_DIR}/libsignal-protocol-c.pc
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
+
+install(FILES
+  "${PROJECT_BINARY_DIR}/signal-protocol-config-version.cmake"
+  "${PROJECT_BINARY_DIR}/signal-protocol-config.cmake"
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/signal-protocol)
+
+if(COVERAGE)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+	set(LINK_FLAGS "${LINK_FLAGS} -fprofile-arcs -ftest-coverage")
 
 	add_custom_command(OUTPUT run_coverage
 			COMMAND ctest
@@ -68,10 +113,8 @@ IF(COVERAGE)
 			COMMENT Collecting and creating coverage information
 	)
 	add_custom_target( coverage DEPENDS run_coverage )
-ENDIF(COVERAGE)
+endif()
 
-add_subdirectory(src)
-
-IF(BUILD_TESTING)
+if(BUILD_TESTING)
 	add_subdirectory(tests)
-ENDIF(BUILD_TESTING)
+endif()

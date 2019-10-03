@@ -1,32 +1,30 @@
-IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable -Wno-unused-function -Wno-shadow")
-ENDIF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+add_library(curve25519 OBJECT)
 
-IF(CMAKE_COMPILER_IS_GNUCC)
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-compare")
-    IF(GCC_WARN_SIGN_CONVERSION)
-        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-sign-conversion")
-    ENDIF(GCC_WARN_SIGN_CONVERSION)
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
+set_property(TARGET curve25519
+  PROPERTY
+    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS})
 
-IF(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shorten-64-to-32")
-ENDIF(CMAKE_C_COMPILER_ID MATCHES "Clang")
+target_compile_options(curve25519
+  PRIVATE
+    ${lint-allow-shorten-64-to-32}
+    ${lint-allow-unused-variable}
+    ${lint-allow-unused-function}
+    ${lint-allow-sign-conversion}
+    ${lint-allow-sign-compare}
+    ${lint-allow-shadow})
 
-include_directories(
-    ed25519/nacl_includes
-    ed25519/additions
-    ed25519/additions/generalized
-    ed25519/sha512
-    ed25519/tests
-    ed25519
-)
+target_include_directories(curve25519
+  PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ed25519/nacl_includes>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ed25519/additions>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ed25519/additions/generalized>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ed25519/sha512>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ed25519/tests>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ed25519>)
 
-set(curve25519_SRCS
-    curve25519-donna.c
-)
-
-set(ed25519_SRCS
+target_sources(curve25519 PRIVATE curve25519-donna.c)
+target_sources(curve25519
+  PRIVATE
     ed25519/fe_0.c
     ed25519/fe_1.c
     ed25519/fe_add.c
@@ -97,12 +95,4 @@ set(ed25519_SRCS
     ed25519/additions/zeroize.c
     ed25519/nacl_sha512/blocks.c
     ed25519/nacl_sha512/hash.c
-    ed25519/tests/internal_fast_tests.c
-)
-
-add_library(curve25519 OBJECT ${curve25519_SRCS} ${ed25519_SRCS})
-
-# Add -fPIC flag
-if(BUILD_SHARED_LIBS)
-    set_property(TARGET curve25519 PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+    ed25519/tests/internal_fast_tests.c)
