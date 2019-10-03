@@ -1,115 +1,84 @@
-if(BUILD_SHARED_LIBS)
-	find_library(M_LIB m)
-endif()
+find_library(M_LIB m)
 
-include_directories(
-	.
-	curve25519/ed25519/nacl_includes
-	curve25519/ed25519/additions
-	curve25519/ed25519/sha512
-	curve25519/ed25519
-	curve25519
-)
-
-set(protobuf_SRCS
-	LocalStorageProtocol.pb-c.c
-	WhisperTextProtocol.pb-c.c
-	FingerprintProtocol.pb-c.c
-)
-
-set(signal_protocol_SRCS
-	vpool.c
-	vpool.h
-	signal_protocol.c
-	signal_protocol.h
-	signal_protocol_types.h
-	signal_protocol_internal.h
-	curve.c
-	curve.h
-	hkdf.c
-	hkdf.h
-	ratchet.c
-	ratchet.h
-	protocol.c
-	protocol.h
-	session_state.c
-	session_state.h
-	session_record.c
-	session_record.h
-	session_pre_key.c
-	session_pre_key.h
-	session_builder.c
-	session_builder.h
-	session_builder_internal.h
-	session_cipher.c
-	session_cipher.h
-	key_helper.c
-	key_helper.h
-	sender_key.c
-	sender_key.h
-	sender_key_state.c
-	sender_key_state.h
-	sender_key_record.c
-	sender_key_record.h
-	group_session_builder.c
-	group_session_builder.h
-	group_cipher.c
-	group_cipher.h
-	fingerprint.c
-	fingerprint.h
-	device_consistency.c
-	device_consistency.h
-)
+add_library(signal-protocol-c)
+add_library(signal::protocol ALIAS signal-protocol-c)
 
 add_subdirectory(curve25519)
 add_subdirectory(protobuf-c)
 
-add_library(signal-protocol-c
-	${protobuf_SRCS}
-	${signal_protocol_SRCS}
+target_sources(signal-protocol-c
+  PRIVATE
+    LocalStorageProtocol.pb-c.c
+    WhisperTextProtocol.pb-c.c
+    FingerprintProtocol.pb-c.c)
+target_sources(signal-protocol-c
+  PRIVATE
+	  vpool.c
+	  signal_protocol.c
+	  signal_protocol_types.h
+	  curve.c
+	  hkdf.c
+	  ratchet.c
+	  protocol.c
+	  session_state.c
+	  session_record.c
+	  session_pre_key.c
+	  session_builder.c
+	  session_cipher.c
+	  key_helper.c
+	  sender_key.c
+	  sender_key_state.c
+	  sender_key_record.c
+	  group_session_builder.c
+	  group_cipher.c
+	  fingerprint.c
+	  device_consistency.c)
+
+target_sources(signal-protocol-c PRIVATE
 	$<TARGET_OBJECTS:curve25519>
-	$<TARGET_OBJECTS:protobuf-c>
-)
+	$<TARGET_OBJECTS:protobuf-c>)
 
-if(BUILD_SHARED_LIBS)
-	target_link_libraries(signal-protocol-c ${M_LIB})
-	set_target_properties(signal-protocol-c PROPERTIES
-		VERSION ${SIGNAL_PROTOCOL_C_VERSION}
-		SOVERSION ${SIGNAL_PROTOCOL_C_VERSION_MAJOR}
-	)
-endif()
+target_include_directories(signal-protocol-c
+  PRIVATE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/curve25519/ed25519/nacl_includes>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/curve25519/ed25519/additions>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/curve25519/ed25519/sha512>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/curve25519/ed25519>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/curve25519>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
 
-INSTALL(
-	FILES
-	signal_protocol.h
-	signal_protocol_types.h
-	curve.h
-	hkdf.h
-	ratchet.h
-	protocol.h
-	session_state.h
-	session_record.h
-	session_pre_key.h
-	session_builder.h
-	session_cipher.h
-	key_helper.h
-	sender_key.h
-	sender_key_state.h
-	sender_key_record.h
-	group_session_builder.h
-	group_cipher.h
-	fingerprint.h
-	device_consistency.h
-	DESTINATION ${INCLUDE_INSTALL_DIR}/signal
-)
+target_link_libraries(signal-protocol-c
+  PRIVATE
+    $<$<BOOL:${M_LIB}>:${M_LIB}>)
 
-INSTALL(TARGETS signal-protocol-c
-	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-	RUNTIME DESTINATION ${BIN_INSTALL_DIR}
-	ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-)
+set_target_properties(signal-protocol-c
+  PROPERTIES
+    EXPORT_NAME protocol
+    SOVERSION "${PROJECT_VERSION_MAJOR}"
+    VERSION "${PROJECT_VERSION}")
 
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/libsignal-protocol-c.pc.in
-		${CMAKE_CURRENT_BINARY_DIR}/libsignal-protocol-c.pc @ONLY)
-
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libsignal-protocol-c.pc DESTINATION "${INSTALL_PKGCONFIG_DIR}")
+# Signal is one of the few libraries that actually doesn't required a
+# directory hierarchy for its headers, so we can just use the PUBLIC_HEADER
+# property
+set_property(TARGET signal-protocol-c APPEND
+  PROPERTY
+    PUBLIC_HEADER
+	    src/signal_protocol.h
+	    src/signal_protocol_types.h
+	    src/curve.h
+	    src/hkdf.h
+	    src/ratchet.h
+	    src/protocol.h
+	    src/session_state.h
+	    src/session_record.h
+	    src/session_pre_key.h
+	    src/session_builder.h
+	    src/session_cipher.h
+	    src/key_helper.h
+	    src/sender_key.h
+	    src/sender_key_state.h
+	    src/sender_key_record.h
+	    src/group_session_builder.h
+	    src/group_cipher.h
+	    src/fingerprint.h
+	    src/device_consistency.h)
