@@ -198,7 +198,7 @@ int session_cipher_encrypt(session_cipher *cipher,
         uint32_t pre_key_id = 0;
         uint32_t signed_pre_key_id;
         ec_public_key *base_key;
-        
+
         if(session_state_unacknowledged_pre_key_message_has_pre_key_id(state)) {
             has_pre_key_id = 1;
             pre_key_id = session_state_unacknowledged_pre_key_message_get_pre_key_id(state);
@@ -347,8 +347,7 @@ int session_cipher_decrypt_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = signal_protocol_session_load_session(cipher->store, &record,
-            cipher->remote_address);
+    result = signal_protocol_session_load_session(cipher->store, &record, cipher->remote_address);
     if(result < 0) {
         goto complete;
     }
@@ -364,8 +363,7 @@ int session_cipher_decrypt_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = signal_protocol_session_store_session(cipher->store,
-            cipher->remote_address, record);
+    result = signal_protocol_session_store_session(cipher->store, cipher->remote_address, record);
 
 complete:
     SIGNAL_UNREF(record);
