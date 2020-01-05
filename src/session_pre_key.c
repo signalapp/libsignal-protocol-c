@@ -220,13 +220,18 @@ void session_pre_key_destroy(signal_type_base *type)
 
 int session_signed_pre_key_create(session_signed_pre_key **pre_key,
         uint32_t id, uint64_t timestamp, ec_key_pair *key_pair,
-        const uint8_t *signature, size_t signature_len)
+        const uint8_t *signature, size_t signature_len, 
+        const uint8_t *rhat, const uint8_t *Rhat, const uint8_t *shat, const uint8_t *chat)
 {
     session_signed_pre_key *result = 0;
 
     assert(key_pair);
     assert(signature);
     assert(signature_len > 0);
+    assert(rhat);
+    assert(Rhat);
+    assert(shat);
+    assert(chat);
 
     if(signature_len > (SIZE_MAX - sizeof(session_signed_pre_key)) / sizeof(uint8_t)) {
         return SG_ERR_NOMEM;
@@ -248,7 +253,11 @@ int session_signed_pre_key_create(session_signed_pre_key **pre_key,
     result->signature_len = signature_len;
 
     memcpy(result->signature, signature, signature_len);
-
+    memcpy(result->rhat, rhat, DJB_KEY_LEN);
+    memcpy(result->Rhat, Rhat, DJB_KEY_LEN);
+    memcpy(result->shat, shat, DJB_KEY_LEN);
+    memcpy(result->chat, chat, DJB_KEY_LEN);
+    
     *pre_key = result;
     return 0;
 }
