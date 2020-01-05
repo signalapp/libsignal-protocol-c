@@ -8,6 +8,8 @@
 #include "LocalStorageProtocol.pb-c.h"
 #include "signal_protocol_internal.h"
 
+#define DJB_KEY_LEN 32
+
 struct session_pre_key {
     signal_type_base base;
     uint32_t id;
@@ -21,6 +23,10 @@ struct session_signed_pre_key {
     uint64_t timestamp;
     size_t signature_len;
     uint8_t signature[];
+    uint8_t rhat[DJB_KEY_LEN]; 
+    uint8_t Rhat[DJB_KEY_LEN];
+    uint8_t shat[DJB_KEY_LEN];
+    uint8_t chat[DJB_KEY_LEN];
 };
 
 struct session_pre_key_bundle {
