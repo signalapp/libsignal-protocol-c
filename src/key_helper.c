@@ -212,6 +212,10 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     ec_key_pair *ec_pair = 0;
     signal_buffer *public_buf = 0;
     signal_buffer *signature_buf = 0;
+    signal_buffer *rhat_buf = 0;
+    signal_buffer *Rhat_buf = 0;
+    signal_buffer *shat_buf = 0;
+    signal_buffer *chat_buf = 0;
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
 
@@ -242,7 +246,11 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,
             signal_buffer_data(signature_buf),
-            signal_buffer_len(signature_buf));
+            signal_buffer_len(signature_buf),
+            signal_buffer_data(rhat_buf),
+            signal_buffer_data(Rhat_buf),
+            signal_buffer_data(shat_buf),
+            signal_buffer_data(chat_buf));
 
 complete:
     SIGNAL_UNREF(ec_pair);
