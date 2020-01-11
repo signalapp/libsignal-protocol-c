@@ -362,7 +362,8 @@ int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const u
 
     if(!record->has_id || !record->has_timestamp
             || !record->has_publickey || !record->has_privatekey
-            || !record->has_signature) {
+            || !record->has_signature
+            || !record->has_rhat || !record->has_Rhat || !record->has_shat || !record->has_chat) {
         result = SG_ERR_INVALID_KEY;
         goto complete;
     }
@@ -384,7 +385,8 @@ int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const u
 
     result = session_signed_pre_key_create(&result_pre_key,
             record->id, record->timestamp, key_pair,
-            record->signature.data, record->signature.len);
+            record->signature.data, record->signature.len,
+            record->rhat, record->Rhat, record->shat, record->chat);
     if(result < 0) {
         goto complete;
     }

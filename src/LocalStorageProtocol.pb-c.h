@@ -193,10 +193,18 @@ struct  _Textsecure__SignedPreKeyRecordStructure
   ProtobufCBinaryData signature;
   protobuf_c_boolean has_timestamp;
   uint64_t timestamp;
+  protobuf_c_boolean has_rhat;
+  ProtobufCBinaryData rhat;
+  protobuf_c_boolean has_Rhat;
+  ProtobufCBinaryData Rhat;
+  protobuf_c_boolean has_shat;
+  ProtobufCBinaryData shat;
+  protobuf_c_boolean has_chat;
+  ProtobufCBinaryData chat;
 };
 #define TEXTSECURE__SIGNED_PRE_KEY_RECORD_STRUCTURE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&textsecure__signed_pre_key_record_structure__descriptor) \
-    , 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,0 }
+    , 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,0, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL}, 0,{0,NULL} }
 
 
 struct  _Textsecure__IdentityKeyPairStructure
