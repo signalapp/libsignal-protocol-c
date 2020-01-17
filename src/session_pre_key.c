@@ -22,11 +22,11 @@ struct session_signed_pre_key {
     ec_key_pair *key_pair;
     uint64_t timestamp;
     size_t signature_len;
-    uint8_t signature[];
     uint8_t rhat[DJB_KEY_LEN]; 
     uint8_t Rhat[DJB_KEY_LEN];
     uint8_t shat[DJB_KEY_LEN];
     uint8_t chat[DJB_KEY_LEN];
+    uint8_t signature[];
 };
 
 struct session_pre_key_bundle {
@@ -438,7 +438,7 @@ int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const u
     result = session_signed_pre_key_create(&result_pre_key,
             record->id, record->timestamp, key_pair,
             record->signature.data, record->signature.len,
-            record->rhat, record->Rhat, record->shat, record->chat);
+            record->rhat.data, record->Rhat.data, record->shat.data, record->chat.data);
     if(result < 0) {
         goto complete;
     }
