@@ -1577,6 +1577,10 @@ session_pre_key_bundle *create_alice_pre_key_bundle(signal_protocol_store_contex
     signal_buffer *Rhat = 0;
     signal_buffer *shat = 0;
     signal_buffer *chat = 0;
+    rhat = signal_buffer_alloc(32);
+    Rhat = signal_buffer_alloc(32);
+    shat = signal_buffer_alloc(32);
+    chat = signal_buffer_alloc(32);
     result = session_signed_pre_key_create(&signed_pre_key_record,
             alice_signed_pre_key_id, time(0), alice_signed_pre_key,
             signal_buffer_data(signature), signal_buffer_len(signature),
@@ -1645,6 +1649,10 @@ session_pre_key_bundle *create_bob_pre_key_bundle(signal_protocol_store_context 
     signal_buffer *Rhat = 0;
     signal_buffer *shat = 0;
     signal_buffer *chat = 0;
+    rhat = signal_buffer_alloc(32);
+    Rhat = signal_buffer_alloc(32);
+    shat = signal_buffer_alloc(32);
+    chat = signal_buffer_alloc(32);
     result = session_signed_pre_key_create(&signed_pre_key_record,
             bob_signed_pre_key_id, time(0), bob_signed_pre_key,
             signal_buffer_data(signature), signal_buffer_len(signature),
