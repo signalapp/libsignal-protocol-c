@@ -1,3 +1,4 @@
+syntax = "proto2";
 package textsecure;
 
 option java_package = "org.whispersystems.libsignal.state";
@@ -78,6 +79,10 @@ message SignedPreKeyRecordStructure {
     optional bytes   privateKey = 3;
     optional bytes   signature  = 4;
     optional fixed64 timestamp  = 5;
+    optional bytes   rhat       = 6;
+    optional bytes   R_hat      = 7;
+    optional bytes   shat       = 8;
+    optional bytes   chat       = 9;
 }
 
 message IdentityKeyPairStructure {

@@ -340,9 +340,9 @@ int session_signed_pre_key_serialize(signal_buffer **buffer, const session_signe
     record.rhat.data = signal_buffer_data(rhat_buf);
     record.rhat.len = DJB_KEY_LEN;
 
-    record.has_Rhat = 1;
-    record.Rhat.data = signal_buffer_data(Rhat_buf);
-    record.Rhat.len = DJB_KEY_LEN;
+    record.has_r_hat = 1;
+    record.r_hat.data = signal_buffer_data(Rhat_buf);
+    record.r_hat.len = DJB_KEY_LEN;
 
     record.has_shat = 1;
     record.shat.data = signal_buffer_data(shat_buf);
@@ -415,7 +415,7 @@ int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const u
     if(!record->has_id || !record->has_timestamp
             || !record->has_publickey || !record->has_privatekey
             || !record->has_signature
-            || !record->has_rhat || !record->has_Rhat || !record->has_shat || !record->has_chat) {
+            || !record->has_rhat || !record->has_r_hat || !record->has_shat || !record->has_chat) {
         result = SG_ERR_INVALID_KEY;
         goto complete;
     }
@@ -438,7 +438,7 @@ int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const u
     result = session_signed_pre_key_create(&result_pre_key,
             record->id, record->timestamp, key_pair,
             record->signature.data, record->signature.len,
-            record->rhat.data, record->Rhat.data, record->shat.data, record->chat.data);
+            record->rhat.data, record->r_hat.data, record->shat.data, record->chat.data);
     if(result < 0) {
         goto complete;
     }

@@ -10,7 +10,7 @@
 void   textsecure__logical_fingerprint__init
                      (Textsecure__LogicalFingerprint         *message)
 {
-  static Textsecure__LogicalFingerprint init_value = TEXTSECURE__LOGICAL_FINGERPRINT__INIT;
+  static const Textsecure__LogicalFingerprint init_value = TEXTSECURE__LOGICAL_FINGERPRINT__INIT;
   *message = init_value;
 }
 size_t textsecure__logical_fingerprint__get_packed_size
@@ -47,13 +47,15 @@ void   textsecure__logical_fingerprint__free_unpacked
                      (Textsecure__LogicalFingerprint *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__logical_fingerprint__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__combined_fingerprints__init
                      (Textsecure__CombinedFingerprints         *message)
 {
-  static Textsecure__CombinedFingerprints init_value = TEXTSECURE__COMBINED_FINGERPRINTS__INIT;
+  static const Textsecure__CombinedFingerprints init_value = TEXTSECURE__COMBINED_FINGERPRINTS__INIT;
   *message = init_value;
 }
 size_t textsecure__combined_fingerprints__get_packed_size
@@ -90,6 +92,8 @@ void   textsecure__combined_fingerprints__free_unpacked
                      (Textsecure__CombinedFingerprints *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__combined_fingerprints__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
