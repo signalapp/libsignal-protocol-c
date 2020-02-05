@@ -243,11 +243,12 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
         goto complete;
     }
 
-    rhat_buf = signal_buffer_alloc(32);
-    Rhat_buf = signal_buffer_alloc(32);
-    shat_buf = signal_buffer_alloc(32);
-    chat_buf = signal_buffer_alloc(32);
-
+    uint8_t arr[32];
+    memset(arr, 0, 32);
+    rhat_buf = signal_buffer_create(arr, 32);
+    Rhat_buf = signal_buffer_create(arr, 32);
+    shat_buf = signal_buffer_create(arr, 32);
+    chat_buf = signal_buffer_create(arr, 32);
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,
             signal_buffer_data(signature_buf),
