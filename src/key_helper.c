@@ -8,6 +8,8 @@
 #include "signal_protocol_internal.h"
 #include "utlist.h"
 
+#define DJB_KEY_LEN 32
+
 struct signal_protocol_key_helper_pre_key_list_node
 {
     session_pre_key *element;
@@ -212,7 +214,7 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     ec_key_pair *ec_pair = 0;
     signal_buffer *public_buf = 0;
     signal_buffer *signature_buf = 0;
-    signal_buffer *rhat_buf = 0;
+    uint8_t rhat_buf[DJB_KEY_LEN];
     signal_buffer *Rhat_buf = 0;
     signal_buffer *shat_buf = 0;
     signal_buffer *chat_buf = 0;
@@ -243,9 +245,15 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
         goto complete;
     }
 
+    // generate random value for rhat
+    result = signal_crypto_random(global_context, rhat_buf, DJB_KEY_LEN);
+    rhat_buf[0] &= 248;
+    rhat_buf[31] &= 127;
+    rhat_buf[31] |= 64;
+
+    // this will be later removed
     uint8_t arr[32];
     memset(arr, 0, 32);
-    rhat_buf = signal_buffer_create(arr, 32);
     Rhat_buf = signal_buffer_create(arr, 32);
     shat_buf = signal_buffer_create(arr, 32);
     chat_buf = signal_buffer_create(arr, 32);
@@ -253,7 +261,7 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
             signed_pre_key_id, timestamp, ec_pair,
             signal_buffer_data(signature_buf),
             signal_buffer_len(signature_buf),
-            signal_buffer_data(rhat_buf),
+            rhat_buf,
             signal_buffer_data(Rhat_buf),
             signal_buffer_data(shat_buf),
             signal_buffer_data(chat_buf));
