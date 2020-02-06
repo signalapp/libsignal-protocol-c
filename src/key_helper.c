@@ -7,6 +7,7 @@
 #include "curve.h"
 #include "signal_protocol_internal.h"
 #include "utlist.h"
+#include "sc.h"
 
 #define DJB_KEY_LEN 32
 
@@ -216,8 +217,8 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     signal_buffer *signature_buf = 0;
     uint8_t rhat_buf[DJB_KEY_LEN];
     signal_buffer *Rhat_buf = 0;
-    signal_buffer *shat_buf = 0;
-    signal_buffer *chat_buf = 0;
+    uint8_t shat_buf[DJB_KEY_LEN];
+    uint8_t chat_buf[DJB_KEY_LEN];
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
 
@@ -255,16 +256,20 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     uint8_t arr[32];
     memset(arr, 0, 32);
     Rhat_buf = signal_buffer_create(arr, 32);
-    shat_buf = signal_buffer_create(arr, 32);
-    chat_buf = signal_buffer_create(arr, 32);
+    memset(chat_buf, 0, 32);
+    
+    // generate value for shat 
+    // shat = rhat + chat*y
+    sc_muladd(shat_buf, get_private_data(private_key), chat_buf, rhat_buf);
+
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,
             signal_buffer_data(signature_buf),
             signal_buffer_len(signature_buf),
             rhat_buf,
             signal_buffer_data(Rhat_buf),
-            signal_buffer_data(shat_buf),
-            signal_buffer_data(chat_buf));
+            shat_buf,
+            chat_buf);
 
 complete:
     SIGNAL_UNREF(ec_pair);
