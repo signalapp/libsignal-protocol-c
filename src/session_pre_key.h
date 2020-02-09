@@ -40,6 +40,10 @@ const uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre
 const uint8_t *session_signed_pre_key_get_Rhat(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre_key);
+const uint8_t *session_pre_key_bundle_get_rhat(const session_pre_key_bundle *pre_key_bundle);
+const uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle);
+const uint8_t *session_pre_key_bundle_get_chat(const session_pre_key_bundle *pre_key_bundle);
+
 
 void session_signed_pre_key_destroy(signal_type_base *type);
 
