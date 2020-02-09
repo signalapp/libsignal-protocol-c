@@ -39,9 +39,9 @@ struct session_pre_key_bundle {
     ec_public_key *signed_pre_key_public;
     signal_buffer *signed_pre_key_signature;
     ec_public_key *identity_key;
-    uint8_t rhat[DJB_KEY_LEN]; 
-    uint8_t shat[DJB_KEY_LEN];
-    uint8_t chat[DJB_KEY_LEN];
+    const uint8_t *rhat; 
+    const uint8_t *shat;
+    const uint8_t *chat;
 
 };
 
@@ -549,6 +549,9 @@ int session_pre_key_bundle_create(session_pre_key_bundle **bundle,
     result_bundle->registration_id = registration_id;
     result_bundle->device_id = device_id;
     result_bundle->pre_key_id = pre_key_id;
+    result_bundle->rhat = rhat;
+    result_bundle->shat = shat;
+    result_bundle->chat = chat;
 
     if(pre_key_public) {
         SIGNAL_REF(pre_key_public);
