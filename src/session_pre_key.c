@@ -39,6 +39,10 @@ struct session_pre_key_bundle {
     ec_public_key *signed_pre_key_public;
     signal_buffer *signed_pre_key_signature;
     ec_public_key *identity_key;
+    uint8_t rhat[DJB_KEY_LEN]; 
+    uint8_t shat[DJB_KEY_LEN];
+    uint8_t chat[DJB_KEY_LEN];
+
 };
 
 /*------------------------------------------------------------------------*/
@@ -525,7 +529,10 @@ int session_pre_key_bundle_create(session_pre_key_bundle **bundle,
         ec_public_key *pre_key_public,
         uint32_t signed_pre_key_id, ec_public_key *signed_pre_key_public,
         const uint8_t *signed_pre_key_signature_data, size_t signed_pre_key_signature_len,
-        ec_public_key *identity_key)
+        ec_public_key *identity_key,
+        const uint8_t *rhat,
+        const uint8_t *shat,
+        const uint8_t *chat)
 {
     int result = 0;
     session_pre_key_bundle *result_bundle = 0;

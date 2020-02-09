@@ -50,7 +50,10 @@ int session_pre_key_bundle_create(session_pre_key_bundle **bundle,
         ec_public_key *pre_key_public,
         uint32_t signed_pre_key_id, ec_public_key *signed_pre_key_public,
         const uint8_t *signed_pre_key_signature_data, size_t signed_pre_key_signature_len,
-        ec_public_key *identity_key);
+        ec_public_key *identity_key,
+        const uint8_t *rhat,
+        const uint8_t *shat,
+        const uint8_t *chat);
 
 uint32_t session_pre_key_bundle_get_registration_id(const session_pre_key_bundle *bundle);
 int session_pre_key_bundle_get_device_id(const session_pre_key_bundle *bundle);
