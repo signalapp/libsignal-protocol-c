@@ -10,6 +10,9 @@
 #include "protocol.h"
 #include "key_helper.h"
 #include "signal_protocol_internal.h"
+#include "sc.h"
+
+#define DJB_KEY_LEN 32
 
 struct session_builder
 {
@@ -204,6 +207,9 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     uint32_t their_one_time_pre_key_id = 0;
     session_state *state = 0;
     uint32_t local_registration_id = 0;
+    signal_buffer *r_buf = 0;
+    signal_buffer *c_buf = 0;
+    signal_buffer *s_buf = 0;
 
     assert(builder);
     assert(builder->store);
@@ -280,6 +286,56 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     if(result < 0) {
         goto complete;
     }
+
+    // Generate random value for r
+    ec_private_key *r = 0;
+    result = curve_generate_private_key(builder->global_context, &r);
+    if (result < 0) {
+        goto complete;
+    }
+    r_buf = signal_buffer_create(get_private_data(r), DJB_KEY_LEN);
+
+    // generate hash value for c
+    void *hmac_context = 0;
+    uint8_t csalt[DJB_KEY_LEN];
+    memset(csalt, 0, sizeof(csalt));
+
+    // initialize HMAC_CTX
+    result = signal_hmac_sha256_init(builder->global_context, &hmac_context, csalt, DJB_KEY_LEN);
+    if (result < 0) {
+        goto complete;
+    }
+
+    // digest input message stream A
+    result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(ratchet_identity_key_pair_get_public(our_identity_key)), DJB_KEY_LEN);
+    if (result < 0) {
+        goto complete;
+    }
+
+    // digest input message stream X 
+    result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(ec_key_pair_get_public(our_base_key)), DJB_KEY_LEN);
+    if (result < 0) {
+        goto complete;
+    }
+
+    // digest input message stream B
+    result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(their_identity_key), DJB_KEY_LEN);
+    if (result < 0) {
+        goto complete;
+    }
+
+    // place authentication code in c_buf
+    result = signal_hmac_sha256_final(builder->global_context, hmac_context, &c_buf);
+    if (result < 0) {
+        goto complete;
+    }
+    
+    signal_hmac_sha256_cleanup(builder->global_context, hmac_context);
+
+    // generate value for s
+    // s = r+cxmodq
+    s_buf = signal_buffer_alloc(DJB_KEY_LEN);
+    sc_muladd(s_buf->data, get_private_data(ec_key_pair_get_private(our_base_key)), signal_buffer_data(c_buf), signal_buffer_data(r_buf));
 
     result = alice_signal_protocol_parameters_create(&parameters,
             our_identity_key,
