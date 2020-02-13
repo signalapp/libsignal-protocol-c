@@ -5,7 +5,7 @@
 #include <string.h>
 #include "session_pre_key.h"
 #include "session_record.h"
-#include "session_state.h"
+#include "session_state.c"
 #include "ratchet.h"
 #include "protocol.h"
 #include "key_helper.h"
@@ -378,6 +378,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     session_state_set_remote_registration_id(state,
             session_pre_key_bundle_get_registration_id(bundle));
     session_state_set_alice_base_key(state, ec_key_pair_get_public(our_base_key));
+    session_state_set_alice_s(state, s_buf);
 
     result = signal_protocol_session_store_session(builder->store, builder->remote_address, record);
     if(result < 0) {
