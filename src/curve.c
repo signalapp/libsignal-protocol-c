@@ -152,6 +152,45 @@ int ec_public_key_serialize_protobuf(ProtobufCBinaryData *buffer, const ec_publi
     return 0;
 }
 
+int alice_s_buf_serialize_protobuf(ProtobufCBinaryData *buffer, const signal_buffer *alice_s_buf)
+{
+    size_t len = 0;
+    uint8_t *data = 0;
+
+    assert(buffer);
+    assert(alice_s_buf);
+
+    len = sizeof(uint8_t) * (DJB_KEY_LEN + 1);
+    data = malloc(len);
+    if(!data) {
+        return SG_ERR_NOMEM;
+    }
+
+    //data[0] = DJB_TYPE;
+    memcpy(data, alice_s_buf->data, DJB_KEY_LEN + 1);
+
+    buffer->data = data;
+    buffer->len = len;
+    return 0;
+}
+
+int alice_s_buf_deserialize_protobuf(signal_buffer **s_buf, const uint8_t *s_buf_data, size_t s_buf_len, signal_context *global_context)
+{
+    signal_buffer *alice_s_buf = 0;
+
+    alice_s_buf = malloc(sizeof(signal_buffer));
+    if(!alice_s_buf) {
+        return SG_ERR_NOMEM;
+    }
+
+    memcpy(alice_s_buf->data, s_buf_data, DJB_KEY_LEN + 1);
+    alice_s_buf->len = DJB_KEY_LEN + 1;
+
+    *s_buf = alice_s_buf;
+
+    return 0;
+}
+
 void ec_public_key_destroy(signal_type_base *type)
 {
     ec_public_key *public_key = (ec_public_key *)type;
