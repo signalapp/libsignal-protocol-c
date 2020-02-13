@@ -147,10 +147,12 @@ struct  _Textsecure__SessionStructure
   protobuf_c_boolean needsrefresh;
   protobuf_c_boolean has_alicebasekey;
   ProtobufCBinaryData alicebasekey;
+  protobuf_c_boolean has_alicesbuf;
+  ProtobufCBinaryData alicesbuf;
 };
 #define TEXTSECURE__SESSION_STRUCTURE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&textsecure__session_structure__descriptor) \
-    , 0, 0, 0, {0,NULL}, 0, {0,NULL}, 0, {0,NULL}, 0, 0, NULL, 0,NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, {0,NULL} }
+    , 0, 0, 0, {0,NULL}, 0, {0,NULL}, 0, {0,NULL}, 0, 0, NULL, 0,NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, {0,NULL}, 0, {0,NULL} }
 
 
 struct  _Textsecure__RecordStructure

@@ -756,7 +756,7 @@ const ProtobufCMessageDescriptor textsecure__session_structure__pending_pre_key_
   (ProtobufCMessageInit) textsecure__session_structure__pending_pre_key__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor textsecure__session_structure__field_descriptors[13] =
+static const ProtobufCFieldDescriptor textsecure__session_structure__field_descriptors[14] =
 {
   {
     "sessionVersion",
@@ -914,9 +914,22 @@ static const ProtobufCFieldDescriptor textsecure__session_structure__field_descr
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "aliceSBuf",
+    14,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(Textsecure__SessionStructure, has_alicesbuf),
+    offsetof(Textsecure__SessionStructure, alicesbuf),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned textsecure__session_structure__field_indices_by_name[] = {
   12,   /* field[12] = aliceBaseKey */
+  13,   /* field[13] = aliceSBuf */
   1,   /* field[1] = localIdentityPublic */
   10,   /* field[10] = localRegistrationId */
   11,   /* field[11] = needsRefresh */
@@ -933,7 +946,7 @@ static const unsigned textsecure__session_structure__field_indices_by_name[] = {
 static const ProtobufCIntRange textsecure__session_structure__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 13 }
+  { 0, 14 }
 };
 const ProtobufCMessageDescriptor textsecure__session_structure__descriptor =
 {
@@ -943,7 +956,7 @@ const ProtobufCMessageDescriptor textsecure__session_structure__descriptor =
   "Textsecure__SessionStructure",
   "textsecure",
   sizeof(Textsecure__SessionStructure),
-  13,
+  14,
   textsecure__session_structure__field_descriptors,
   textsecure__session_structure__field_indices_by_name,
   1,  textsecure__session_structure__number_ranges,
