@@ -8,6 +8,7 @@
 #include "session_state.h"
 #include "session_cipher.h"
 #include "session_builder.h"
+#include "session_builder.c"
 #include "session_pre_key.h"
 #include "curve.h"
 #include "ratchet.h"
@@ -72,6 +73,8 @@ START_TEST(test_schnorr_verification)
     int64_t timestamp = 1411152577000LL;
 
     int result = 0;
+    session_record *bob_record = 0;
+    session_state *state = 0;
 
     /* Create Alice's data store and session builder */
     signal_protocol_store_context *alice_store = 0;
@@ -134,12 +137,21 @@ START_TEST(test_schnorr_verification)
 
     signal_buffer_free(bob_signed_pre_key_public_serialized);
 
-    /* Have Alice process Bob's pre key bundle */
+    /* 
+        Alice processes Bob's pre key bundle.
+        She can verify Bob's Schnorr proof from within
+        session_builder_process_pre_key_bundle().
+    */
     result = session_builder_process_pre_key_bundle(alice_session_builder, bob_pre_key);
     ck_assert_int_eq(result, 0);
+     
+    /* Bob loads session state, including Alice's Schnorr proof */
+    result = signal_protocol_session_load_session(alice_session_builder->store, &bob_record, alice_session_builder->remote_address);
+    state = session_record_get_state(bob_record);
 
     /* 
-        Bob will verify Alice's Schnorr proof here...
+        Bob can verify Alice's Schnorr proof here... 
+        Access Alice's "s" by *state->alice_s_buf->data
     */
 
     /* Cleanup */
