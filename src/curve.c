@@ -663,3 +663,11 @@ complete:
     }
     return result;
 }
+
+const uint8_t* get_private_data(const ec_private_key *private_key) {
+    return private_key->data;
+}
+
+const uint8_t* get_public_data(const ec_public_key *public_key) {
+    return public_key->data;
+}

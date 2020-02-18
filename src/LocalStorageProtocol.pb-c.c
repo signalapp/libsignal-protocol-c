@@ -10,37 +10,37 @@
 void   textsecure__session_structure__chain__chain_key__init
                      (Textsecure__SessionStructure__Chain__ChainKey         *message)
 {
-  static Textsecure__SessionStructure__Chain__ChainKey init_value = TEXTSECURE__SESSION_STRUCTURE__CHAIN__CHAIN_KEY__INIT;
+  static const Textsecure__SessionStructure__Chain__ChainKey init_value = TEXTSECURE__SESSION_STRUCTURE__CHAIN__CHAIN_KEY__INIT;
   *message = init_value;
 }
 void   textsecure__session_structure__chain__message_key__init
                      (Textsecure__SessionStructure__Chain__MessageKey         *message)
 {
-  static Textsecure__SessionStructure__Chain__MessageKey init_value = TEXTSECURE__SESSION_STRUCTURE__CHAIN__MESSAGE_KEY__INIT;
+  static const Textsecure__SessionStructure__Chain__MessageKey init_value = TEXTSECURE__SESSION_STRUCTURE__CHAIN__MESSAGE_KEY__INIT;
   *message = init_value;
 }
 void   textsecure__session_structure__chain__init
                      (Textsecure__SessionStructure__Chain         *message)
 {
-  static Textsecure__SessionStructure__Chain init_value = TEXTSECURE__SESSION_STRUCTURE__CHAIN__INIT;
+  static const Textsecure__SessionStructure__Chain init_value = TEXTSECURE__SESSION_STRUCTURE__CHAIN__INIT;
   *message = init_value;
 }
 void   textsecure__session_structure__pending_key_exchange__init
                      (Textsecure__SessionStructure__PendingKeyExchange         *message)
 {
-  static Textsecure__SessionStructure__PendingKeyExchange init_value = TEXTSECURE__SESSION_STRUCTURE__PENDING_KEY_EXCHANGE__INIT;
+  static const Textsecure__SessionStructure__PendingKeyExchange init_value = TEXTSECURE__SESSION_STRUCTURE__PENDING_KEY_EXCHANGE__INIT;
   *message = init_value;
 }
 void   textsecure__session_structure__pending_pre_key__init
                      (Textsecure__SessionStructure__PendingPreKey         *message)
 {
-  static Textsecure__SessionStructure__PendingPreKey init_value = TEXTSECURE__SESSION_STRUCTURE__PENDING_PRE_KEY__INIT;
+  static const Textsecure__SessionStructure__PendingPreKey init_value = TEXTSECURE__SESSION_STRUCTURE__PENDING_PRE_KEY__INIT;
   *message = init_value;
 }
 void   textsecure__session_structure__init
                      (Textsecure__SessionStructure         *message)
 {
-  static Textsecure__SessionStructure init_value = TEXTSECURE__SESSION_STRUCTURE__INIT;
+  static const Textsecure__SessionStructure init_value = TEXTSECURE__SESSION_STRUCTURE__INIT;
   *message = init_value;
 }
 size_t textsecure__session_structure__get_packed_size
@@ -77,13 +77,15 @@ void   textsecure__session_structure__free_unpacked
                      (Textsecure__SessionStructure *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__session_structure__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__record_structure__init
                      (Textsecure__RecordStructure         *message)
 {
-  static Textsecure__RecordStructure init_value = TEXTSECURE__RECORD_STRUCTURE__INIT;
+  static const Textsecure__RecordStructure init_value = TEXTSECURE__RECORD_STRUCTURE__INIT;
   *message = init_value;
 }
 size_t textsecure__record_structure__get_packed_size
@@ -120,13 +122,15 @@ void   textsecure__record_structure__free_unpacked
                      (Textsecure__RecordStructure *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__record_structure__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__pre_key_record_structure__init
                      (Textsecure__PreKeyRecordStructure         *message)
 {
-  static Textsecure__PreKeyRecordStructure init_value = TEXTSECURE__PRE_KEY_RECORD_STRUCTURE__INIT;
+  static const Textsecure__PreKeyRecordStructure init_value = TEXTSECURE__PRE_KEY_RECORD_STRUCTURE__INIT;
   *message = init_value;
 }
 size_t textsecure__pre_key_record_structure__get_packed_size
@@ -163,13 +167,15 @@ void   textsecure__pre_key_record_structure__free_unpacked
                      (Textsecure__PreKeyRecordStructure *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__pre_key_record_structure__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__signed_pre_key_record_structure__init
                      (Textsecure__SignedPreKeyRecordStructure         *message)
 {
-  static Textsecure__SignedPreKeyRecordStructure init_value = TEXTSECURE__SIGNED_PRE_KEY_RECORD_STRUCTURE__INIT;
+  static const Textsecure__SignedPreKeyRecordStructure init_value = TEXTSECURE__SIGNED_PRE_KEY_RECORD_STRUCTURE__INIT;
   *message = init_value;
 }
 size_t textsecure__signed_pre_key_record_structure__get_packed_size
@@ -206,13 +212,15 @@ void   textsecure__signed_pre_key_record_structure__free_unpacked
                      (Textsecure__SignedPreKeyRecordStructure *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__signed_pre_key_record_structure__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__identity_key_pair_structure__init
                      (Textsecure__IdentityKeyPairStructure         *message)
 {
-  static Textsecure__IdentityKeyPairStructure init_value = TEXTSECURE__IDENTITY_KEY_PAIR_STRUCTURE__INIT;
+  static const Textsecure__IdentityKeyPairStructure init_value = TEXTSECURE__IDENTITY_KEY_PAIR_STRUCTURE__INIT;
   *message = init_value;
 }
 size_t textsecure__identity_key_pair_structure__get_packed_size
@@ -249,31 +257,33 @@ void   textsecure__identity_key_pair_structure__free_unpacked
                      (Textsecure__IdentityKeyPairStructure *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__identity_key_pair_structure__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__sender_key_state_structure__sender_chain_key__init
                      (Textsecure__SenderKeyStateStructure__SenderChainKey         *message)
 {
-  static Textsecure__SenderKeyStateStructure__SenderChainKey init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__SENDER_CHAIN_KEY__INIT;
+  static const Textsecure__SenderKeyStateStructure__SenderChainKey init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__SENDER_CHAIN_KEY__INIT;
   *message = init_value;
 }
 void   textsecure__sender_key_state_structure__sender_message_key__init
                      (Textsecure__SenderKeyStateStructure__SenderMessageKey         *message)
 {
-  static Textsecure__SenderKeyStateStructure__SenderMessageKey init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__SENDER_MESSAGE_KEY__INIT;
+  static const Textsecure__SenderKeyStateStructure__SenderMessageKey init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__SENDER_MESSAGE_KEY__INIT;
   *message = init_value;
 }
 void   textsecure__sender_key_state_structure__sender_signing_key__init
                      (Textsecure__SenderKeyStateStructure__SenderSigningKey         *message)
 {
-  static Textsecure__SenderKeyStateStructure__SenderSigningKey init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__SENDER_SIGNING_KEY__INIT;
+  static const Textsecure__SenderKeyStateStructure__SenderSigningKey init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__SENDER_SIGNING_KEY__INIT;
   *message = init_value;
 }
 void   textsecure__sender_key_state_structure__init
                      (Textsecure__SenderKeyStateStructure         *message)
 {
-  static Textsecure__SenderKeyStateStructure init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__INIT;
+  static const Textsecure__SenderKeyStateStructure init_value = TEXTSECURE__SENDER_KEY_STATE_STRUCTURE__INIT;
   *message = init_value;
 }
 size_t textsecure__sender_key_state_structure__get_packed_size
@@ -310,13 +320,15 @@ void   textsecure__sender_key_state_structure__free_unpacked
                      (Textsecure__SenderKeyStateStructure *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__sender_key_state_structure__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   textsecure__sender_key_record_structure__init
                      (Textsecure__SenderKeyRecordStructure         *message)
 {
-  static Textsecure__SenderKeyRecordStructure init_value = TEXTSECURE__SENDER_KEY_RECORD_STRUCTURE__INIT;
+  static const Textsecure__SenderKeyRecordStructure init_value = TEXTSECURE__SENDER_KEY_RECORD_STRUCTURE__INIT;
   *message = init_value;
 }
 size_t textsecure__sender_key_record_structure__get_packed_size
@@ -353,6 +365,8 @@ void   textsecure__sender_key_record_structure__free_unpacked
                      (Textsecure__SenderKeyRecordStructure *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &textsecure__sender_key_record_structure__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
@@ -1051,7 +1065,7 @@ const ProtobufCMessageDescriptor textsecure__pre_key_record_structure__descripto
   (ProtobufCMessageInit) textsecure__pre_key_record_structure__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structure__field_descriptors[5] =
+static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structure__field_descriptors[9] =
 {
   {
     "id",
@@ -1113,18 +1127,70 @@ static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structur
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "rhat",
+    6,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(Textsecure__SignedPreKeyRecordStructure, has_rhat),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, rhat),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "R_hat",
+    7,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(Textsecure__SignedPreKeyRecordStructure, has_r_hat),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, r_hat),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "shat",
+    8,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(Textsecure__SignedPreKeyRecordStructure, has_shat),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, shat),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "chat",
+    9,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(Textsecure__SignedPreKeyRecordStructure, has_chat),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, chat),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned textsecure__signed_pre_key_record_structure__field_indices_by_name[] = {
+  6,   /* field[6] = R_hat */
+  8,   /* field[8] = chat */
   0,   /* field[0] = id */
   2,   /* field[2] = privateKey */
   1,   /* field[1] = publicKey */
+  5,   /* field[5] = rhat */
+  7,   /* field[7] = shat */
   3,   /* field[3] = signature */
   4,   /* field[4] = timestamp */
 };
 static const ProtobufCIntRange textsecure__signed_pre_key_record_structure__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 5 }
+  { 0, 9 }
 };
 const ProtobufCMessageDescriptor textsecure__signed_pre_key_record_structure__descriptor =
 {
@@ -1134,7 +1200,7 @@ const ProtobufCMessageDescriptor textsecure__signed_pre_key_record_structure__de
   "Textsecure__SignedPreKeyRecordStructure",
   "textsecure",
   sizeof(Textsecure__SignedPreKeyRecordStructure),
-  5,
+  9,
   textsecure__signed_pre_key_record_structure__field_descriptors,
   textsecure__signed_pre_key_record_structure__field_indices_by_name,
   1,  textsecure__signed_pre_key_record_structure__number_ranges,

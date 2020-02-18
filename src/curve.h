@@ -189,6 +189,10 @@ int curve_calculate_vrf_signature(signal_context *context,
         const ec_private_key *signing_key,
         const uint8_t *message_data, size_t message_len);
 
+const uint8_t* get_private_data(const ec_private_key *private_key);
+
+const uint8_t* get_public_data(const ec_public_key *public_key);
+
 #ifdef __cplusplus
 }
 #endif
