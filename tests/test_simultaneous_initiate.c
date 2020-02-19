@@ -1565,6 +1565,7 @@ session_pre_key_bundle *create_alice_pre_key_bundle(signal_protocol_store_contex
     uint8_t alice_Rhatfull = 0;
     uint8_t alice_shat = 0;
     uint8_t alice_chat = 0;
+    uint8_t alice_Yfull = 0;
     session_pre_key_bundle *alice_pre_key_bundle = 0;
     result = session_pre_key_bundle_create(&alice_pre_key_bundle,
             1, 1,
@@ -1575,7 +1576,8 @@ session_pre_key_bundle *create_alice_pre_key_bundle(signal_protocol_store_contex
             ratchet_identity_key_pair_get_public(alice_identity_key_pair),
             &alice_Rhatfull,
             &alice_shat,
-            &alice_chat);
+            &alice_chat,
+            &alice_Yfull);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *signed_pre_key_record = 0;
@@ -1583,14 +1585,16 @@ session_pre_key_bundle *create_alice_pre_key_bundle(signal_protocol_store_contex
     signal_buffer *Rhatfull = 0;
     signal_buffer *shat = 0;
     signal_buffer *chat = 0;
+    signal_buffer *Yfull = 0;
     rhat = signal_buffer_alloc(32);
-    Rhatfull = signal_buffer_alloc(32);
+    Rhatfull = signal_buffer_alloc(128);
     shat = signal_buffer_alloc(32);
     chat = signal_buffer_alloc(32);
+    Yfull = signal_buffer_alloc(128);
     result = session_signed_pre_key_create(&signed_pre_key_record,
             alice_signed_pre_key_id, time(0), alice_signed_pre_key,
             signal_buffer_data(signature), signal_buffer_len(signature),
-            signal_buffer_data(rhat), signal_buffer_data(Rhatfull), signal_buffer_data(shat), signal_buffer_data(chat));
+            signal_buffer_data(rhat), signal_buffer_data(Rhatfull), signal_buffer_data(shat), signal_buffer_data(chat), signal_buffer_data(Yfull));
     ck_assert_int_eq(result, 0);
 
     result = signal_protocol_signed_pre_key_store_key(store, signed_pre_key_record);
@@ -1643,6 +1647,7 @@ session_pre_key_bundle *create_bob_pre_key_bundle(signal_protocol_store_context 
     uint8_t bob_Rhatfull = 0;
     uint8_t bob_shat = 0;
     uint8_t bob_chat = 0;
+    uint8_t bob_Yfull = 0;
     session_pre_key_bundle *bob_pre_key_bundle = 0;
     result = session_pre_key_bundle_create(&bob_pre_key_bundle,
             1, 1,
@@ -1653,7 +1658,8 @@ session_pre_key_bundle *create_bob_pre_key_bundle(signal_protocol_store_context 
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
             &bob_Rhatfull,
             &bob_shat,
-            &bob_chat);
+            &bob_chat,
+            &bob_Yfull);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *signed_pre_key_record = 0;
@@ -1661,14 +1667,16 @@ session_pre_key_bundle *create_bob_pre_key_bundle(signal_protocol_store_context 
     signal_buffer *Rhatfull = 0;
     signal_buffer *shat = 0;
     signal_buffer *chat = 0;
+    signal_buffer *Yfull = 0;
     rhat = signal_buffer_alloc(32);
-    Rhatfull = signal_buffer_alloc(32);
+    Rhatfull = signal_buffer_alloc(128);
     shat = signal_buffer_alloc(32);
     chat = signal_buffer_alloc(32);
+    Yfull = signal_buffer_alloc(128);
     result = session_signed_pre_key_create(&signed_pre_key_record,
             bob_signed_pre_key_id, time(0), bob_signed_pre_key,
             signal_buffer_data(signature), signal_buffer_len(signature),
-            signal_buffer_data(rhat), signal_buffer_data(Rhatfull), signal_buffer_data(shat), signal_buffer_data(chat));
+            signal_buffer_data(rhat), signal_buffer_data(Rhatfull), signal_buffer_data(shat), signal_buffer_data(chat), signal_buffer_data(Yfull));
     ck_assert_int_eq(result, 0);
 
     result = signal_protocol_signed_pre_key_store_key(store, signed_pre_key_record);

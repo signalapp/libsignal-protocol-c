@@ -270,10 +270,13 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     signal_buffer *Rhatfull_buf = 0;
     signal_buffer *shat_buf = 0;
     signal_buffer *chat_buf = 0;
+    ge_p3 Yfull;
+    signal_buffer *Yfull_buf = 0;
     rhat_buf = signal_buffer_alloc(DJB_KEY_LEN);
     chat_buf = signal_buffer_alloc(DJB_KEY_LEN);
     shat_buf = signal_buffer_alloc(DJB_KEY_LEN);
     Rhatfull_buf = signal_buffer_alloc(128);
+    Yfull_buf = signal_buffer_alloc(128);
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
 
@@ -321,6 +324,10 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     ge_scalarmult_base(&Rhatfull, rhat_buf->data);
     ge_p3_tobytes_128(Rhatfull_buf->data, &Rhatfull);
 
+    // generate value for Yfull
+    ge_scalarmult_base(&Yfull, get_private_data(ec_key_pair_get_private(ec_pair)));
+    ge_p3_tobytes_128(Yfull_buf->data, &Yfull);
+
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,
             signal_buffer_data(signature_buf),
@@ -328,7 +335,8 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
             signal_buffer_data(rhat_buf),
             signal_buffer_data(Rhatfull_buf),
             signal_buffer_data(shat_buf),
-            signal_buffer_data(chat_buf));
+            signal_buffer_data(chat_buf),
+            signal_buffer_data(Yfull_buf));
 
 complete:
     SIGNAL_UNREF(ec_pair);
