@@ -273,7 +273,7 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     rhat_buf = signal_buffer_alloc(DJB_KEY_LEN);
     chat_buf = signal_buffer_alloc(DJB_KEY_LEN);
     shat_buf = signal_buffer_alloc(DJB_KEY_LEN);
-    Rhatfull_buf = signal_buffer_alloc(DJB_KEY_LEN); // NOT SURE IF THIS SHOULD BE 128 OR 32
+    Rhatfull_buf = signal_buffer_alloc(128);
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
 
@@ -319,7 +319,7 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
 
     // generate value for Rhatfull
     ge_scalarmult_base(&Rhatfull, rhat_buf->data);
-    ge_p3_tobytes(Rhatfull_buf->data, &Rhatfull);
+    ge_p3_tobytes_128(Rhatfull_buf->data, &Rhatfull);
 
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,

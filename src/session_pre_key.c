@@ -24,7 +24,7 @@ struct session_signed_pre_key {
     uint64_t timestamp;
     size_t signature_len;
     uint8_t rhat[DJB_KEY_LEN]; 
-    uint8_t *Rhatfull;
+    uint8_t Rhatfull[128];
     uint8_t shat[DJB_KEY_LEN];
     uint8_t chat[DJB_KEY_LEN];
     uint8_t signature[];
@@ -259,7 +259,7 @@ int session_signed_pre_key_create(session_signed_pre_key **pre_key,
 
     memcpy(result->signature, signature, signature_len);
     memcpy(result->rhat, rhat, DJB_KEY_LEN);
-    memcpy(result->Rhatfull, Rhatfull, DJB_KEY_LEN);
+    memcpy(result->Rhatfull, Rhatfull, 128);
     memcpy(result->shat, shat, DJB_KEY_LEN);
     memcpy(result->chat, chat, DJB_KEY_LEN);
     
@@ -307,7 +307,7 @@ int session_signed_pre_key_serialize(signal_buffer **buffer, const session_signe
         result = SG_ERR_NOMEM;
         goto complete;
     }
-    Rhatfull_buf = signal_buffer_create(pre_key->Rhatfull, DJB_KEY_LEN);
+    Rhatfull_buf = signal_buffer_create(pre_key->Rhatfull, 128);
     if (!Rhatfull_buf) {
         result = SG_ERR_NOMEM;
         goto complete;
