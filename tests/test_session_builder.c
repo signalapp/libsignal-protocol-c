@@ -180,7 +180,7 @@ START_TEST(test_basic_pre_key_v2)
     result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
-    uint8_t rhat = 0;
+    uint8_t Rhatfull = 0;
     uint8_t shat = 0;
     uint8_t chat = 0;
     session_pre_key_bundle *bob_pre_key = 0;
@@ -191,7 +191,7 @@ START_TEST(test_basic_pre_key_v2)
             ec_key_pair_get_public(bob_pre_key_pair),
             0, 0, 0, 0, /* no signed pre key or signature */
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -263,7 +263,7 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
-    uint8_t rhat = 0;
+    uint8_t Rhatfull = 0;
     uint8_t shat = 0;
     uint8_t chat = 0;
     session_pre_key_bundle *bob_pre_key = 0;
@@ -277,7 +277,7 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -484,7 +484,7 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -578,7 +578,7 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(alice_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -688,7 +688,7 @@ START_TEST(test_bad_signed_pre_key_signature)
         modified_signature_data[i / 8] ^= (0x01 << ((uint8_t)i % 8));
 
         /* Create a pre key bundle */
-        uint8_t rhat = 0;
+        uint8_t Rhatfull = 0;
         uint8_t shat = 0;
         uint8_t chat = 0;
         session_pre_key_bundle *bob_pre_key = 0;
@@ -702,7 +702,7 @@ START_TEST(test_bad_signed_pre_key_signature)
                 modified_signature_data,
                 signature_len,
                 ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-                &rhat,
+                &Rhatfull,
                 &shat,
                 &chat);
         ck_assert_int_eq(result, 0);
@@ -716,7 +716,7 @@ START_TEST(test_bad_signed_pre_key_signature)
     }
 
     /* Create a correct pre key bundle */
-    uint8_t rhat = 0;
+    uint8_t Rhatfull = 0;
     uint8_t shat = 0;
     uint8_t chat = 0;
     session_pre_key_bundle *bob_pre_key = 0;
@@ -730,7 +730,7 @@ START_TEST(test_bad_signed_pre_key_signature)
             signal_buffer_data(bob_signed_pre_key_signature),
             signature_len,
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -796,7 +796,7 @@ START_TEST(test_repeat_bundle_message_v2)
             signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
-    uint8_t rhat = 0;
+    uint8_t Rhatfull = 0;
     uint8_t shat = 0;
     uint8_t chat = 0;
     session_pre_key_bundle *bob_pre_key = 0;
@@ -807,7 +807,7 @@ START_TEST(test_repeat_bundle_message_v2)
             ec_key_pair_get_public(bob_pre_key_pair),
             0, 0, 0, 0,
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -911,7 +911,7 @@ START_TEST(test_repeat_bundle_message_v3)
             signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
-    uint8_t rhat = 0;
+    uint8_t Rhatfull = 0;
     uint8_t shat = 0;
     uint8_t chat = 0;
     session_pre_key_bundle *bob_pre_key = 0;
@@ -925,7 +925,7 @@ START_TEST(test_repeat_bundle_message_v3)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -1134,7 +1134,7 @@ START_TEST(test_bad_message_bundle)
             signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
-    uint8_t rhat = 0;
+    uint8_t Rhatfull = 0;
     uint8_t shat = 0;
     uint8_t chat = 0;
     session_pre_key_bundle *bob_pre_key = 0;
@@ -1148,7 +1148,7 @@ START_TEST(test_bad_message_bundle)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);
@@ -1315,7 +1315,7 @@ START_TEST(test_optional_one_time_pre_key)
             signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
-    uint8_t rhat = 0;
+    uint8_t Rhatfull = 0;
     uint8_t shat = 0;
     uint8_t chat = 0;
     session_pre_key_bundle *bob_pre_key = 0;
@@ -1328,7 +1328,7 @@ START_TEST(test_optional_one_time_pre_key)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &rhat,
+            &Rhatfull,
             &shat,
             &chat);
     ck_assert_int_eq(result, 0);

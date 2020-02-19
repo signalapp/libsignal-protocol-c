@@ -40,7 +40,7 @@ const uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre
 const uint8_t *session_signed_pre_key_get_Rhat(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre_key);
-const uint8_t *session_pre_key_bundle_get_rhat(const session_pre_key_bundle *pre_key_bundle);
+const uint8_t *session_pre_key_bundle_get_Rhatfull(const session_pre_key_bundle *pre_key_bundle);
 const uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle);
 const uint8_t *session_pre_key_bundle_get_chat(const session_pre_key_bundle *pre_key_bundle);
 
@@ -55,7 +55,7 @@ int session_pre_key_bundle_create(session_pre_key_bundle **bundle,
         uint32_t signed_pre_key_id, ec_public_key *signed_pre_key_public,
         const uint8_t *signed_pre_key_signature_data, size_t signed_pre_key_signature_len,
         ec_public_key *identity_key,
-        const uint8_t *rhat,
+        const uint8_t *Rhatfull,
         const uint8_t *shat,
         const uint8_t *chat);
 

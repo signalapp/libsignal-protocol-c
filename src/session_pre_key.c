@@ -39,7 +39,7 @@ struct session_pre_key_bundle {
     ec_public_key *signed_pre_key_public;
     signal_buffer *signed_pre_key_signature;
     ec_public_key *identity_key;
-    const uint8_t *rhat; 
+    const uint8_t *Rhatfull; 
     const uint8_t *shat;
     const uint8_t *chat;
 
@@ -513,7 +513,7 @@ const uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre
 
 const uint8_t *session_pre_key_bundle_get_rhat(const session_pre_key_bundle *pre_key_bundle)
 {
-    return pre_key_bundle->rhat;
+    return pre_key_bundle->Rhatfull;
 }
 
 const uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle)
@@ -545,7 +545,7 @@ int session_pre_key_bundle_create(session_pre_key_bundle **bundle,
         uint32_t signed_pre_key_id, ec_public_key *signed_pre_key_public,
         const uint8_t *signed_pre_key_signature_data, size_t signed_pre_key_signature_len,
         ec_public_key *identity_key,
-        const uint8_t *rhat,
+        const uint8_t *Rhatfull,
         const uint8_t *shat,
         const uint8_t *chat)
 {
@@ -564,7 +564,7 @@ int session_pre_key_bundle_create(session_pre_key_bundle **bundle,
     result_bundle->registration_id = registration_id;
     result_bundle->device_id = device_id;
     result_bundle->pre_key_id = pre_key_id;
-    result_bundle->rhat = rhat;
+    result_bundle->Rhatfull = Rhatfull;
     result_bundle->shat = shat;
     result_bundle->chat = chat;
 
