@@ -511,7 +511,7 @@ const uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre
     return pre_key->chat;
 }
 
-const uint8_t *session_pre_key_bundle_get_rhat(const session_pre_key_bundle *pre_key_bundle)
+const uint8_t *session_pre_key_bundle_get_Rhatfull(const session_pre_key_bundle *pre_key_bundle)
 {
     return pre_key_bundle->Rhatfull;
 }
