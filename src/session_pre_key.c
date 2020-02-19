@@ -7,6 +7,7 @@
 #include "curve.h"
 #include "LocalStorageProtocol.pb-c.h"
 #include "signal_protocol_internal.h"
+#include "ge.h"
 
 #define DJB_KEY_LEN 32
 
@@ -23,7 +24,7 @@ struct session_signed_pre_key {
     uint64_t timestamp;
     size_t signature_len;
     uint8_t rhat[DJB_KEY_LEN]; 
-    uint8_t Rhat[DJB_KEY_LEN];
+    uint8_t *Rhatfull;
     uint8_t shat[DJB_KEY_LEN];
     uint8_t chat[DJB_KEY_LEN];
     uint8_t signature[];
@@ -225,7 +226,7 @@ void session_pre_key_destroy(signal_type_base *type)
 int session_signed_pre_key_create(session_signed_pre_key **pre_key,
         uint32_t id, uint64_t timestamp, ec_key_pair *key_pair,
         const uint8_t *signature, size_t signature_len, 
-        const uint8_t *rhat, const uint8_t *Rhat, const uint8_t *shat, const uint8_t *chat)
+        const uint8_t *rhat, const uint8_t *Rhatfull, const uint8_t *shat, const uint8_t *chat)
 {
     session_signed_pre_key *result = 0;
 
@@ -233,7 +234,7 @@ int session_signed_pre_key_create(session_signed_pre_key **pre_key,
     assert(signature);
     assert(signature_len > 0);
     assert(rhat);
-    assert(Rhat);
+    assert(Rhatfull);
     assert(shat);
     assert(chat);
 
@@ -258,7 +259,7 @@ int session_signed_pre_key_create(session_signed_pre_key **pre_key,
 
     memcpy(result->signature, signature, signature_len);
     memcpy(result->rhat, rhat, DJB_KEY_LEN);
-    memcpy(result->Rhat, Rhat, DJB_KEY_LEN);
+    memcpy(result->Rhatfull, Rhatfull, DJB_KEY_LEN);
     memcpy(result->shat, shat, DJB_KEY_LEN);
     memcpy(result->chat, chat, DJB_KEY_LEN);
     
@@ -278,7 +279,7 @@ int session_signed_pre_key_serialize(signal_buffer **buffer, const session_signe
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
     signal_buffer *rhat_buf = 0;
-    signal_buffer *Rhat_buf = 0;
+    signal_buffer *Rhatfull_buf = 0;
     signal_buffer *shat_buf = 0;
     signal_buffer *chat_buf = 0;
     size_t len = 0;
@@ -306,8 +307,8 @@ int session_signed_pre_key_serialize(signal_buffer **buffer, const session_signe
         result = SG_ERR_NOMEM;
         goto complete;
     }
-    Rhat_buf = signal_buffer_create(pre_key->Rhat, DJB_KEY_LEN);
-    if (!Rhat_buf) {
+    Rhatfull_buf = signal_buffer_create(pre_key->Rhatfull, DJB_KEY_LEN);
+    if (!Rhatfull_buf) {
         result = SG_ERR_NOMEM;
         goto complete;
     }
@@ -344,9 +345,9 @@ int session_signed_pre_key_serialize(signal_buffer **buffer, const session_signe
     record.rhat.data = signal_buffer_data(rhat_buf);
     record.rhat.len = DJB_KEY_LEN;
 
-    record.has_r_hat = 1;
-    record.r_hat.data = signal_buffer_data(Rhat_buf);
-    record.r_hat.len = DJB_KEY_LEN;
+    record.has_rhatfull = 1;
+    record.rhatfull.data = signal_buffer_data(Rhatfull_buf);
+    record.rhatfull.len = DJB_KEY_LEN;
 
     record.has_shat = 1;
     record.shat.data = signal_buffer_data(shat_buf);
@@ -386,8 +387,8 @@ complete:
     if(rhat_buf) {
         signal_buffer_free(rhat_buf);
     }
-    if(Rhat_buf) {
-        signal_buffer_free(Rhat_buf);
+    if(Rhatfull_buf) {
+        signal_buffer_free(Rhatfull_buf);
     }
     if(shat_buf) {
         signal_buffer_free(shat_buf);
@@ -419,7 +420,7 @@ int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const u
     if(!record->has_id || !record->has_timestamp
             || !record->has_publickey || !record->has_privatekey
             || !record->has_signature
-            || !record->has_rhat || !record->has_r_hat || !record->has_shat || !record->has_chat) {
+            || !record->has_rhat || !record->has_rhatfull || !record->has_shat || !record->has_chat) {
         result = SG_ERR_INVALID_KEY;
         goto complete;
     }
@@ -442,7 +443,7 @@ int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const u
     result = session_signed_pre_key_create(&result_pre_key,
             record->id, record->timestamp, key_pair,
             record->signature.data, record->signature.len,
-            record->rhat.data, record->r_hat.data, record->shat.data, record->chat.data);
+            record->rhat.data, record->rhatfull.data, record->shat.data, record->chat.data);
     if(result < 0) {
         goto complete;
     }
@@ -496,9 +497,9 @@ const uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre
     return pre_key->rhat;
 }
 
-const uint8_t *session_signed_pre_key_get_Rhat(const session_signed_pre_key *pre_key) 
+const uint8_t *session_signed_pre_key_get_Rhatfull(const session_signed_pre_key *pre_key) 
 {
-    return pre_key->Rhat;
+    return pre_key->Rhatfull;
 }
 
 const uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key)

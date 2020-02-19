@@ -195,8 +195,8 @@ struct  _Textsecure__SignedPreKeyRecordStructure
   uint64_t timestamp;
   protobuf_c_boolean has_rhat;
   ProtobufCBinaryData rhat;
-  protobuf_c_boolean has_r_hat;
-  ProtobufCBinaryData r_hat;
+  protobuf_c_boolean has_rhatfull;
+  ProtobufCBinaryData rhatfull;
   protobuf_c_boolean has_shat;
   ProtobufCBinaryData shat;
   protobuf_c_boolean has_chat;

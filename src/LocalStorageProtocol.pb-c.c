@@ -1140,12 +1140,12 @@ static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structur
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "R_hat",
+    "Rhatfull",
     7,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(Textsecure__SignedPreKeyRecordStructure, has_r_hat),
-    offsetof(Textsecure__SignedPreKeyRecordStructure, r_hat),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, has_rhatfull),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, rhatfull),
     NULL,
     NULL,
     0,             /* flags */
@@ -1177,7 +1177,7 @@ static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structur
   },
 };
 static const unsigned textsecure__signed_pre_key_record_structure__field_indices_by_name[] = {
-  6,   /* field[6] = R_hat */
+  6,   /* field[6] = Rhatfull */
   8,   /* field[8] = chat */
   0,   /* field[0] = id */
   2,   /* field[2] = privateKey */
