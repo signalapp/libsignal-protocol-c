@@ -11,6 +11,7 @@
 #include "key_helper.h"
 #include "signal_protocol_internal.h"
 #include "sc.h"
+#include "ge.h"
 
 #define DJB_KEY_LEN 32
 
@@ -210,6 +211,12 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     signal_buffer *r_buf = 0;
     signal_buffer *c_buf = 0;
     signal_buffer *s_buf = 0;
+    ge_p3 Xfull;
+    signal_buffer *Xfull_buf = 0;
+    ge_p3 Rfull;
+    signal_buffer *Rfull_buf = 0;
+    Xfull_buf = signal_buffer_alloc(128);
+    Rfull_buf = signal_buffer_alloc(128);
 
     assert(builder);
     assert(builder->store);
@@ -336,6 +343,14 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     // s = r+cxmodq
     s_buf = signal_buffer_alloc(DJB_KEY_LEN);
     sc_muladd(s_buf->data, get_private_data(ec_key_pair_get_private(our_base_key)), signal_buffer_data(c_buf), signal_buffer_data(r_buf));
+
+    // generate Xfull
+    ge_scalarmult_base(&Xfull, get_private_data(ec_key_pair_get_private(our_base_key)));
+    ge_p3_tobytes_128(Xfull_buf->data, &Xfull);
+
+    // generate Rfull
+    ge_scalarmult_base(&Rfull, r_buf->data);
+    ge_p3_tobytes_128(Rfull_buf->data, &Rfull);
 
     result = alice_signal_protocol_parameters_create(&parameters,
             our_identity_key,
