@@ -48,3 +48,11 @@ int ge_frombytes_negate_vartime(ge_p3 *h,const unsigned char *s)
   fe_mul(h->T,h->X,h->Y);
   return 0;
 }
+
+void ge_frombytes_128(const ge_p3 *h, unsigned char *s)
+{
+  fe_frombytes(h->X, &s[0]);
+  fe_frombytes(h->Y, &s[32]);
+  fe_frombytes(h->Z, &s[64]);
+  fe_frombytes(h->T, &s[96]);
+}
