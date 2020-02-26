@@ -192,6 +192,27 @@ complete:
     return result;
 }
 
+// originally fixed incompatible limb definitions b/n curve25519donna and ed25519,
+// but ultimately unnecessary
+void contract(uint8_t* out, const fe in) {
+	//int64_t limbs[10]={0};
+	//for(int i=0;i<10;i++)
+	//	limbs[i]=in[i];  //write 32B value to 64B spot
+	//fcontract(out,limbs);//condense
+	fe_tobytes(out,in);
+}
+
+/* compacts full general representation of a curve point to just the
+ * 32Byte reduced x-value: X/Z. NOTE in edwards coordinates!! */
+void justx3(uint8_t* out, const ge_p3* in) {
+	fe z_inv={0};
+	fe ret={0};
+	fe_invert(z_inv,in->Z);
+	fe_mul(ret,z_inv,in->X); //prepare short x
+	contract(out,ret);
+}
+
+
 int session_builder_process_pre_key_bundle(session_builder *builder, session_pre_key_bundle *bundle)
 {
     int result = 0;
@@ -250,6 +271,40 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
         if(result < 0) {
             goto complete;
         }
+
+        // TODO: (Ana) Need full points for Y and Rhat to be passed along inside Bob's pre_key_bundle, 
+        //        check what the appropriate type/size would be
+        //          - can Alice know rhat and generate Rhat herself or she only sees Rhat??
+        
+        signal_buffer *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle); //signal_buffer or uint_8?
+        ge_p3 Rhatfull;
+        ge_frombytes_128(&Rhatfull, Rhatfull_buf->data);
+
+        signal_buffer *Yfull_buf = session_pre_key_bundle_get_Yfull(bundle);
+        ge_p3 Yfull;
+        ge_frombytes_128(&Yfull, Yfull_buf->data);
+
+        uint8_t *shat = session_pre_key_bundle_get_shat(bundle);
+
+        uint8_t *chat = session_pre_key_bundle_get_chat(bundle);
+
+        ge_p3 alice_lhs_pre; ge_scalarmult_base(&alice_lhs_pre,&shat);
+        ge_p3 alice_rhs_pre; ge_scalarmult(&alice_rhs_pre,&chat,&Yfull);
+         
+        ge_p3_add(&alice_rhs_pre,&alice_rhs_pre,&Rhatfull);
+         
+        uint8_t alice_lhs[32]; justx3(alice_lhs,&alice_lhs_pre);
+        uint8_t alice_rhs[32]; justx3(alice_rhs,&alice_rhs_pre);
+         
+        int ret = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
+         
+        if (ret!=0) {
+        print_buffer(alice_lhs,DJB_KEY_LEN);
+        print_buffer(alice_rhs,DJB_KEY_LEN);
+        printf("test failed!\n");
+        printf("quiting\n");
+        return -3;
+        } else printf("\tpassed.\n");
 
         result = curve_verify_signature(identity_key,
                 signal_buffer_data(serialized_signed_pre_key),
