@@ -276,13 +276,13 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
         //        check what the appropriate type/size would be
         //          - can Alice know rhat and generate Rhat herself or she only sees Rhat??
         
-        signal_buffer *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle); //signal_buffer or uint_8?
+        uint8_t *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle); //signal_buffer or uint_8?
         ge_p3 Rhatfull;
-        ge_frombytes_128(&Rhatfull, Rhatfull_buf->data);
+        ge_frombytes_128(&Rhatfull, Rhatfull_buf);
 
-        signal_buffer *Yfull_buf = session_pre_key_bundle_get_Yfull(bundle);
+        uint8_t *Yfull_buf = session_pre_key_bundle_get_Yfull(bundle);
         ge_p3 Yfull;
-        ge_frombytes_128(&Yfull, Yfull_buf->data);
+        ge_frombytes_128(&Yfull, Yfull_buf);
 
         uint8_t *shat = session_pre_key_bundle_get_shat(bundle);
 
@@ -299,8 +299,6 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
         int ret = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
          
         if (ret!=0) {
-        print_buffer(alice_lhs,DJB_KEY_LEN);
-        print_buffer(alice_rhs,DJB_KEY_LEN);
         printf("test failed!\n");
         printf("quiting\n");
         return -3;

@@ -205,12 +205,12 @@ void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key
     }
 }
 
-int signal_protocol_key_helper_generate_rhat(signal_context *global_context, signal_buffer *rhat_buf) {
+int signal_protocol_key_helper_generate_rhat(signal_context *global_context, signal_buffer **rhat_buf) {
     ec_private_key *rhat = 0;
     int result;
     result = curve_generate_private_key(global_context, &rhat);
     if (result >= 0) {
-       rhat_buf = signal_buffer_create(get_private_data(rhat), DJB_KEY_LEN);
+       *rhat_buf = signal_buffer_create(get_private_data(rhat), DJB_KEY_LEN);
     }
     return result;
 }
@@ -305,7 +305,7 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     }
 
     // generate random value for rhat
-    result = signal_protocol_key_helper_generate_rhat(global_context, rhat_buf);
+    result = signal_protocol_key_helper_generate_rhat(global_context, &rhat_buf);
     if (result < 0) {
         goto complete;
     }    
