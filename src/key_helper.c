@@ -215,7 +215,7 @@ int signal_protocol_key_helper_generate_rhat(signal_context *global_context, sig
     return result;
 }
 
-int signal_protocol_key_helper_generate_chat(signal_context *global_context, const ratchet_identity_key_pair *identity_key_pair, ec_public_key *public_key, signal_buffer *chat_buf) {
+int signal_protocol_key_helper_generate_chat(signal_context *global_context, const ratchet_identity_key_pair *identity_key_pair, ec_public_key *public_key, signal_buffer **chat_buf) {
     void *hmac_context = 0;
     uint8_t csalt[DJB_KEY_LEN];
     memset(csalt, 0, sizeof(csalt));
@@ -239,7 +239,7 @@ int signal_protocol_key_helper_generate_chat(signal_context *global_context, con
     }
 
     // place authentication code in chat_buf
-    result = signal_hmac_sha256_final(global_context, hmac_context, &chat_buf);
+    result = signal_hmac_sha256_final(global_context, hmac_context, chat_buf);
     if (result < 0) {
         goto complete;
     }
@@ -311,7 +311,7 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     }    
 
     // generate hash value for chat
-    result = signal_protocol_key_helper_generate_chat(global_context, identity_key_pair, public_key, chat_buf);
+    result = signal_protocol_key_helper_generate_chat(global_context, identity_key_pair, public_key, &chat_buf);
     if (result < 0) {
         goto complete;
     }
