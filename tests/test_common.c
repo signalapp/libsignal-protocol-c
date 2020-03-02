@@ -65,6 +65,14 @@ void print_buffer(const char *prefix, signal_buffer *buffer)
     fprintf(stderr, "\n");
 }
 
+void print(signal_buffer *buffer, size_t len){
+    printf("buffer length: %zu\n", len);
+    int i;
+    for(i = 0; i < len; i++){
+        printf("%02X\n", buffer->data[i]);
+    }
+}
+
 void shuffle_buffers(signal_buffer **array, size_t n)
 {
     if (n > 1) {
