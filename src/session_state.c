@@ -78,7 +78,9 @@ struct session_state
     int needs_refresh;
     ec_public_key *alice_base_key;
 
+    //Schnorr Values
     signal_buffer *alice_s_buf;
+    signal_buffer *alice_c_buf;
 
     signal_context *global_context;
 };
@@ -378,6 +380,16 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
         }
         //session_structure->alicesbuf = state->alice_s_buf;
         session_structure->has_alicesbuf = 1;
+    }
+
+    if(state->alice_c_buf) {
+        result = alice_c_buf_serialize_protobuf(
+                &session_structure->alicecbuf, state->alice_c_buf);
+        if(result < 0) {
+            goto complete;
+        }
+        //session_structure->alicecbuf = state->alice_c_buf;
+        session_structure->has_alicecbuf = 1;
     }
 
 complete:
@@ -925,6 +937,18 @@ int session_state_deserialize_protobuf(session_state **state, Textsecure__Sessio
                 &result_state->alice_s_buf,
                 session_structure->alicesbuf.data,
                 session_structure->alicesbuf.len,
+                global_context);
+        if(result < 0) {
+            goto complete;
+        }
+    }
+
+    if(session_structure->has_alicecbuf) {
+        //result_state->alice_c_buf = session_structure->alicecbuf;
+        result = alice_c_buf_deserialize_protobuf(
+                &result_state->alice_c_buf,
+                session_structure->alicecbuf.data,
+                session_structure->alicecbuf.len,
                 global_context);
         if(result < 0) {
             goto complete;
@@ -1802,13 +1826,30 @@ void session_state_set_alice_s(session_state *state, signal_buffer *s_buf)
     if(state->alice_s_buf) {
         SIGNAL_UNREF(state->alice_s_buf);
     }
-    SIGNAL_REF(s_buf);
+    //SIGNAL_REF(s_buf);
     state->alice_s_buf = s_buf;
+}
+
+void session_state_set_alice_c(session_state *state, signal_buffer *c_buf)
+{
+    assert(state);
+    assert(c_buf);
+
+    if(state->alice_c_buf) {
+        SIGNAL_UNREF(state->alice_c_buf);
+    }
+    //SIGNAL_REF(c_buf);
+    state->alice_c_buf = c_buf;
 }
 
 signal_buffer *session_state_get_alice_s(session_state *state)
 {
     return state->alice_s_buf;
+}
+
+signal_buffer *session_state_get_alice_c(session_state *state)
+{
+    return state->alice_c_buf;
 }
 
 ec_public_key *session_state_get_alice_base_key(const session_state *state)
