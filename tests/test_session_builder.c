@@ -149,6 +149,11 @@ START_TEST(test_schnorr_verification)
     result = signal_protocol_session_load_session(alice_session_builder->store, &bob_record, alice_session_builder->remote_address);
     state = session_record_get_state(bob_record);
 
+    printf("loaded s_buf.....\n");
+    print(state->alice_s_buf, state->alice_s_buf->len);
+    printf("loaded c_buf.....\n");
+    print(state->alice_c_buf, state->alice_c_buf->len);
+
     /* 
         Bob can verify Alice's Schnorr proof here... 
         Access Alice's "s" by *state->alice_s_buf->data
@@ -1742,13 +1747,13 @@ Suite *session_builder_suite(void)
     TCase *tcase = tcase_create("case");
     tcase_add_checked_fixture(tcase, test_setup, test_teardown);
     tcase_add_test(tcase, test_schnorr_verification);
-    tcase_add_test(tcase, test_basic_pre_key_v2);
+    /*tcase_add_test(tcase, test_basic_pre_key_v2);
     tcase_add_test(tcase, test_basic_pre_key_v3);
     tcase_add_test(tcase, test_bad_signed_pre_key_signature);
     tcase_add_test(tcase, test_repeat_bundle_message_v2);
     tcase_add_test(tcase, test_repeat_bundle_message_v3);
     tcase_add_test(tcase, test_bad_message_bundle);
-    tcase_add_test(tcase, test_optional_one_time_pre_key);
+    tcase_add_test(tcase, test_optional_one_time_pre_key);*/
     suite_add_tcase(suite, tcase);
 
     return suite;
