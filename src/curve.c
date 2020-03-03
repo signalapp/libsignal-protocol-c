@@ -160,33 +160,102 @@ int alice_s_buf_serialize_protobuf(ProtobufCBinaryData *buffer, const signal_buf
     assert(buffer);
     assert(alice_s_buf);
 
-    len = sizeof(uint8_t) * (DJB_KEY_LEN + 1);
+    len = sizeof(uint8_t) * (DJB_KEY_LEN);
     data = malloc(len);
     if(!data) {
         return SG_ERR_NOMEM;
     }
 
     //data[0] = DJB_TYPE;
-    memcpy(data, alice_s_buf->data, DJB_KEY_LEN + 1);
+    memcpy(data, alice_s_buf->data, DJB_KEY_LEN);
 
     buffer->data = data;
     buffer->len = len;
+
+    /*int i;
+    printf("stored serialized s buf data\n");
+    for(i = 0; i < DJB_KEY_LEN; i++){
+        printf("%hhu\n", data[i]);
+    }*/
+
     return 0;
 }
 
 int alice_s_buf_deserialize_protobuf(signal_buffer **s_buf, const uint8_t *s_buf_data, size_t s_buf_len, signal_context *global_context)
 {
+    /*int i;
+    printf("loaded serialized s buf data\n");
+    for(i = 0; i < DJB_KEY_LEN; i++){
+        printf("%hhu\n", s_buf_data[i]);
+    }*/
+
     signal_buffer *alice_s_buf = 0;
 
-    alice_s_buf = malloc(sizeof(signal_buffer));
+    //alice_s_buf = malloc(sizeof(signal_buffer));
+    alice_s_buf = signal_buffer_alloc(s_buf_len);
+
     if(!alice_s_buf) {
         return SG_ERR_NOMEM;
     }
 
-    memcpy(alice_s_buf->data, s_buf_data, DJB_KEY_LEN + 1);
-    alice_s_buf->len = DJB_KEY_LEN + 1;
+    memcpy(alice_s_buf->data, s_buf_data, DJB_KEY_LEN);
+    alice_s_buf->len = DJB_KEY_LEN;
 
     *s_buf = alice_s_buf;
+
+    return 0;
+}
+
+int alice_c_buf_serialize_protobuf(ProtobufCBinaryData *buffer, const signal_buffer *alice_c_buf)
+{
+    size_t len = 0;
+    uint8_t *data = 0;
+
+    assert(buffer);
+    assert(alice_c_buf);
+
+    len = sizeof(uint8_t) * (DJB_KEY_LEN);
+    data = malloc(len);
+    if(!data) {
+        return SG_ERR_NOMEM;
+    }
+
+    //data[0] = DJB_TYPE;
+    memcpy(data, alice_c_buf->data, DJB_KEY_LEN);
+
+    buffer->data = data;
+    buffer->len = len;
+
+    /*int i;
+    printf("stored serialized c buf data\n");
+    for(i = 0; i < DJB_KEY_LEN; i++){
+        printf("%hhu\n", data[i]);
+    }*/
+    
+    return 0;
+}
+
+int alice_c_buf_deserialize_protobuf(signal_buffer **c_buf, const uint8_t *c_buf_data, size_t c_buf_len, signal_context *global_context)
+{
+    /*int i;
+    printf("loaded serialized c buf data\n");
+    for(i = 0; i < DJB_KEY_LEN; i++){
+        printf("%hhu\n", c_buf_data[i]);
+    }*/
+
+    signal_buffer *alice_c_buf = 0;
+
+    //alice_c_buf = malloc(sizeof(signal_buffer));
+    alice_c_buf = signal_buffer_alloc(c_buf_len);
+
+    if(!alice_c_buf) {
+        return SG_ERR_NOMEM;
+    }
+
+    memcpy(alice_c_buf->data, c_buf_data, DJB_KEY_LEN);
+    alice_c_buf->len = DJB_KEY_LEN;
+
+    *c_buf = alice_c_buf;
 
     return 0;
 }

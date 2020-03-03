@@ -73,6 +73,9 @@ int ec_private_key_serialize_protobuf(ProtobufCBinaryData *buffer, const ec_priv
 int alice_s_buf_serialize_protobuf(ProtobufCBinaryData *buffer, const signal_buffer *alice_s_buf);
 int alice_s_buf_deserialize_protobuf(signal_buffer **s_buf, const uint8_t *s_buf_data, size_t s_buf_len, signal_context *global_context);
 
+int alice_c_buf_serialize_protobuf(ProtobufCBinaryData *buffer, const signal_buffer *alice_c_buf);
+int alice_c_buf_deserialize_protobuf(signal_buffer **c_buf, const uint8_t *c_buf_data, size_t c_buf_len, signal_context *global_context);
+
 int ratchet_chain_key_get_key_protobuf(const ratchet_chain_key *chain_key, ProtobufCBinaryData *buffer);
 int ratchet_root_key_get_key_protobuf(const ratchet_root_key *root_key, ProtobufCBinaryData *buffer);
 
