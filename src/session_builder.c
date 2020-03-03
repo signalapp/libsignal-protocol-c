@@ -11,6 +11,7 @@
 #include "key_helper.h"
 #include "signal_protocol_internal.h"
 #include "sc.h"
+#include "../tests/test_common.h"
 
 #define DJB_KEY_LEN 32
 
@@ -379,6 +380,12 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
             session_pre_key_bundle_get_registration_id(bundle));
     session_state_set_alice_base_key(state, ec_key_pair_get_public(our_base_key));
     session_state_set_alice_s(state, s_buf);
+    session_state_set_alice_c(state, c_buf);
+
+    printf("stored s_buf.....\n");
+    print(state->alice_s_buf, state->alice_s_buf->len);
+    printf("stored c_buf.....\n");
+    print(state->alice_c_buf, state->alice_c_buf->len);
 
     result = signal_protocol_session_store_session(builder->store, builder->remote_address, record);
     if(result < 0) {
