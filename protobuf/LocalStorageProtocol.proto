@@ -61,6 +61,7 @@ message SessionStructure {
     optional bool needsRefresh = 12;
     optional bytes aliceBaseKey = 13;
     optional bytes aliceSBuf = 14;
+    optional bytes aliceCBuf = 15;
 }
 
 message RecordStructure {
