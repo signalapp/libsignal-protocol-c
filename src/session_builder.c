@@ -12,6 +12,8 @@
 #include "signal_protocol_internal.h"
 #include "sc.h"
 #include "ge.h"
+#include "generalized/gen_crypto_additions.h"
+#include "crypto_additions.h"
 
 #define DJB_KEY_LEN 32
 
@@ -231,6 +233,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     uint32_t local_registration_id = 0;
     signal_buffer *r_buf = 0;
     signal_buffer *c_buf = 0;
+    c_buf = signal_buffer_alloc(DJB_KEY_LEN);
     signal_buffer *s_buf = 0;
     ge_p3 Xfull;
     signal_buffer *Xfull_buf = 0;
@@ -288,13 +291,13 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
 
         uint8_t *chat = session_pre_key_bundle_get_chat(bundle);
 
-        ge_p3 alice_lhs_pre; ge_scalarmult_base(&alice_lhs_pre,&shat);
-        ge_p3 alice_rhs_pre; ge_scalarmult(&alice_rhs_pre,&chat,&Yfull);
+        ge_scalarmult_base(&alice_lhs_pre,shat);
+        ge_scalarmult(&alice_rhs_pre,chat,&Yfull);
          
         ge_p3_add(&alice_rhs_pre,&alice_rhs_pre,&Rhatfull);
          
-        uint8_t alice_lhs[32]; justx3(alice_lhs,&alice_lhs_pre);
-        uint8_t alice_rhs[32]; justx3(alice_rhs,&alice_rhs_pre);
+        justx3(alice_lhs,&alice_lhs_pre);
+        justx3(alice_rhs,&alice_rhs_pre);
          
         int ret = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
          

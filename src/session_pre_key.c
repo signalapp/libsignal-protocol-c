@@ -510,47 +510,47 @@ size_t session_signed_pre_key_get_signature_len(const session_signed_pre_key *pr
     return pre_key->signature_len;
 }
 
-const uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre_key)
+uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre_key)
 {
     return pre_key->rhat;
 }
 
-const uint8_t *session_signed_pre_key_get_Rhatfull(const session_signed_pre_key *pre_key) 
+uint8_t *session_signed_pre_key_get_Rhatfull(const session_signed_pre_key *pre_key) 
 {
     return pre_key->Rhatfull;
 }
 
-const uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key)
+uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key)
 {
     return pre_key->shat;
 }
 
-const uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre_key)
+uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre_key)
 {
     return pre_key->chat;
 }
 
-const uint8_t *session_signed_pre_key_get_Yfull(const session_signed_pre_key *pre_key) 
+uint8_t *session_signed_pre_key_get_Yfull(const session_signed_pre_key *pre_key) 
 {
     return pre_key->Yfull;
 }
 
-const uint8_t *session_pre_key_bundle_get_Rhatfull(const session_pre_key_bundle *pre_key_bundle)
+uint8_t *session_pre_key_bundle_get_Rhatfull(const session_pre_key_bundle *pre_key_bundle)
 {
     return pre_key_bundle->Rhatfull;
 }
 
-const uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle)
+uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle)
 {
     return pre_key_bundle->shat;
 }
 
-const uint8_t *session_pre_key_bundle_get_chat(const session_pre_key_bundle *pre_key_bundle)
+uint8_t *session_pre_key_bundle_get_chat(const session_pre_key_bundle *pre_key_bundle)
 {
     return pre_key_bundle->chat;
 }
 
-const uint8_t *session_pre_key_bundle_get_Yfull(const session_pre_key_bundle *pre_key_bundle) 
+uint8_t *session_pre_key_bundle_get_Yfull(const session_pre_key_bundle *pre_key_bundle) 
 {
     return pre_key_bundle->Yfull;
 }
