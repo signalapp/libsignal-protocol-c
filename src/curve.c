@@ -191,7 +191,6 @@ int alice_s_buf_deserialize_protobuf(signal_buffer **s_buf, const uint8_t *s_buf
 
     signal_buffer *alice_s_buf = 0;
 
-    //alice_s_buf = malloc(sizeof(signal_buffer));
     alice_s_buf = signal_buffer_alloc(s_buf_len);
 
     if(!alice_s_buf) {
@@ -245,7 +244,6 @@ int alice_c_buf_deserialize_protobuf(signal_buffer **c_buf, const uint8_t *c_buf
 
     signal_buffer *alice_c_buf = 0;
 
-    //alice_c_buf = malloc(sizeof(signal_buffer));
     alice_c_buf = signal_buffer_alloc(c_buf_len);
 
     if(!alice_c_buf) {
@@ -256,6 +254,112 @@ int alice_c_buf_deserialize_protobuf(signal_buffer **c_buf, const uint8_t *c_buf
     alice_c_buf->len = DJB_KEY_LEN;
 
     *c_buf = alice_c_buf;
+
+    return 0;
+}
+
+int alice_Xfull_buf_serialize_protobuf(ProtobufCBinaryData *buffer, const signal_buffer *alice_Xfull_buf)
+{
+    size_t len = 0;
+    uint8_t *data = 0;
+
+    assert(buffer);
+    assert(alice_Xfull_buf);
+
+    len = sizeof(uint8_t) * (128);
+    data = malloc(len);
+    if(!data) {
+        return SG_ERR_NOMEM;
+    }
+
+    //data[0] = DJB_TYPE;
+    memcpy(data, alice_Xfull_buf->data, 128);
+
+    buffer->data = data;
+    buffer->len = len;
+
+    /*int i;
+    printf("stored serialized Xfull buf data\n");
+    for(i = 0; i < 128; i++){
+        printf("%hhu\n", data[i]);
+    }*/
+    
+    return 0;
+}
+
+int alice_Xfull_buf_deserialize_protobuf(signal_buffer **Xfull_buf, const uint8_t *Xfull_buf_data, size_t Xfull_buf_len, signal_context *global_context)
+{
+    /*int i;
+    printf("loaded serialized Xfull buf data\n");
+    for(i = 0; i < 128; i++){
+        printf("%hhu\n", Xfull_buf_data[i]);
+    }*/
+
+    signal_buffer *alice_Xfull_buf = 0;
+
+    alice_Xfull_buf = signal_buffer_alloc(Xfull_buf_len);
+
+    if(!alice_Xfull_buf) {
+        return SG_ERR_NOMEM;
+    }
+
+    memcpy(alice_Xfull_buf->data, Xfull_buf_data, 128);
+    alice_Xfull_buf->len = 128;
+
+    *Xfull_buf = alice_Xfull_buf;
+
+    return 0;
+}
+
+int alice_Rfull_buf_serialize_protobuf(ProtobufCBinaryData *buffer, const signal_buffer *alice_Rfull_buf)
+{
+    size_t len = 0;
+    uint8_t *data = 0;
+
+    assert(buffer);
+    assert(alice_Rfull_buf);
+
+    len = sizeof(uint8_t) * (128);
+    data = malloc(len);
+    if(!data) {
+        return SG_ERR_NOMEM;
+    }
+
+    //data[0] = DJB_TYPE;
+    memcpy(data, alice_Rfull_buf->data, 128);
+
+    buffer->data = data;
+    buffer->len = len;
+
+    /*int i;
+    printf("stored serialized Rfull buf data\n");
+    for(i = 0; i < 128; i++){
+        printf("%hhu\n", data[i]);
+    }*/
+    
+    return 0;
+}
+
+int alice_Rfull_buf_deserialize_protobuf(signal_buffer **Rfull_buf, const uint8_t *Rfull_buf_data, size_t Rfull_buf_len, signal_context *global_context)
+{
+    /*int i;
+    printf("loaded serialized Rfull buf data\n");
+    for(i = 0; i < 128; i++){
+        printf("%hhu\n", Rfull_buf_data[i]);
+    }*/
+
+    signal_buffer *alice_Rfull_buf = 0;
+
+    alice_Rfull_buf = signal_buffer_alloc(Rfull_buf_len);
+
+    if(!alice_Rfull_buf) {
+        return SG_ERR_NOMEM;
+    }
+
+    memcpy(alice_Rfull_buf->data, Rfull_buf_data, 128);
+    alice_Rfull_buf->len = 128;
+
+    *Rfull_buf = alice_Rfull_buf;
 
     return 0;
 }
