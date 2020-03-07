@@ -287,7 +287,7 @@ void public_key_set_data_Y(ec_public_key *public_key) {
 }
 
 void ec_key_pair_set_public_Y(const ec_key_pair *key_pair) {
-    public_key_set_data(ec_key_pair_get_public(key_pair));
+    public_key_set_data_Y(ec_key_pair_get_public(key_pair));
 }
 
 void public_key_set_data_y(ec_private_key *private_key) {
@@ -296,7 +296,7 @@ void public_key_set_data_y(ec_private_key *private_key) {
 }
 
 void ec_key_pair_set_private_y(const ec_key_pair *key_pair) {
-    public_key_set_data(ec_key_pair_get_private(key_pair));
+    public_key_set_data_y(ec_key_pair_get_private(key_pair));
 }
 
 void ec_key_pair_destroy(signal_type_base *type)
