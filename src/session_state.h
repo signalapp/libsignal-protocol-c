@@ -83,6 +83,10 @@ void session_state_set_alice_s(session_state *state, signal_buffer *s_buf);
 signal_buffer *session_state_get_alice_s(session_state *state);
 void session_state_set_alice_c(session_state *state, signal_buffer *c_buf);
 signal_buffer *session_state_get_alice_c(session_state *state);
+void session_state_set_alice_Xfull(session_state *state, signal_buffer *Xfull_buf);
+signal_buffer *session_state_get_alice_Xfull(session_state *state);
+void session_state_set_alice_Rfull(session_state *state, signal_buffer *Rfull_buf);
+signal_buffer *session_state_get_alice_Rfull(session_state *state);
 
 void session_state_destroy(signal_type_base *type);
 

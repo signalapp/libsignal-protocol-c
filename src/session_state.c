@@ -81,6 +81,8 @@ struct session_state
     //Schnorr Values
     signal_buffer *alice_s_buf;
     signal_buffer *alice_c_buf;
+    signal_buffer *alice_Xfull_buf;
+    signal_buffer *alice_Rfull_buf;
 
     signal_context *global_context;
 };
@@ -378,7 +380,6 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
         if(result < 0) {
             goto complete;
         }
-        //session_structure->alicesbuf = state->alice_s_buf;
         session_structure->has_alicesbuf = 1;
     }
 
@@ -388,8 +389,25 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
         if(result < 0) {
             goto complete;
         }
-        //session_structure->alicecbuf = state->alice_c_buf;
         session_structure->has_alicecbuf = 1;
+    }
+
+    if(state->alice_Xfull_buf) {
+        result = alice_Xfull_buf_serialize_protobuf(
+                &session_structure->alicexfullbuf, state->alice_Xfull_buf);
+        if(result < 0) {
+            goto complete;
+        }
+        session_structure->has_alicexfullbuf = 1;
+    }
+
+    if(state->alice_Rfull_buf) {
+        result = alice_Rfull_buf_serialize_protobuf(
+                &session_structure->alicerfullbuf, state->alice_Rfull_buf);
+        if(result < 0) {
+            goto complete;
+        }
+        session_structure->has_alicerfullbuf = 1;
     }
 
 complete:
@@ -932,7 +950,6 @@ int session_state_deserialize_protobuf(session_state **state, Textsecure__Sessio
     }
 
     if(session_structure->has_alicesbuf) {
-        //result_state->alice_s_buf = session_structure->alicesbuf;
         result = alice_s_buf_deserialize_protobuf(
                 &result_state->alice_s_buf,
                 session_structure->alicesbuf.data,
@@ -944,11 +961,32 @@ int session_state_deserialize_protobuf(session_state **state, Textsecure__Sessio
     }
 
     if(session_structure->has_alicecbuf) {
-        //result_state->alice_c_buf = session_structure->alicecbuf;
         result = alice_c_buf_deserialize_protobuf(
                 &result_state->alice_c_buf,
                 session_structure->alicecbuf.data,
                 session_structure->alicecbuf.len,
+                global_context);
+        if(result < 0) {
+            goto complete;
+        }
+    }
+
+    if(session_structure->has_alicexfullbuf) {
+        result = alice_Xfull_buf_deserialize_protobuf(
+                &result_state->alice_Xfull_buf,
+                session_structure->alicexfullbuf.data,
+                session_structure->alicexfullbuf.len,
+                global_context);
+        if(result < 0) {
+            goto complete;
+        }
+    }
+
+    if(session_structure->has_alicerfullbuf) {
+        result = alice_Rfull_buf_deserialize_protobuf(
+                &result_state->alice_Rfull_buf,
+                session_structure->alicerfullbuf.data,
+                session_structure->alicerfullbuf.len,
                 global_context);
         if(result < 0) {
             goto complete;
@@ -1830,6 +1868,11 @@ void session_state_set_alice_s(session_state *state, signal_buffer *s_buf)
     state->alice_s_buf = s_buf;
 }
 
+signal_buffer *session_state_get_alice_s(session_state *state)
+{
+    return state->alice_s_buf;
+}
+
 void session_state_set_alice_c(session_state *state, signal_buffer *c_buf)
 {
     assert(state);
@@ -1842,14 +1885,43 @@ void session_state_set_alice_c(session_state *state, signal_buffer *c_buf)
     state->alice_c_buf = c_buf;
 }
 
-signal_buffer *session_state_get_alice_s(session_state *state)
-{
-    return state->alice_s_buf;
-}
-
 signal_buffer *session_state_get_alice_c(session_state *state)
 {
     return state->alice_c_buf;
+}
+
+void session_state_set_alice_Xfull(session_state *state, signal_buffer *Xfull_buf)
+{
+    assert(state);
+    assert(Xfull_buf);
+
+    if(state->alice_Xfull_buf) {
+        SIGNAL_UNREF(state->alice_Xfull_buf);
+    }
+    //SIGNAL_REF(Xfull_buf);
+    state->alice_Xfull_buf = Xfull_buf;
+}
+
+signal_buffer *session_state_get_alice_Xfull(session_state *state)
+{
+    return state->alice_Xfull_buf;
+}
+
+void session_state_set_alice_Rfull(session_state *state, signal_buffer *Rfull_buf)
+{
+    assert(state);
+    assert(Rfull_buf);
+
+    if(state->alice_Rfull_buf) {
+        SIGNAL_UNREF(state->alice_Rfull_buf);
+    }
+    //SIGNAL_REF(Rfull_buf);
+    state->alice_Rfull_buf = Rfull_buf;
+}
+
+signal_buffer *session_state_get_alice_Rfull(session_state *state)
+{
+    return state->alice_Rfull_buf;
 }
 
 ec_public_key *session_state_get_alice_base_key(const session_state *state)
