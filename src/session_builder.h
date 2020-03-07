@@ -24,6 +24,16 @@ extern "C" {
  */
 
 /**
+ * Gets a session builder store.
+ */
+signal_protocol_store_context *session_builder_get_store(session_builder *session_builder);
+
+/**
+ * Gets a session builder remote address.
+ */
+const signal_protocol_address *session_builder_get_remote_address(session_builder *session_builder);
+
+/**
  * Constructs a session builder.
  *
  * The store and global contexts must remain valid for the lifetime of the
