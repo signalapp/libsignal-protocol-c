@@ -251,7 +251,7 @@ int signal_protocol_key_helper_generate_chat(signal_context *global_context, con
 }
 
 void signal_protocol_key_helper_generate_shat(ec_key_pair *ec_pair, signal_buffer *chat_buf, signal_buffer *rhat_buf, signal_buffer *shat_buf) {
-    sc_muladd(shat_buf->data, get_private_data(ec_key_pair_get_private(ec_pair)), signal_buffer_data(chat_buf), signal_buffer_data(rhat_buf));
+    sc_muladd(signal_buffer_data(shat_buf), get_private_data(ec_key_pair_get_private(ec_pair)), signal_buffer_data(chat_buf), signal_buffer_data(rhat_buf));
 }
 
 int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
@@ -321,12 +321,12 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     signal_protocol_key_helper_generate_shat(ec_pair, chat_buf, rhat_buf, shat_buf);
 
     // generate value for Rhatfull
-    ge_scalarmult_base(&Rhatfull, rhat_buf->data);
-    ge_p3_tobytes_128(Rhatfull_buf->data, &Rhatfull);
+    ge_scalarmult_base(&Rhatfull, signal_buffer_data(rhat_buf));
+    ge_p3_tobytes_128(signal_buffer_data(Rhatfull_buf), &Rhatfull);
 
     // generate value for Yfull
     ge_scalarmult_base(&Yfull, get_private_data(ec_key_pair_get_private(ec_pair)));
-    ge_p3_tobytes_128(Yfull_buf->data, &Yfull);
+    ge_p3_tobytes_128(signal_buffer_data(Yfull_buf), &Yfull);
 
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,

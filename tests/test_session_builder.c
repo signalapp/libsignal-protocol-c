@@ -153,6 +153,7 @@ START_TEST(test_schnorr_verification)
     session_builder_free(alice_session_builder);
     signal_protocol_store_context_destroy(alice_store);
 }
+END_TEST
 
 START_TEST(test_basic_pre_key_v2)
 {
