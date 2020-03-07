@@ -39,6 +39,8 @@ ec_public_key *ratchet_identity_key_pair_get_public(const ratchet_identity_key_p
 ec_private_key *ratchet_identity_key_pair_get_private(const ratchet_identity_key_pair *key_pair);
 void ratchet_identity_key_pair_destroy(signal_type_base *type);
 
+void ratchet_identity_key_pair_set_public(const ratchet_identity_key_pair *key_pair);
+
 typedef struct symmetric_signal_protocol_parameters symmetric_signal_protocol_parameters;
 typedef struct alice_signal_protocol_parameters alice_signal_protocol_parameters;
 typedef struct bob_signal_protocol_parameters bob_signal_protocol_parameters;

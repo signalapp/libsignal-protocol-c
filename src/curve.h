@@ -193,6 +193,18 @@ const uint8_t* get_private_data(const ec_private_key *private_key);
 
 const uint8_t* get_public_data(const ec_public_key *public_key);
 
+void ec_key_pair_set_public(const ec_key_pair *key_pair);
+
+void public_key_set_data(ec_public_key *public_key);
+
+void public_key_set_data_Y(ec_public_key *public_key); 
+
+void ec_key_pair_set_public_Y(const ec_key_pair *key_pair);
+
+void public_key_set_data_y(ec_private_key *private_key);
+
+void ec_key_pair_set_private_y(const ec_key_pair *key_pair);
+
 #ifdef __cplusplus
 }
 #endif

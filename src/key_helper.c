@@ -206,12 +206,14 @@ void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key
 }
 
 int signal_protocol_key_helper_generate_rhat(signal_context *global_context, signal_buffer **rhat_buf) {
-    ec_private_key *rhat = 0;
-    int result;
-    result = curve_generate_private_key(global_context, &rhat);
-    if (result >= 0) {
-       *rhat_buf = signal_buffer_create(get_private_data(rhat), DJB_KEY_LEN);
-    }
+    // ec_private_key *rhat = 0;
+    int result = 0;
+    // result = curve_generate_private_key(global_context, &rhat);
+    // rhat->data
+    uint8_t rhat[32]= {0x40, 0xf6, 0x65, 0xd0, 0x7a, 0x9f, 0xd2, 0xaf, 0xcf, 0x68, 0xd3, 0xbc, 0x7e, 0xc6, 0xe5, 0xa7, 0x91, 0x3e, 0x44, 0x56, 0x12, 0xf1, 0x98, 0xa8, 0xe8, 0x73, 0xee, 0xea, 0xf5, 0x3f, 0xac, 0x5b}; 
+    // if (result >= 0) {
+       *rhat_buf = signal_buffer_create(&rhat, DJB_KEY_LEN);
+    // }
     return result;
 }
 
@@ -280,12 +282,16 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
 
+    ratchet_identity_key_pair_set_public(identity_key_pair);
     assert(global_context);
 
     result = curve_generate_key_pair(global_context, &ec_pair);
     if(result < 0) {
         goto complete;
     }
+
+    ec_key_pair_set_public_Y(ec_pair);
+    ec_key_pair_set_private_y(ec_pair);
 
     public_key = ec_key_pair_get_public(ec_pair);
     result = ec_public_key_serialize(&public_buf, public_key);
