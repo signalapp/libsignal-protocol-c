@@ -8,7 +8,6 @@
 #include "session_state.h"
 #include "session_cipher.h"
 #include "session_builder.h"
-#include "session_builder.c"
 #include "session_pre_key.h"
 #include "curve.h"
 #include "ratchet.h"
@@ -147,13 +146,17 @@ START_TEST(test_schnorr_verification)
     ck_assert_int_eq(result, 0);
      
     /* Bob loads session state, including Alice's Schnorr proof */
-    result = signal_protocol_session_load_session(alice_session_builder->store, &bob_record, alice_session_builder->remote_address);
+    result = signal_protocol_session_load_session(session_builder_get_store(alice_session_builder), &bob_record, session_builder_get_remote_address(alice_session_builder));
     state = session_record_get_state(bob_record);
 
     printf("loaded s_buf.....\n");
-    print(state->alice_s_buf, state->alice_s_buf->len);
+    print(session_state_get_alice_s(state), session_state_get_alice_s(state)->len);
     printf("loaded c_buf.....\n");
-    print(state->alice_c_buf, state->alice_c_buf->len);
+    print(session_state_get_alice_c(state), session_state_get_alice_c(state)->len);
+    printf("loaded Xfull_buf.....\n");
+    print(session_state_get_alice_Xfull(state), session_state_get_alice_Xfull(state)->len);
+    printf("loaded Rfull_buf.....\n");
+    print(session_state_get_alice_Rfull(state), session_state_get_alice_Rfull(state)->len);
 
     /* 
         Bob can verify Alice's Schnorr proof here... 
@@ -170,6 +173,7 @@ START_TEST(test_schnorr_verification)
     session_builder_free(alice_session_builder);
     signal_protocol_store_context_destroy(alice_store);
 }
+END_TEST
 
 START_TEST(test_basic_pre_key_v2)
 {
