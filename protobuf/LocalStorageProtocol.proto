@@ -62,6 +62,8 @@ message SessionStructure {
     optional bytes aliceBaseKey = 13;
     optional bytes aliceSBuf = 14;
     optional bytes aliceCBuf = 15;
+    optional bytes aliceXfullBuf = 16;
+    optional bytes aliceRfullBuf = 17;
 }
 
 message RecordStructure {
