@@ -73,7 +73,9 @@ typedef struct {
 
 extern void ge_tobytes(unsigned char *,const ge_p2 *);
 extern void ge_p3_tobytes(unsigned char *,const ge_p3 *);
+extern void ge_p3_tobytes_128(unsigned char *,const ge_p3 *);
 extern int ge_frombytes_negate_vartime(ge_p3 *,const unsigned char *);
+extern void ge_frombytes_128(const ge_p3 *, unsigned char *);
 
 extern void ge_p2_0(ge_p2 *);
 extern void ge_p3_0(ge_p3 *);

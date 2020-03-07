@@ -5,12 +5,16 @@
 #include <string.h>
 #include "session_pre_key.h"
 #include "session_record.h"
-#include "session_state.c"
+#include "session_state.h"
 #include "ratchet.h"
 #include "protocol.h"
 #include "key_helper.h"
 #include "signal_protocol_internal.h"
+#include "signal_protocol_types.h"
 #include "sc.h"
+#include "ge.h"
+#include "generalized/gen_crypto_additions.h"
+#include "crypto_additions.h"
 #include "../tests/test_common.h"
 
 #define DJB_KEY_LEN 32
@@ -20,6 +24,16 @@ struct session_builder
     signal_protocol_store_context *store;
     const signal_protocol_address *remote_address;
     signal_context *global_context;
+};
+
+signal_protocol_store_context *session_builder_get_store(session_builder *session_builder)
+{
+    return session_builder->store;
+};
+
+const signal_protocol_address *session_builder_get_remote_address(session_builder *session_builder)
+{
+    return session_builder->remote_address;
 };
 
 static int session_builder_process_pre_key_signal_message_v3(session_builder *builder,
@@ -192,6 +206,27 @@ complete:
     return result;
 }
 
+// originally fixed incompatible limb definitions b/n curve25519donna and ed25519,
+// but ultimately unnecessary
+void contract(uint8_t* out, const fe in) {
+	//int64_t limbs[10]={0};
+	//for(int i=0;i<10;i++)
+	//	limbs[i]=in[i];  //write 32B value to 64B spot
+	//fcontract(out,limbs);//condense
+	fe_tobytes(out,in);
+}
+
+/* compacts full general representation of a curve point to just the
+ * 32Byte reduced x-value: X/Z. NOTE in edwards coordinates!! */
+void justx3(uint8_t* out, const ge_p3* in) {
+	fe z_inv={0};
+	fe ret={0};
+	fe_invert(z_inv,in->Z);
+	fe_mul(ret,z_inv,in->X); //prepare short x
+	contract(out,ret);
+}
+
+
 int session_builder_process_pre_key_bundle(session_builder *builder, session_pre_key_bundle *bundle)
 {
     int result = 0;
@@ -210,7 +245,18 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     uint32_t local_registration_id = 0;
     signal_buffer *r_buf = 0;
     signal_buffer *c_buf = 0;
+    c_buf = signal_buffer_alloc(DJB_KEY_LEN);
     signal_buffer *s_buf = 0;
+    ge_p3 Xfull;
+    signal_buffer *Xfull_buf = 0;
+    ge_p3 Rfull;
+    signal_buffer *Rfull_buf = 0;
+    Xfull_buf = signal_buffer_alloc(128);
+    Rfull_buf = signal_buffer_alloc(128);
+    ge_p3 alice_lhs_pre;
+    ge_p3 alice_rhs_pre;
+    uint8_t alice_lhs[DJB_KEY_LEN];
+    uint8_t alice_rhs[DJB_KEY_LEN];
 
     assert(builder);
     assert(builder->store);
@@ -240,6 +286,38 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
         if(result < 0) {
             goto complete;
         }
+
+        // TODO: (Ana) Need full points for Y and Rhat to be passed along inside Bob's pre_key_bundle, 
+        //        check what the appropriate type/size would be
+        //          - can Alice know rhat and generate Rhat herself or she only sees Rhat??
+        
+        uint8_t *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle); //signal_buffer or uint_8?
+        ge_p3 Rhatfull;
+        ge_frombytes_128(&Rhatfull, Rhatfull_buf);
+
+        uint8_t *Yfull_buf = session_pre_key_bundle_get_Yfull(bundle);
+        ge_p3 Yfull;
+        ge_frombytes_128(&Yfull, Yfull_buf);
+
+        uint8_t *shat = session_pre_key_bundle_get_shat(bundle);
+
+        uint8_t *chat = session_pre_key_bundle_get_chat(bundle);
+
+        ge_scalarmult_base(&alice_lhs_pre,shat);
+        ge_scalarmult(&alice_rhs_pre,chat,&Yfull);
+         
+        ge_p3_add(&alice_rhs_pre,&alice_rhs_pre,&Rhatfull);
+         
+        justx3(alice_lhs,&alice_lhs_pre);
+        justx3(alice_rhs,&alice_rhs_pre);
+         
+        int ret = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
+         
+        if (ret!=0) {
+        printf("test failed!\n");
+        printf("quiting\n");
+        return -3;
+        } else printf("\tpassed.\n");
 
         result = curve_verify_signature(identity_key,
                 signal_buffer_data(serialized_signed_pre_key),
@@ -338,6 +416,16 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     s_buf = signal_buffer_alloc(DJB_KEY_LEN);
     sc_muladd(s_buf->data, get_private_data(ec_key_pair_get_private(our_base_key)), signal_buffer_data(c_buf), signal_buffer_data(r_buf));
 
+    // generate Xfull
+    ge_scalarmult_base(&Xfull, get_private_data(ec_key_pair_get_private(our_base_key)));
+    ge_p3_tobytes_128(Xfull_buf->data, &Xfull);
+
+    // generate Rfull
+    ge_scalarmult_base(&Rfull, r_buf->data);
+    ge_p3_tobytes_128(Rfull_buf->data, &Rfull);
+
+    ge_scalarmult_base(&alice_lhs_pre, session_pre_key_bundle_get_shat(bundle));
+
     result = alice_signal_protocol_parameters_create(&parameters,
             our_identity_key,
             our_base_key,
@@ -381,11 +469,17 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     session_state_set_alice_base_key(state, ec_key_pair_get_public(our_base_key));
     session_state_set_alice_s(state, s_buf);
     session_state_set_alice_c(state, c_buf);
+    session_state_set_alice_Xfull(state, Xfull_buf);
+    session_state_set_alice_Rfull(state, Rfull_buf);
 
     printf("stored s_buf.....\n");
-    print(state->alice_s_buf, state->alice_s_buf->len);
+    print(session_state_get_alice_s(state), session_state_get_alice_s(state)->len);
     printf("stored c_buf.....\n");
-    print(state->alice_c_buf, state->alice_c_buf->len);
+    print(session_state_get_alice_c(state), session_state_get_alice_c(state)->len);
+    printf("stored Xfull_buf.....\n");
+    print(session_state_get_alice_Xfull(state), session_state_get_alice_Xfull(state)->len);
+    printf("stored Rfull_buf.....\n");
+    print(session_state_get_alice_Rfull(state), session_state_get_alice_Rfull(state)->len);
 
     result = signal_protocol_session_store_session(builder->store, builder->remote_address, record);
     if(result < 0) {

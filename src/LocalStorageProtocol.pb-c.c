@@ -1091,7 +1091,7 @@ const ProtobufCMessageDescriptor textsecure__pre_key_record_structure__descripto
   (ProtobufCMessageInit) textsecure__pre_key_record_structure__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structure__field_descriptors[9] =
+static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structure__field_descriptors[10] =
 {
   {
     "id",
@@ -1166,12 +1166,12 @@ static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structur
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "R_hat",
+    "Rhatfull",
     7,
     PROTOBUF_C_LABEL_OPTIONAL,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(Textsecure__SignedPreKeyRecordStructure, has_r_hat),
-    offsetof(Textsecure__SignedPreKeyRecordStructure, r_hat),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, has_rhatfull),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, rhatfull),
     NULL,
     NULL,
     0,             /* flags */
@@ -1201,9 +1201,22 @@ static const ProtobufCFieldDescriptor textsecure__signed_pre_key_record_structur
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "Yfull",
+    10,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(Textsecure__SignedPreKeyRecordStructure, has_yfull),
+    offsetof(Textsecure__SignedPreKeyRecordStructure, yfull),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned textsecure__signed_pre_key_record_structure__field_indices_by_name[] = {
-  6,   /* field[6] = R_hat */
+  6,   /* field[6] = Rhatfull */
+  9,   /* field[9] = Yfull */
   8,   /* field[8] = chat */
   0,   /* field[0] = id */
   2,   /* field[2] = privateKey */
@@ -1216,7 +1229,7 @@ static const unsigned textsecure__signed_pre_key_record_structure__field_indices
 static const ProtobufCIntRange textsecure__signed_pre_key_record_structure__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 9 }
+  { 0, 10 }
 };
 const ProtobufCMessageDescriptor textsecure__signed_pre_key_record_structure__descriptor =
 {
@@ -1226,7 +1239,7 @@ const ProtobufCMessageDescriptor textsecure__signed_pre_key_record_structure__de
   "Textsecure__SignedPreKeyRecordStructure",
   "textsecure",
   sizeof(Textsecure__SignedPreKeyRecordStructure),
-  9,
+  10,
   textsecure__signed_pre_key_record_structure__field_descriptors,
   textsecure__signed_pre_key_record_structure__field_indices_by_name,
   1,  textsecure__signed_pre_key_record_structure__number_ranges,
