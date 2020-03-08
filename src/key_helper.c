@@ -318,6 +318,9 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
 
     // generate hash value for chat
     result = signal_protocol_key_helper_generate_chat(global_context, identity_key_pair, public_key, &chat_buf);
+    chat_buf->data[31] &= 127;
+    chat_buf->data[31] |= 64;
+    // result = signal_protocol_key_helper_generate_chat(global_context, identity_key_pair, public_key, &chat_buf);
     if (result < 0) {
         goto complete;
     }

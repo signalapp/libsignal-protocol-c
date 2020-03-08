@@ -301,173 +301,173 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
         justx3(alice_lhs,&alice_lhs_pre);
         justx3(alice_rhs,&alice_rhs_pre);
          
-        int ret = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
+        result = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
          
-        if (ret!=0) {
+        if (result!=0) {
         printf("test failed!\n");
         printf("quiting\n");
-        return -3;
+        goto complete;
         } else printf("\tpassed.\n");
-
-        result = curve_verify_signature(identity_key,
-                signal_buffer_data(serialized_signed_pre_key),
-                signal_buffer_len(serialized_signed_pre_key),
-                signal_buffer_data(signature),
-                signal_buffer_len(signature));
-
-        signal_buffer_free(serialized_signed_pre_key);
-
-        if(result == 0) {
-            signal_log(builder->global_context, SG_LOG_WARNING, "invalid signature on device key!");
-            result = SG_ERR_INVALID_KEY;
-        }
-        if(result < 0) {
-            goto complete;
-        }
     }
+    //     result = curve_verify_signature(identity_key,
+    //             signal_buffer_data(serialized_signed_pre_key),
+    //             signal_buffer_len(serialized_signed_pre_key),
+    //             signal_buffer_data(signature),
+    //             signal_buffer_len(signature));
 
-    if(!signed_pre_key) {
-        result = SG_ERR_INVALID_KEY;
-        signal_log(builder->global_context, SG_LOG_WARNING, "no signed pre key!");
-        goto complete;
-    }
+    //     signal_buffer_free(serialized_signed_pre_key);
 
-    result = signal_protocol_session_load_session(builder->store, &record, builder->remote_address);
-    if(result < 0) {
-        goto complete;
-    }
+    //     if(result == 0) {
+    //         signal_log(builder->global_context, SG_LOG_WARNING, "invalid signature on device key!");
+    //         result = SG_ERR_INVALID_KEY;
+    //     }
+    //     if(result < 0) {
+    //         goto complete;
+    //     }
+    // }
 
-    result = curve_generate_key_pair(builder->global_context, &our_base_key);
-    if(result < 0) {
-        goto complete;
-    }
+    // if(!signed_pre_key) {
+    //     result = SG_ERR_INVALID_KEY;
+    //     signal_log(builder->global_context, SG_LOG_WARNING, "no signed pre key!");
+    //     goto complete;
+    // }
 
-    their_identity_key = session_pre_key_bundle_get_identity_key(bundle);
-    their_signed_pre_key = signed_pre_key;
-    their_one_time_pre_key = pre_key;
+    // result = signal_protocol_session_load_session(builder->store, &record, builder->remote_address);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
-    if(their_one_time_pre_key) {
-        has_their_one_time_pre_key_id = 1;
-        their_one_time_pre_key_id = session_pre_key_bundle_get_pre_key_id(bundle);
-    }
+    // result = curve_generate_key_pair(builder->global_context, &our_base_key);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
-    result = signal_protocol_identity_get_key_pair(builder->store, &our_identity_key);
-    if(result < 0) {
-        goto complete;
-    }
+    // their_identity_key = session_pre_key_bundle_get_identity_key(bundle);
+    // their_signed_pre_key = signed_pre_key;
+    // their_one_time_pre_key = pre_key;
 
-    // Generate random value for r
-    ec_private_key *r = 0;
-    result = curve_generate_private_key(builder->global_context, &r);
-    if (result < 0) {
-        goto complete;
-    }
-    r_buf = signal_buffer_create(get_private_data(r), DJB_KEY_LEN);
+    // if(their_one_time_pre_key) {
+    //     has_their_one_time_pre_key_id = 1;
+    //     their_one_time_pre_key_id = session_pre_key_bundle_get_pre_key_id(bundle);
+    // }
 
-    // generate hash value for c
-    void *hmac_context = 0;
-    uint8_t csalt[DJB_KEY_LEN];
-    memset(csalt, 0, sizeof(csalt));
+    // result = signal_protocol_identity_get_key_pair(builder->store, &our_identity_key);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
-    // initialize HMAC_CTX
-    result = signal_hmac_sha256_init(builder->global_context, &hmac_context, csalt, DJB_KEY_LEN);
-    if (result < 0) {
-        goto complete;
-    }
+    // // Generate random value for r
+    // ec_private_key *r = 0;
+    // result = curve_generate_private_key(builder->global_context, &r);
+    // if (result < 0) {
+    //     goto complete;
+    // }
+    // r_buf = signal_buffer_create(get_private_data(r), DJB_KEY_LEN);
 
-    // digest input message stream A
-    result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(ratchet_identity_key_pair_get_public(our_identity_key)), DJB_KEY_LEN);
-    if (result < 0) {
-        goto complete;
-    }
+    // // generate hash value for c
+    // void *hmac_context = 0;
+    // uint8_t csalt[DJB_KEY_LEN];
+    // memset(csalt, 0, sizeof(csalt));
 
-    // digest input message stream X 
-    result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(ec_key_pair_get_public(our_base_key)), DJB_KEY_LEN);
-    if (result < 0) {
-        goto complete;
-    }
+    // // initialize HMAC_CTX
+    // result = signal_hmac_sha256_init(builder->global_context, &hmac_context, csalt, DJB_KEY_LEN);
+    // if (result < 0) {
+    //     goto complete;
+    // }
 
-    // digest input message stream B
-    result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(their_identity_key), DJB_KEY_LEN);
-    if (result < 0) {
-        goto complete;
-    }
+    // // digest input message stream A
+    // result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(ratchet_identity_key_pair_get_public(our_identity_key)), DJB_KEY_LEN);
+    // if (result < 0) {
+    //     goto complete;
+    // }
 
-    // place authentication code in c_buf
-    result = signal_hmac_sha256_final(builder->global_context, hmac_context, &c_buf);
-    if (result < 0) {
-        goto complete;
-    }
+    // // digest input message stream X 
+    // result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(ec_key_pair_get_public(our_base_key)), DJB_KEY_LEN);
+    // if (result < 0) {
+    //     goto complete;
+    // }
+
+    // // digest input message stream B
+    // result = signal_hmac_sha256_update(builder->global_context, hmac_context, get_public_data(their_identity_key), DJB_KEY_LEN);
+    // if (result < 0) {
+    //     goto complete;
+    // }
+
+    // // place authentication code in c_buf
+    // result = signal_hmac_sha256_final(builder->global_context, hmac_context, &c_buf);
+    // if (result < 0) {
+    //     goto complete;
+    // }
     
-    signal_hmac_sha256_cleanup(builder->global_context, hmac_context);
+    // signal_hmac_sha256_cleanup(builder->global_context, hmac_context);
 
-    // generate value for s
-    // s = r+cxmodq
-    sc_muladd(signal_buffer_data(s_buf), get_private_data(ec_key_pair_get_private(our_base_key)), signal_buffer_data(c_buf), signal_buffer_data(r_buf));
+    // // generate value for s
+    // // s = r+cxmodq
+    // sc_muladd(signal_buffer_data(s_buf), get_private_data(ec_key_pair_get_private(our_base_key)), signal_buffer_data(c_buf), signal_buffer_data(r_buf));
 
-    // generate Xfull
-    ge_scalarmult_base(&Xfull, get_private_data(ec_key_pair_get_private(our_base_key)));
-    ge_p3_tobytes_128(signal_buffer_data(Xfull_buf), &Xfull);
+    // // generate Xfull
+    // ge_scalarmult_base(&Xfull, get_private_data(ec_key_pair_get_private(our_base_key)));
+    // ge_p3_tobytes_128(signal_buffer_data(Xfull_buf), &Xfull);
 
-    // generate Rfull
-    ge_scalarmult_base(&Rfull, r_buf->data);
-    ge_p3_tobytes_128(signal_buffer_data(Rfull_buf), &Rfull);
+    // // generate Rfull
+    // ge_scalarmult_base(&Rfull, r_buf->data);
+    // ge_p3_tobytes_128(signal_buffer_data(Rfull_buf), &Rfull);
 
-    ge_scalarmult_base(&alice_lhs_pre, session_pre_key_bundle_get_shat(bundle));
+    // ge_scalarmult_base(&alice_lhs_pre, session_pre_key_bundle_get_shat(bundle));
 
-    result = alice_signal_protocol_parameters_create(&parameters,
-            our_identity_key,
-            our_base_key,
-            their_identity_key,
-            their_signed_pre_key,
-            their_one_time_pre_key,
-            their_signed_pre_key);
-    if(result < 0) {
-        goto complete;
-    }
+    // result = alice_signal_protocol_parameters_create(&parameters,
+    //         our_identity_key,
+    //         our_base_key,
+    //         their_identity_key,
+    //         their_signed_pre_key,
+    //         their_one_time_pre_key,
+    //         their_signed_pre_key);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
-    if(!session_record_is_fresh(record)) {
-        result = session_record_archive_current_state(record);
-        if(result < 0) {
-            goto complete;
-        }
-    }
+    // if(!session_record_is_fresh(record)) {
+    //     result = session_record_archive_current_state(record);
+    //     if(result < 0) {
+    //         goto complete;
+    //     }
+    // }
 
-    state = session_record_get_state(record);
+    // state = session_record_get_state(record);
 
-    result = ratcheting_session_alice_initialize(
-            state, parameters,
-            builder->global_context);
-    if(result < 0) {
-        goto complete;
-    }
+    // result = ratcheting_session_alice_initialize(
+    //         state, parameters,
+    //         builder->global_context);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
-    session_state_set_unacknowledged_pre_key_message(state,
-            has_their_one_time_pre_key_id ? &their_one_time_pre_key_id : 0,
-            session_pre_key_bundle_get_signed_pre_key_id(bundle),
-            ec_key_pair_get_public(our_base_key));
+    // session_state_set_unacknowledged_pre_key_message(state,
+    //         has_their_one_time_pre_key_id ? &their_one_time_pre_key_id : 0,
+    //         session_pre_key_bundle_get_signed_pre_key_id(bundle),
+    //         ec_key_pair_get_public(our_base_key));
 
-    result = signal_protocol_identity_get_local_registration_id(builder->store, &local_registration_id);
-    if(result < 0) {
-        goto complete;
-    }
+    // result = signal_protocol_identity_get_local_registration_id(builder->store, &local_registration_id);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
-    session_state_set_local_registration_id(state, local_registration_id);
-    session_state_set_remote_registration_id(state,
-            session_pre_key_bundle_get_registration_id(bundle));
-    session_state_set_alice_base_key(state, ec_key_pair_get_public(our_base_key));
+    // session_state_set_local_registration_id(state, local_registration_id);
+    // session_state_set_remote_registration_id(state,
+    //         session_pre_key_bundle_get_registration_id(bundle));
+    // session_state_set_alice_base_key(state, ec_key_pair_get_public(our_base_key));
 
-    result = signal_protocol_session_store_session(builder->store, builder->remote_address, record);
-    if(result < 0) {
-        goto complete;
-    }
+    // result = signal_protocol_session_store_session(builder->store, builder->remote_address, record);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
-    result = signal_protocol_identity_save_identity(builder->store,
-            builder->remote_address,
-            their_identity_key);
-    if(result < 0) {
-        goto complete;
-    }
+    // result = signal_protocol_identity_save_identity(builder->store,
+    //         builder->remote_address,
+    //         their_identity_key);
+    // if(result < 0) {
+    //     goto complete;
+    // }
 
 complete:
     SIGNAL_UNREF(record);
