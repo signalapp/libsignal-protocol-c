@@ -1562,6 +1562,9 @@ session_pre_key_bundle *create_alice_pre_key_bundle(signal_protocol_store_contex
             signal_buffer_len(alice_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
+    uint8_t alice_Rhatfull = 0;
+    uint8_t alice_shat = 0;
+    uint8_t alice_chat = 0;
     session_pre_key_bundle *alice_pre_key_bundle = 0;
     result = session_pre_key_bundle_create(&alice_pre_key_bundle,
             1, 1,
@@ -1569,7 +1572,10 @@ session_pre_key_bundle *create_alice_pre_key_bundle(signal_protocol_store_contex
             ec_key_pair_get_public(alice_unsigned_pre_key),
             alice_signed_pre_key_id, alice_signed_pre_key_public,
             signal_buffer_data(signature), signal_buffer_len(signature),
-            ratchet_identity_key_pair_get_public(alice_identity_key_pair));
+            ratchet_identity_key_pair_get_public(alice_identity_key_pair),
+            &alice_Rhatfull,
+            &alice_shat,
+            &alice_chat);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *signed_pre_key_record = 0;
@@ -1634,6 +1640,9 @@ session_pre_key_bundle *create_bob_pre_key_bundle(signal_protocol_store_context 
             signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
+    uint8_t bob_Rhatfull = 0;
+    uint8_t bob_shat = 0;
+    uint8_t bob_chat = 0;
     session_pre_key_bundle *bob_pre_key_bundle = 0;
     result = session_pre_key_bundle_create(&bob_pre_key_bundle,
             1, 1,
@@ -1641,7 +1650,10 @@ session_pre_key_bundle *create_bob_pre_key_bundle(signal_protocol_store_context 
             ec_key_pair_get_public(bob_unsigned_pre_key),
             bob_signed_pre_key_id, bob_signed_pre_key_public,
             signal_buffer_data(signature), signal_buffer_len(signature),
-            ratchet_identity_key_pair_get_public(bob_identity_key_pair));
+            ratchet_identity_key_pair_get_public(bob_identity_key_pair),
+            &bob_Rhatfull,
+            &bob_shat,
+            &bob_chat);
     ck_assert_int_eq(result, 0);
 
     session_signed_pre_key *signed_pre_key_record = 0;
