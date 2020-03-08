@@ -277,11 +277,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
             goto complete;
         }
 
-        // TODO: (Ana) Need full points for Y and Rhat to be passed along inside Bob's pre_key_bundle, 
-        //        check what the appropriate type/size would be
-        //          - can Alice know rhat and generate Rhat herself or she only sees Rhat??
-        
-        uint8_t *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle); //signal_buffer or uint_8?
+        uint8_t *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle);
         ge_p3 Rhatfull;
         ge_frombytes_128(&Rhatfull, Rhatfull_buf);
 
