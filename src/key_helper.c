@@ -8,7 +8,8 @@
 #include "signal_protocol_internal.h"
 #include "utlist.h"
 #include "sc.h"
-
+#include <string.h> 
+#include "ge.h"
 #define DJB_KEY_LEN 32
 
 struct signal_protocol_key_helper_pre_key_list_node
@@ -204,6 +205,55 @@ void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key
     }
 }
 
+int signal_protocol_key_helper_generate_rhat(signal_context *global_context, signal_buffer *rhat_buf) {
+    ec_private_key *rhat = 0;
+    int result;
+    result = curve_generate_private_key(global_context, &rhat);
+    if (result >= 0) {
+       rhat_buf = signal_buffer_create(get_private_data(rhat), DJB_KEY_LEN);
+    }
+    return result;
+}
+
+int signal_protocol_key_helper_generate_chat(signal_context *global_context, const ratchet_identity_key_pair *identity_key_pair, ec_public_key *public_key, signal_buffer *chat_buf) {
+    void *hmac_context = 0;
+    uint8_t csalt[DJB_KEY_LEN];
+    memset(csalt, 0, sizeof(csalt));
+    int result;
+    // initialize HMAC_CTX
+    result = signal_hmac_sha256_init(global_context, &hmac_context, csalt, DJB_KEY_LEN);
+    if (result < 0) {
+        goto complete;
+    }
+
+    // digest input message stream B
+    result = signal_hmac_sha256_update(global_context, hmac_context, get_public_data(ratchet_identity_key_pair_get_public(identity_key_pair)), DJB_KEY_LEN);
+    if (result < 0) {
+        goto complete;
+    }
+
+    // digest input message stream Y
+    result = signal_hmac_sha256_update(global_context, hmac_context, get_public_data(public_key), DJB_KEY_LEN);
+    if (result < 0) {
+        goto complete;
+    }
+
+    // place authentication code in chat_buf
+    result = signal_hmac_sha256_final(global_context, hmac_context, &chat_buf);
+    if (result < 0) {
+        goto complete;
+    }
+    
+    signal_hmac_sha256_cleanup(global_context, hmac_context);
+
+ complete:
+    return result;
+}
+
+void signal_protocol_key_helper_generate_shat(ec_key_pair *ec_pair, signal_buffer *chat_buf, signal_buffer *rhat_buf, signal_buffer *shat_buf) {
+    sc_muladd(shat_buf->data, get_private_data(ec_key_pair_get_private(ec_pair)), signal_buffer_data(chat_buf), signal_buffer_data(rhat_buf));
+}
+
 int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
         const ratchet_identity_key_pair *identity_key_pair,
         uint32_t signed_pre_key_id,
@@ -216,9 +266,17 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     signal_buffer *public_buf = 0;
     signal_buffer *signature_buf = 0;
     signal_buffer *rhat_buf = 0;
-    signal_buffer *Rhat_buf = 0;
+    ge_p3 Rhatfull;
+    signal_buffer *Rhatfull_buf = 0;
     signal_buffer *shat_buf = 0;
     signal_buffer *chat_buf = 0;
+    ge_p3 Yfull;
+    signal_buffer *Yfull_buf = 0;
+    rhat_buf = signal_buffer_alloc(DJB_KEY_LEN);
+    chat_buf = signal_buffer_alloc(DJB_KEY_LEN);
+    shat_buf = signal_buffer_alloc(DJB_KEY_LEN);
+    Rhatfull_buf = signal_buffer_alloc(128);
+    Yfull_buf = signal_buffer_alloc(128);
     ec_public_key *public_key = 0;
     ec_private_key *private_key = 0;
 
@@ -247,62 +305,38 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     }
 
     // generate random value for rhat
-    ec_private_key *rhat = 0;
-    result = curve_generate_private_key(global_context, &rhat);
+    result = signal_protocol_key_helper_generate_rhat(global_context, rhat_buf);
     if (result < 0) {
         goto complete;
-    }
-    rhat_buf = signal_buffer_create(get_private_data(rhat), DJB_KEY_LEN);
-
-    // this will be later removed
-    uint8_t arr[32];
-    memset(arr, 0, 32);
-    Rhat_buf = signal_buffer_create(arr, 32);
+    }    
 
     // generate hash value for chat
-    void *hmac_context = 0;
-    uint8_t csalt[DJB_KEY_LEN];
-    memset(csalt, 0, sizeof(csalt));
-    
-    // initialize HMAC_CTX
-    result = signal_hmac_sha256_init(global_context, &hmac_context, csalt, DJB_KEY_LEN);
+    result = signal_protocol_key_helper_generate_chat(global_context, identity_key_pair, public_key, chat_buf);
     if (result < 0) {
         goto complete;
     }
 
-    // digest input message stream B
-    result = signal_hmac_sha256_update(global_context, hmac_context, get_public_data(ratchet_identity_key_pair_get_public(identity_key_pair)), DJB_KEY_LEN);
-    if (result < 0) {
-        goto complete;
-    }
-
-    // digest input message stream Y
-    result = signal_hmac_sha256_update(global_context, hmac_context, get_public_data(public_key), DJB_KEY_LEN);
-    if (result < 0) {
-        goto complete;
-    }
-
-    // place authentication code in chat_buf
-    result = signal_hmac_sha256_final(global_context, hmac_context, &chat_buf);
-    if (result < 0) {
-        goto complete;
-    }
-    
-    signal_hmac_sha256_cleanup(global_context, hmac_context);
-    
     // generate value for shat 
     // shat = rhat + chat*y
-    shat_buf = signal_buffer_alloc(32);
-    sc_muladd(shat_buf->data, get_private_data(ec_key_pair_get_private(ec_pair)), signal_buffer_data(chat_buf), signal_buffer_data(rhat_buf));
+    signal_protocol_key_helper_generate_shat(ec_pair, chat_buf, rhat_buf, shat_buf);
+
+    // generate value for Rhatfull
+    ge_scalarmult_base(&Rhatfull, rhat_buf->data);
+    ge_p3_tobytes_128(Rhatfull_buf->data, &Rhatfull);
+
+    // generate value for Yfull
+    ge_scalarmult_base(&Yfull, get_private_data(ec_key_pair_get_private(ec_pair)));
+    ge_p3_tobytes_128(Yfull_buf->data, &Yfull);
 
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,
             signal_buffer_data(signature_buf),
             signal_buffer_len(signature_buf),
             signal_buffer_data(rhat_buf),
-            signal_buffer_data(Rhat_buf),
+            signal_buffer_data(Rhatfull_buf),
             signal_buffer_data(shat_buf),
-            signal_buffer_data(chat_buf));
+            signal_buffer_data(chat_buf),
+            signal_buffer_data(Yfull_buf));
 
 complete:
     SIGNAL_UNREF(ec_pair);
