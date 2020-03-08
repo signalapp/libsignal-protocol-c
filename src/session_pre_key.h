@@ -27,7 +27,7 @@ void session_pre_key_destroy(signal_type_base *type);
 int session_signed_pre_key_create(session_signed_pre_key **pre_key,
         uint32_t id, uint64_t timestamp, ec_key_pair *key_pair,
         const uint8_t *signature, size_t signature_len, 
-        const uint8_t *rhat, const uint8_t *Rhat, const uint8_t *shat, const uint8_t *chat);
+        const uint8_t *rhat, const uint8_t *Rhatfull, const uint8_t *shat, const uint8_t *chat, const uint8_t *Yfull);
 int session_signed_pre_key_serialize(signal_buffer **buffer, const session_signed_pre_key *pre_key);
 int session_signed_pre_key_deserialize(session_signed_pre_key **pre_key, const uint8_t *data, size_t len, signal_context *global_context);
 
@@ -37,12 +37,14 @@ ec_key_pair *session_signed_pre_key_get_key_pair(const session_signed_pre_key *p
 const uint8_t *session_signed_pre_key_get_signature(const session_signed_pre_key *pre_key);
 size_t session_signed_pre_key_get_signature_len(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre_key);
-const uint8_t *session_signed_pre_key_get_Rhat(const session_signed_pre_key *pre_key);
+const uint8_t *session_signed_pre_key_get_Rhatfull(const session_signed_pre_key *pre_key);
+const uint8_t *session_signed_pre_key_get_Yfull(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre_key);
 const uint8_t *session_pre_key_bundle_get_Rhatfull(const session_pre_key_bundle *pre_key_bundle);
 const uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle);
 const uint8_t *session_pre_key_bundle_get_chat(const session_pre_key_bundle *pre_key_bundle);
+const uint8_t *session_pre_key_bundle_get_Yfull(const session_pre_key_bundle *pre_key_bundle);
 
 
 void session_signed_pre_key_destroy(signal_type_base *type);
@@ -57,7 +59,8 @@ int session_pre_key_bundle_create(session_pre_key_bundle **bundle,
         ec_public_key *identity_key,
         const uint8_t *Rhatfull,
         const uint8_t *shat,
-        const uint8_t *chat);
+        const uint8_t *chat,
+        const uint8_t *Yfull);
 
 uint32_t session_pre_key_bundle_get_registration_id(const session_pre_key_bundle *bundle);
 int session_pre_key_bundle_get_device_id(const session_pre_key_bundle *bundle);
