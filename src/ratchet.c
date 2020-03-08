@@ -598,10 +598,6 @@ ec_private_key *ratchet_identity_key_pair_get_private(const ratchet_identity_key
     return key_pair->private_key;
 }
 
-void ratchet_identity_key_pair_set_public(const ratchet_identity_key_pair *key_pair) {
-    ec_key_pair_set_public(key_pair);
-}
-
 void ratchet_identity_key_pair_destroy(signal_type_base *type)
 {
     ratchet_identity_key_pair *key_pair = (ratchet_identity_key_pair *)type;
