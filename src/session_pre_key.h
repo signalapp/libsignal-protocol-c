@@ -36,15 +36,15 @@ uint64_t session_signed_pre_key_get_timestamp(const session_signed_pre_key *pre_
 ec_key_pair *session_signed_pre_key_get_key_pair(const session_signed_pre_key *pre_key);
 const uint8_t *session_signed_pre_key_get_signature(const session_signed_pre_key *pre_key);
 size_t session_signed_pre_key_get_signature_len(const session_signed_pre_key *pre_key);
-const uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre_key);
-const uint8_t *session_signed_pre_key_get_Rhatfull(const session_signed_pre_key *pre_key);
-const uint8_t *session_signed_pre_key_get_Yfull(const session_signed_pre_key *pre_key);
-const uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key);
-const uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre_key);
-const uint8_t *session_pre_key_bundle_get_Rhatfull(const session_pre_key_bundle *pre_key_bundle);
-const uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle);
-const uint8_t *session_pre_key_bundle_get_chat(const session_pre_key_bundle *pre_key_bundle);
-const uint8_t *session_pre_key_bundle_get_Yfull(const session_pre_key_bundle *pre_key_bundle);
+uint8_t *session_signed_pre_key_get_rhat(const session_signed_pre_key *pre_key);
+uint8_t *session_signed_pre_key_get_Rhatfull(const session_signed_pre_key *pre_key);
+uint8_t *session_signed_pre_key_get_Yfull(const session_signed_pre_key *pre_key);
+uint8_t *session_signed_pre_key_get_shat(const session_signed_pre_key *pre_key);
+uint8_t *session_signed_pre_key_get_chat(const session_signed_pre_key *pre_key);
+uint8_t *session_pre_key_bundle_get_Rhatfull(const session_pre_key_bundle *pre_key_bundle);
+uint8_t *session_pre_key_bundle_get_shat(const session_pre_key_bundle *pre_key_bundle);
+uint8_t *session_pre_key_bundle_get_chat(const session_pre_key_bundle *pre_key_bundle);
+uint8_t *session_pre_key_bundle_get_Yfull(const session_pre_key_bundle *pre_key_bundle);
 
 
 void session_signed_pre_key_destroy(signal_type_base *type);
