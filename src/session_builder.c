@@ -245,8 +245,10 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     uint32_t local_registration_id = 0;
     signal_buffer *r_buf = 0;
     signal_buffer *c_buf = 0;
+    r_buf = signal_buffer_alloc(DJB_KEY_LEN);
     c_buf = signal_buffer_alloc(DJB_KEY_LEN);
     signal_buffer *s_buf = 0;
+    s_buf = signal_buffer_alloc(DJB_KEY_LEN);
     ge_p3 Xfull;
     signal_buffer *Xfull_buf = 0;
     ge_p3 Rfull;
@@ -255,8 +257,8 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
     Rfull_buf = signal_buffer_alloc(128);
     ge_p3 alice_lhs_pre;
     ge_p3 alice_rhs_pre;
-    uint8_t alice_lhs[DJB_KEY_LEN];
-    uint8_t alice_rhs[DJB_KEY_LEN];
+    uint8_t *alice_lhs = malloc(DJB_KEY_LEN);
+    uint8_t *alice_rhs = malloc(DJB_KEY_LEN);
 
     assert(builder);
     assert(builder->store);
@@ -287,11 +289,7 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
             goto complete;
         }
 
-        // TODO: (Ana) Need full points for Y and Rhat to be passed along inside Bob's pre_key_bundle, 
-        //        check what the appropriate type/size would be
-        //          - can Alice know rhat and generate Rhat herself or she only sees Rhat??
-        
-        uint8_t *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle); //signal_buffer or uint_8?
+        uint8_t *Rhatfull_buf = session_pre_key_bundle_get_Rhatfull(bundle);
         ge_p3 Rhatfull;
         ge_frombytes_128(&Rhatfull, Rhatfull_buf);
 
@@ -311,14 +309,14 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
         justx3(alice_lhs,&alice_lhs_pre);
         justx3(alice_rhs,&alice_rhs_pre);
          
-        int ret = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
+        result = memcmp(alice_lhs,alice_rhs,DJB_KEY_LEN);
          
-        if (ret!=0) {
+        if (result!=0) {
         printf("test failed!\n");
         printf("quiting\n");
-        return -3;
+        goto complete;
         } else printf("\tpassed.\n");
-
+    
         result = curve_verify_signature(identity_key,
                 signal_buffer_data(serialized_signed_pre_key),
                 signal_buffer_len(serialized_signed_pre_key),
@@ -413,16 +411,15 @@ int session_builder_process_pre_key_bundle(session_builder *builder, session_pre
 
     // generate value for s
     // s = r+cxmodq
-    s_buf = signal_buffer_alloc(DJB_KEY_LEN);
-    sc_muladd(s_buf->data, get_private_data(ec_key_pair_get_private(our_base_key)), signal_buffer_data(c_buf), signal_buffer_data(r_buf));
+    sc_muladd(signal_buffer_data(s_buf), get_private_data(ec_key_pair_get_private(our_base_key)), signal_buffer_data(c_buf), signal_buffer_data(r_buf));
 
     // generate Xfull
     ge_scalarmult_base(&Xfull, get_private_data(ec_key_pair_get_private(our_base_key)));
-    ge_p3_tobytes_128(Xfull_buf->data, &Xfull);
+    ge_p3_tobytes_128(signal_buffer_data(Xfull_buf), &Xfull);
 
     // generate Rfull
     ge_scalarmult_base(&Rfull, r_buf->data);
-    ge_p3_tobytes_128(Rfull_buf->data, &Rfull);
+    ge_p3_tobytes_128(signal_buffer_data(Rfull_buf), &Rfull);
 
     ge_scalarmult_base(&alice_lhs_pre, session_pre_key_bundle_get_shat(bundle));
 
