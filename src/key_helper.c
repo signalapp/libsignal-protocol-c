@@ -205,17 +205,17 @@ void signal_protocol_key_helper_key_list_free(signal_protocol_key_helper_pre_key
     }
 }
 
-int signal_protocol_key_helper_generate_rhat(signal_context *global_context, signal_buffer *rhat_buf) {
+int signal_protocol_key_helper_generate_rhat(signal_context *global_context, signal_buffer **rhat_buf) {
     ec_private_key *rhat = 0;
     int result;
     result = curve_generate_private_key(global_context, &rhat);
     if (result >= 0) {
-       rhat_buf = signal_buffer_create(get_private_data(rhat), DJB_KEY_LEN);
+       *rhat_buf = signal_buffer_create(get_private_data(rhat), DJB_KEY_LEN);
     }
     return result;
 }
 
-int signal_protocol_key_helper_generate_chat(signal_context *global_context, const ratchet_identity_key_pair *identity_key_pair, ec_public_key *public_key, signal_buffer *chat_buf) {
+int signal_protocol_key_helper_generate_chat(signal_context *global_context, const ratchet_identity_key_pair *identity_key_pair, ec_public_key *public_key, signal_buffer **chat_buf) {
     void *hmac_context = 0;
     uint8_t csalt[DJB_KEY_LEN];
     memset(csalt, 0, sizeof(csalt));
@@ -239,7 +239,7 @@ int signal_protocol_key_helper_generate_chat(signal_context *global_context, con
     }
 
     // place authentication code in chat_buf
-    result = signal_hmac_sha256_final(global_context, hmac_context, &chat_buf);
+    result = signal_hmac_sha256_final(global_context, hmac_context, chat_buf);
     if (result < 0) {
         goto complete;
     }
@@ -251,7 +251,7 @@ int signal_protocol_key_helper_generate_chat(signal_context *global_context, con
 }
 
 void signal_protocol_key_helper_generate_shat(ec_key_pair *ec_pair, signal_buffer *chat_buf, signal_buffer *rhat_buf, signal_buffer *shat_buf) {
-    sc_muladd(shat_buf->data, get_private_data(ec_key_pair_get_private(ec_pair)), signal_buffer_data(chat_buf), signal_buffer_data(rhat_buf));
+    sc_muladd(signal_buffer_data(shat_buf), get_private_data(ec_key_pair_get_private(ec_pair)), signal_buffer_data(chat_buf), signal_buffer_data(rhat_buf));
 }
 
 int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **signed_pre_key,
@@ -305,13 +305,16 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     }
 
     // generate random value for rhat
-    result = signal_protocol_key_helper_generate_rhat(global_context, rhat_buf);
+    result = signal_protocol_key_helper_generate_rhat(global_context, &rhat_buf);
     if (result < 0) {
         goto complete;
     }    
 
     // generate hash value for chat
-    result = signal_protocol_key_helper_generate_chat(global_context, identity_key_pair, public_key, chat_buf);
+    result = signal_protocol_key_helper_generate_chat(global_context, identity_key_pair, public_key, &chat_buf);
+    // "clamping" suggested in Alex's code
+    chat_buf->data[31] &= 127; 
+    chat_buf->data[31] |= 64;
     if (result < 0) {
         goto complete;
     }
@@ -321,12 +324,12 @@ int signal_protocol_key_helper_generate_signed_pre_key(session_signed_pre_key **
     signal_protocol_key_helper_generate_shat(ec_pair, chat_buf, rhat_buf, shat_buf);
 
     // generate value for Rhatfull
-    ge_scalarmult_base(&Rhatfull, rhat_buf->data);
-    ge_p3_tobytes_128(Rhatfull_buf->data, &Rhatfull);
+    ge_scalarmult_base(&Rhatfull, signal_buffer_data(rhat_buf));
+    ge_p3_tobytes_128(signal_buffer_data(Rhatfull_buf), &Rhatfull);
 
     // generate value for Yfull
     ge_scalarmult_base(&Yfull, get_private_data(ec_key_pair_get_private(ec_pair)));
-    ge_p3_tobytes_128(Yfull_buf->data, &Yfull);
+    ge_p3_tobytes_128(signal_buffer_data(Yfull_buf), &Yfull);
 
     result = session_signed_pre_key_create(&result_signed_pre_key,
             signed_pre_key_id, timestamp, ec_pair,
