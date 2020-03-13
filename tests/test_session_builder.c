@@ -671,6 +671,11 @@ START_TEST(test_bad_signed_pre_key_signature)
     result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
+    // Generate Bob's signed pre key with actual Schnorr proof values included
+    session_signed_pre_key *bob_signed_pre_key = 0;
+    result = signal_protocol_key_helper_generate_signed_pre_key(&bob_signed_pre_key, bob_identity_key_pair, 22, time(0), global_context);
+    ck_assert_int_eq(result, 0);
+
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
     result = ec_public_key_serialize(&bob_signed_pre_key_public_serialized,
             ec_key_pair_get_public(bob_signed_pre_key_pair));
@@ -695,10 +700,6 @@ START_TEST(test_bad_signed_pre_key_signature)
         modified_signature_data[i / 8] ^= (0x01 << ((uint8_t)i % 8));
 
         /* Create a pre key bundle */
-        uint8_t Rhatfull = 0;
-        uint8_t shat = 0;
-        uint8_t chat = 0;
-        uint8_t Yfull = 0;
         session_pre_key_bundle *bob_pre_key = 0;
         result = session_pre_key_bundle_create(&bob_pre_key,
                 bob_local_registration_id,
@@ -710,10 +711,10 @@ START_TEST(test_bad_signed_pre_key_signature)
                 modified_signature_data,
                 signature_len,
                 ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-                &Rhatfull,
-                &shat,
-                &chat,
-                &Yfull);
+                session_signed_pre_key_get_Rhatfull(bob_signed_pre_key),
+                session_signed_pre_key_get_shat(bob_signed_pre_key),
+                session_signed_pre_key_get_chat(bob_signed_pre_key),
+                session_signed_pre_key_get_Yfull(bob_signed_pre_key));
         ck_assert_int_eq(result, 0);
 
         /* Process the bundle and make sure we fail with an invalid key error */
@@ -725,10 +726,6 @@ START_TEST(test_bad_signed_pre_key_signature)
     }
 
     /* Create a correct pre key bundle */
-    uint8_t Rhatfull = 0;
-    uint8_t shat = 0;
-    uint8_t chat = 0;
-    uint8_t Yfull = 0;
     session_pre_key_bundle *bob_pre_key = 0;
     result = session_pre_key_bundle_create(&bob_pre_key,
             bob_local_registration_id,
@@ -740,10 +737,10 @@ START_TEST(test_bad_signed_pre_key_signature)
             signal_buffer_data(bob_signed_pre_key_signature),
             signature_len,
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &Rhatfull,
-            &shat,
-            &chat,
-            &Yfull);
+            session_signed_pre_key_get_Rhatfull(bob_signed_pre_key),
+            session_signed_pre_key_get_shat(bob_signed_pre_key),
+            session_signed_pre_key_get_chat(bob_signed_pre_key),
+            session_signed_pre_key_get_Yfull(bob_signed_pre_key));
     ck_assert_int_eq(result, 0);
 
     /* Process the bundle and make sure we do not fail */
@@ -1763,7 +1760,7 @@ Suite *session_builder_suite(void)
     tcase_add_test(tcase, test_schnorr_verification);
     tcase_add_test(tcase, test_basic_pre_key_v2);
 //     tcase_add_test(tcase, test_basic_pre_key_v3);
-//     tcase_add_test(tcase, test_bad_signed_pre_key_signature);
+    tcase_add_test(tcase, test_bad_signed_pre_key_signature);
 //     tcase_add_test(tcase, test_repeat_bundle_message_v2);
 //     tcase_add_test(tcase, test_repeat_bundle_message_v3);
 //     tcase_add_test(tcase, test_bad_message_bundle);
