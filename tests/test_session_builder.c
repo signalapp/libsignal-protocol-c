@@ -182,10 +182,8 @@ START_TEST(test_basic_pre_key_v2)
     result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
 
-    uint8_t Rhatfull = 0;
-    uint8_t shat = 0;
-    uint8_t chat = 0;
-    uint8_t Yfull = 0;
+    // the last buffers passed to this function are usually generated as part of the signed_pre_key 
+    // but the premise of this unit test is that there is no signed pre key 
     session_pre_key_bundle *bob_pre_key = 0;
     result = session_pre_key_bundle_create(&bob_pre_key,
             bob_local_registration_id,
@@ -194,10 +192,7 @@ START_TEST(test_basic_pre_key_v2)
             ec_key_pair_get_public(bob_pre_key_pair),
             0, 0, 0, 0, /* no signed pre key or signature */
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &Rhatfull,
-            &shat,
-            &chat,
-            &Yfull);
+            0, 0, 0, 0); /* no signed pre key or signature */ 
     ck_assert_int_eq(result, 0);
 
     /*
@@ -1766,7 +1761,7 @@ Suite *session_builder_suite(void)
     TCase *tcase = tcase_create("case");
     tcase_add_checked_fixture(tcase, test_setup, test_teardown);
     tcase_add_test(tcase, test_schnorr_verification);
-//     tcase_add_test(tcase, test_basic_pre_key_v2);
+    tcase_add_test(tcase, test_basic_pre_key_v2);
 //     tcase_add_test(tcase, test_basic_pre_key_v3);
 //     tcase_add_test(tcase, test_bad_signed_pre_key_signature);
 //     tcase_add_test(tcase, test_repeat_bundle_message_v2);
