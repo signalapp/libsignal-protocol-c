@@ -14,6 +14,7 @@
 #include "protocol.h"
 #include "test_common.h"
 #include "key_helper.h"
+#define DJB_KEY_LEN 32
 
 static signal_protocol_address alice_address = {
         "+14151111111", 12, 1
@@ -162,6 +163,31 @@ START_TEST(test_schnorr_verification)
         Bob can verify Alice's Schnorr proof here... 
         Access Alice's "s" by *state->alice_s_buf->data
     */
+     signal_buffer *s_buf = 0;
+     signal_buffer *c_buf = 0;
+     signal_buffer *Xfull_buf = 0;
+     signal_buffer *Rfull_buf = 0;
+     s_buf = signal_buffer_alloc(DJB_KEY_LEN);
+     c_buf = signal_buffer_alloc(DJB_KEY_LEN);
+     Xfull_buf = signal_buffer_alloc(128);
+     Rfull_buf = signal_buffer_alloc(128);  
+
+     s_buf = session_state_get_alice_s(state);
+     c_buf = session_state_get_alice_c(state);
+     Xfull_buf = session_state_get_alice_Xfull(state);
+     Rfull_buf = session_state_get_alice_Rfull(state);
+
+     uint8_t *bob_lhs = malloc(DJB_KEY_LEN);
+     uint8_t *bob_rhs = malloc(DJB_KEY_LEN);
+
+     build_bob_lhs(bob_lhs, &s_buf);
+     build_bob_rhs(bob_rhs, &c_buf, &Xfull_buf, &Rfull_buf);
+         
+    result = memcmp(bob_lhs,bob_rhs,DJB_KEY_LEN);
+         
+    if (result!=0) {
+        printf("Bob's schnoor test of Alice failed!\n");
+    } else printf("\t Bob's schnoor proof of Alice passed\n");  
 
     /* Cleanup */
     SIGNAL_UNREF(bob_pre_key);
