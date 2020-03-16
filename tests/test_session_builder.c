@@ -241,13 +241,14 @@ START_TEST(test_basic_pre_key_v3)
     result = curve_generate_key_pair(global_context, &bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    ec_key_pair *bob_signed_pre_key_pair = 0;
-    result = curve_generate_key_pair(global_context, &bob_signed_pre_key_pair);
-    ck_assert_int_eq(result, 0);
-
     ratchet_identity_key_pair *bob_identity_key_pair = 0;
     result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
+
+    session_signed_pre_key *bob_signed_pre_key_record = 0;
+    result = signal_protocol_key_helper_generate_signed_pre_key(&bob_signed_pre_key_record, bob_identity_key_pair, 22, time(0), global_context);
+    ck_assert_int_eq(result, 0);
+    ec_key_pair *bob_signed_pre_key_pair = session_signed_pre_key_get_key_pair(bob_signed_pre_key_record);
 
     signal_buffer *bob_signed_pre_key_public_serialized = 0;
     result = ec_public_key_serialize(&bob_signed_pre_key_public_serialized,
@@ -262,10 +263,6 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_len(bob_signed_pre_key_public_serialized));
     ck_assert_int_eq(result, 0);
 
-    uint8_t Rhatfull = 0;
-    uint8_t shat = 0;
-    uint8_t chat = 0;
-    uint8_t Yfull = 0;
     session_pre_key_bundle *bob_pre_key = 0;
     result = session_pre_key_bundle_create(&bob_pre_key,
             bob_local_registration_id,
@@ -277,10 +274,10 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &Rhatfull,
-            &shat,
-            &chat,
-            &Yfull);
+            session_signed_pre_key_get_Rhatfull(bob_signed_pre_key_record),
+            session_signed_pre_key_get_shat(bob_signed_pre_key_record),
+            session_signed_pre_key_get_chat(bob_signed_pre_key_record),
+            session_signed_pre_key_get_Yfull(bob_signed_pre_key_record));
     ck_assert_int_eq(result, 0);
 
     signal_buffer_free(bob_signed_pre_key_public_serialized);
@@ -336,29 +333,6 @@ START_TEST(test_basic_pre_key_v3)
     ck_assert_int_eq(result, 0);
 
     result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
-    ck_assert_int_eq(result, 0);
-
-    session_signed_pre_key *bob_signed_pre_key_record = 0;
-    signal_buffer *bob_signed_pre_key_rhat = 0;
-    signal_buffer *bob_signed_pre_key_Rhatfull = 0;
-    signal_buffer *bob_signed_pre_key_shat = 0;
-    signal_buffer *bob_signed_pre_key_chat = 0;
-    signal_buffer *bob_signed_pre_key_Yfull = 0;
-    bob_signed_pre_key_rhat = signal_buffer_alloc(32);
-    bob_signed_pre_key_Rhatfull = signal_buffer_alloc(128);
-    bob_signed_pre_key_shat = signal_buffer_alloc(32);
-    bob_signed_pre_key_chat = signal_buffer_alloc(32);
-    bob_signed_pre_key_Yfull = signal_buffer_alloc(128);
-    result = session_signed_pre_key_create(&bob_signed_pre_key_record,
-            22, time(0),
-            bob_signed_pre_key_pair,
-            signal_buffer_data(bob_signed_pre_key_signature),
-            signal_buffer_len(bob_signed_pre_key_signature),
-            signal_buffer_data(bob_signed_pre_key_rhat),
-            signal_buffer_data(bob_signed_pre_key_Rhatfull),
-            signal_buffer_data(bob_signed_pre_key_shat),
-            signal_buffer_data(bob_signed_pre_key_chat),
-            signal_buffer_data(bob_signed_pre_key_Yfull));
     ck_assert_int_eq(result, 0);
 
     result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
@@ -448,7 +422,6 @@ START_TEST(test_basic_pre_key_v3)
     SIGNAL_UNREF(bob_identity_key_pair); bob_identity_key_pair = 0;
     signal_buffer_free(bob_signed_pre_key_signature); bob_signed_pre_key_signature = 0;
     SIGNAL_UNREF(bob_pre_key_record); bob_pre_key_record = 0;
-    SIGNAL_UNREF(bob_signed_pre_key_record); bob_signed_pre_key_record = 0;
 
     /* Create Alice's new session data */
     setup_test_store_context(&alice_store, global_context);
@@ -461,11 +434,12 @@ START_TEST(test_basic_pre_key_v3)
     result = curve_generate_key_pair(global_context, &bob_pre_key_pair);
     ck_assert_int_eq(result, 0);
 
-    result = curve_generate_key_pair(global_context, &bob_signed_pre_key_pair);
-    ck_assert_int_eq(result, 0);
-
     result = signal_protocol_identity_get_key_pair(bob_store, &bob_identity_key_pair);
     ck_assert_int_eq(result, 0);
+
+    result = signal_protocol_key_helper_generate_signed_pre_key(&bob_signed_pre_key_record, bob_identity_key_pair, 23, time(0), global_context);
+    ck_assert_int_eq(result, 0);
+    bob_signed_pre_key_pair = session_signed_pre_key_get_key_pair(bob_signed_pre_key_record);
 
     result = ec_public_key_serialize(&bob_signed_pre_key_public_serialized,
             ec_key_pair_get_public(bob_signed_pre_key_pair));
@@ -488,10 +462,10 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(bob_identity_key_pair),
-            &Rhatfull,
-            &shat,
-            &chat,
-            &Yfull);
+            session_signed_pre_key_get_Rhatfull(bob_signed_pre_key_record),
+            session_signed_pre_key_get_shat(bob_signed_pre_key_record),
+            session_signed_pre_key_get_chat(bob_signed_pre_key_record),
+            session_signed_pre_key_get_Yfull(bob_signed_pre_key_record));
     ck_assert_int_eq(result, 0);
 
     signal_buffer_free(bob_signed_pre_key_public_serialized);
@@ -503,18 +477,6 @@ START_TEST(test_basic_pre_key_v3)
     ck_assert_int_eq(result, 0);
 
     result = signal_protocol_pre_key_store_key(bob_store, bob_pre_key_record);
-    ck_assert_int_eq(result, 0);
-
-    result = session_signed_pre_key_create(&bob_signed_pre_key_record,
-            23, time(0),
-            bob_signed_pre_key_pair,
-            signal_buffer_data(bob_signed_pre_key_signature),
-            signal_buffer_len(bob_signed_pre_key_signature),
-            signal_buffer_data(bob_signed_pre_key_rhat),
-            signal_buffer_data(bob_signed_pre_key_Rhatfull),
-            signal_buffer_data(bob_signed_pre_key_shat),
-            signal_buffer_data(bob_signed_pre_key_chat),
-            signal_buffer_data(bob_signed_pre_key_Yfull));
     ck_assert_int_eq(result, 0);
 
     result = signal_protocol_signed_pre_key_store_key(bob_store, bob_signed_pre_key_record);
@@ -584,10 +546,10 @@ START_TEST(test_basic_pre_key_v3)
             signal_buffer_data(bob_signed_pre_key_signature),
             signal_buffer_len(bob_signed_pre_key_signature),
             ratchet_identity_key_pair_get_public(alice_identity_key_pair),
-            &Rhatfull,
-            &shat,
-            &chat,
-            &Yfull);
+            session_signed_pre_key_get_Rhatfull(bob_signed_pre_key_record),
+            session_signed_pre_key_get_shat(bob_signed_pre_key_record),
+            session_signed_pre_key_get_chat(bob_signed_pre_key_record),
+            session_signed_pre_key_get_Yfull(bob_signed_pre_key_record));
     ck_assert_int_eq(result, 0);
 
     /* Have Alice process Bob's new pre key bundle, which should fail */
@@ -603,7 +565,6 @@ START_TEST(test_basic_pre_key_v3)
     signal_buffer_free(plaintext);
     SIGNAL_UNREF(outgoing_message);
     SIGNAL_UNREF(outgoing_message_copy);
-    SIGNAL_UNREF(bob_signed_pre_key_record);
     SIGNAL_UNREF(bob_pre_key_record);
     signal_buffer_free(bob_signed_pre_key_signature);
     SIGNAL_UNREF(bob_pre_key_pair);
@@ -1759,7 +1720,7 @@ Suite *session_builder_suite(void)
     tcase_add_checked_fixture(tcase, test_setup, test_teardown);
     tcase_add_test(tcase, test_schnorr_verification);
     tcase_add_test(tcase, test_basic_pre_key_v2);
-//     tcase_add_test(tcase, test_basic_pre_key_v3);
+    tcase_add_test(tcase, test_basic_pre_key_v3);
     tcase_add_test(tcase, test_bad_signed_pre_key_signature);
 //     tcase_add_test(tcase, test_repeat_bundle_message_v2);
 //     tcase_add_test(tcase, test_repeat_bundle_message_v3);
