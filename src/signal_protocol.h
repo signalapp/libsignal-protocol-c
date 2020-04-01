@@ -626,7 +626,7 @@ typedef struct signal_protocol_identity_key_store {
      * @param address the address of the remote client
      * @param key_data Pointer to the remote client's identity key, may be null
      * @param key_len Length of the remote client's identity key
-     * @return 0 on success, negative on failure
+     * @return 0 on success, 1 on the same identity key as already stored, negative on failure
      */
     int (*save_identity)(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
 

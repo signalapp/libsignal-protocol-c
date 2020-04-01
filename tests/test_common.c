@@ -646,7 +646,13 @@ int test_identity_key_store_save_identity(const signal_protocol_address *address
     HASH_FIND(hh, data->keys, &recipient_hash, sizeof(int64_t), s);
     if(s) {
         signal_buffer_free(s->identity_key);
-        s->identity_key = key_buf;
+        if (key_data == NULL) {
+            HASH_DEL(data->keys, s);
+            signal_buffer_free(key_buf);
+            return 0;
+        } else {
+            s->identity_key = key_buf;
+        }
     }
     else {
         s = malloc(sizeof(test_identity_store_key));

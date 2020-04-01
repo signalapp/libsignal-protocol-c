@@ -265,6 +265,7 @@ int session_cipher_decrypt_pre_key_signal_message(session_cipher *cipher,
     session_record *record = 0;
     int has_unsigned_pre_key_id = 0;
     uint32_t unsigned_pre_key_id = 0;
+    uint8_t identity_key_changed = 0;
 
     assert(cipher);
     signal_lock(cipher->global_context);
@@ -279,7 +280,7 @@ int session_cipher_decrypt_pre_key_signal_message(session_cipher *cipher,
         goto complete;
     }
 
-    result = session_builder_process_pre_key_signal_message(cipher->builder, record, ciphertext, &unsigned_pre_key_id);
+    result = session_builder_process_pre_key_signal_message(cipher->builder, record, ciphertext, &unsigned_pre_key_id, &identity_key_changed);
     if(result < 0) {
         goto complete;
     }
@@ -289,6 +290,10 @@ int session_cipher_decrypt_pre_key_signal_message(session_cipher *cipher,
             pre_key_signal_message_get_signal_message(ciphertext),
             &result_buf);
     if(result < 0) {
+        if(identity_key_changed) {
+            signal_protocol_identity_save_identity(cipher->store, cipher->remote_address, NULL);
+        }
+
         goto complete;
     }
 
