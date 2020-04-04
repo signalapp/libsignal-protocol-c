@@ -1,3 +1,5 @@
+syntax = "proto2";
+
 package textsecure;
 
 option java_package = "org.whispersystems.libsignal.protocol";

@@ -1,5 +1,6 @@
 if(BUILD_SHARED_LIBS)
 	find_library(M_LIB m)
+	find_library(PBC_LIB protobuf-c)
 endif()
 
 include_directories(
@@ -62,17 +63,15 @@ set(signal_protocol_SRCS
 )
 
 add_subdirectory(curve25519)
-add_subdirectory(protobuf-c)
 
 add_library(signal-protocol-c
 	${protobuf_SRCS}
 	${signal_protocol_SRCS}
 	$<TARGET_OBJECTS:curve25519>
-	$<TARGET_OBJECTS:protobuf-c>
 )
 
 if(BUILD_SHARED_LIBS)
-	target_link_libraries(signal-protocol-c ${M_LIB})
+	target_link_libraries(signal-protocol-c ${M_LIB} ${PBC_LIB})
 	set_target_properties(signal-protocol-c PROPERTIES
 		VERSION ${SIGNAL_PROTOCOL_C_VERSION}
 		SOVERSION ${SIGNAL_PROTOCOL_C_VERSION_MAJOR}

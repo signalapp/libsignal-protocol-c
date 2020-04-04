@@ -1,5 +1,6 @@
 enable_testing()
 find_library(M_LIB m)
+find_library(PBC_LIB protobuf-c)
 find_package(Check 0.9.10 REQUIRED)
 IF(NOT(APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
   find_package(OpenSSL 1.0 REQUIRED)
@@ -32,6 +33,7 @@ endif()
 
 set(LIBS ${LIBS}
 	${M_LIB}
+	${PBC_LIB}
 	${CHECK_LDFLAGS}
 	${OPENSSL_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
