@@ -34,14 +34,6 @@ typedef struct session_state_receiver_chain
     struct session_state_receiver_chain *prev, *next;
 } session_state_receiver_chain;
 
-typedef struct session_pending_key_exchange
-{
-    uint32_t sequence;
-    ec_key_pair *local_base_key;
-    ec_key_pair *local_ratchet_key;
-    ratchet_identity_key_pair *local_identity_key;
-} session_pending_key_exchange;
-
 typedef struct session_pending_pre_key
 {
     int has_pre_key_id;
@@ -65,9 +57,6 @@ struct session_state
     session_state_sender_chain sender_chain;
 
     session_state_receiver_chain *receiver_chain_head;
-
-    int has_pending_key_exchange;
-    session_pending_key_exchange pending_key_exchange;
 
     int has_pending_pre_key;
     session_pending_pre_key pending_pre_key;
@@ -100,21 +89,12 @@ static int session_state_serialize_prepare_message_keys(
         Textsecure__SessionStructure__Chain__MessageKey *message_key_structure);
 static void session_state_serialize_prepare_message_keys_free(
         Textsecure__SessionStructure__Chain__MessageKey *message_key_structure);
-static int session_state_serialize_prepare_pending_key_exchange(
-        session_pending_key_exchange *exchange,
-        Textsecure__SessionStructure__PendingKeyExchange *exchange_structure);
-static void session_state_serialize_prepare_pending_key_exchange_free(
-        Textsecure__SessionStructure__PendingKeyExchange *exchange_structure);
 static int session_state_serialize_prepare_pending_pre_key(
         session_pending_pre_key *pre_key,
         Textsecure__SessionStructure__PendingPreKey *pre_key_structure);
 static void session_state_serialize_prepare_pending_pre_key_free(
         Textsecure__SessionStructure__PendingPreKey *pre_key_structure);
 
-static int session_state_deserialize_protobuf_pending_key_exchange(
-        session_pending_key_exchange *result_exchange,
-        Textsecure__SessionStructure__PendingKeyExchange *exchange_structure,
-        signal_context *global_context);
 static int session_state_deserialize_protobuf_pending_pre_key(
         session_pending_pre_key *result_pre_key,
         Textsecure__SessionStructure__PendingPreKey *pre_key_structure,
@@ -315,21 +295,6 @@ int session_state_serialize_prepare(session_state *state, Textsecure__SessionStr
             i++;
         }
         session_structure->n_receiverchains = i;
-        if(result < 0) {
-            goto complete;
-        }
-    }
-
-    if(state->has_pending_key_exchange) {
-        session_structure->pendingkeyexchange = malloc(sizeof(Textsecure__SessionStructure__PendingKeyExchange));
-        if(!session_structure->pendingkeyexchange) {
-            result = SG_ERR_NOMEM;
-            goto complete;
-        }
-        textsecure__session_structure__pending_key_exchange__init(session_structure->pendingkeyexchange);
-        result = session_state_serialize_prepare_pending_key_exchange(
-                &state->pending_key_exchange,
-                session_structure->pendingkeyexchange);
         if(result < 0) {
             goto complete;
         }
@@ -567,76 +532,6 @@ static void session_state_serialize_prepare_message_keys_free(
     free(message_key_structure);
 }
 
-static int session_state_serialize_prepare_pending_key_exchange(
-        session_pending_key_exchange *exchange,
-        Textsecure__SessionStructure__PendingKeyExchange *exchange_structure)
-{
-    int result = 0;
-
-    exchange_structure->has_sequence = 1;
-    exchange_structure->sequence = exchange->sequence;
-
-    if(exchange->local_base_key) {
-        ec_public_key *public_key = 0;
-        ec_private_key *private_key = 0;
-
-        public_key = ec_key_pair_get_public(exchange->local_base_key);
-        result = ec_public_key_serialize_protobuf(&exchange_structure->localbasekey, public_key);
-        if(result < 0) {
-            goto complete;
-        }
-        exchange_structure->has_localbasekey = 1;
-
-        private_key = ec_key_pair_get_private(exchange->local_base_key);
-        result = ec_private_key_serialize_protobuf(&exchange_structure->localbasekeyprivate, private_key);
-        if(result < 0) {
-            goto complete;
-        }
-        exchange_structure->has_localbasekeyprivate = 1;
-    }
-
-    if(exchange->local_ratchet_key) {
-        ec_public_key *public_key;
-        ec_private_key *private_key;
-
-        public_key = ec_key_pair_get_public(exchange->local_ratchet_key);
-        result = ec_public_key_serialize_protobuf(&exchange_structure->localratchetkey, public_key);
-        if(result < 0) {
-            goto complete;
-        }
-        exchange_structure->has_localratchetkey = 1;
-
-        private_key = ec_key_pair_get_private(exchange->local_ratchet_key);
-        result = ec_private_key_serialize_protobuf(&exchange_structure->localratchetkeyprivate, private_key);
-        if(result < 0) {
-            goto complete;
-        }
-        exchange_structure->has_localratchetkeyprivate = 1;
-    }
-
-    if(exchange->local_identity_key) {
-        ec_public_key *public_key;
-        ec_private_key *private_key;
-
-        public_key = ratchet_identity_key_pair_get_public(exchange->local_identity_key);
-        result = ec_public_key_serialize_protobuf(&exchange_structure->localidentitykey, public_key);
-        if(result < 0) {
-            goto complete;
-        }
-        exchange_structure->has_localidentitykey = 1;
-
-        private_key = ratchet_identity_key_pair_get_private(exchange->local_identity_key);
-        result = ec_private_key_serialize_protobuf(&exchange_structure->localidentitykeyprivate, private_key);
-        if(result < 0) {
-            goto complete;
-        }
-        exchange_structure->has_localidentitykeyprivate = 1;
-    }
-
-complete:
-    return result;
-}
-
 static int session_state_serialize_prepare_pending_pre_key(
         session_pending_pre_key *pre_key,
         Textsecure__SessionStructure__PendingPreKey *pre_key_structure)
@@ -693,10 +588,6 @@ void session_state_serialize_prepare_free(Textsecure__SessionStructure *session_
         free(session_structure->receiverchains);
     }
 
-    if(session_structure->pendingkeyexchange) {
-        session_state_serialize_prepare_pending_key_exchange_free(session_structure->pendingkeyexchange);
-    }
-
     if(session_structure->pendingprekey) {
         session_state_serialize_prepare_pending_pre_key_free(session_structure->pendingprekey);
     }
@@ -733,30 +624,6 @@ static void session_state_serialize_prepare_chain_free(
         free(chain_structure->messagekeys);
     }
     free(chain_structure);
-}
-
-static void session_state_serialize_prepare_pending_key_exchange_free(
-        Textsecure__SessionStructure__PendingKeyExchange *exchange_structure)
-{
-    if(exchange_structure->has_localbasekey) {
-        free(exchange_structure->localbasekey.data);
-    }
-    if(exchange_structure->has_localbasekeyprivate) {
-        free(exchange_structure->localbasekeyprivate.data);
-    }
-    if(exchange_structure->has_localratchetkey) {
-        free(exchange_structure->localratchetkey.data);
-    }
-    if(exchange_structure->has_localratchetkeyprivate) {
-        free(exchange_structure->localratchetkeyprivate.data);
-    }
-    if(exchange_structure->has_localidentitykey) {
-        free(exchange_structure->localidentitykey.data);
-    }
-    if(exchange_structure->has_localidentitykeyprivate) {
-        free(exchange_structure->localidentitykeyprivate.data);
-    }
-    free(exchange_structure);
 }
 
 static void session_state_serialize_prepare_pending_pre_key_free(
@@ -860,16 +727,6 @@ int session_state_deserialize_protobuf(session_state **state, Textsecure__Sessio
         }
     }
 
-    if(session_structure->pendingkeyexchange) {
-        result = session_state_deserialize_protobuf_pending_key_exchange(
-                &result_state->pending_key_exchange,
-                session_structure->pendingkeyexchange, global_context);
-        if(result < 0) {
-            goto complete;
-        }
-        result_state->has_pending_key_exchange = 1;
-    }
-
     if(session_structure->pendingprekey) {
         result = session_state_deserialize_protobuf_pending_pre_key(
                 &result_state->pending_pre_key,
@@ -915,119 +772,6 @@ complete:
     return result;
 }
 
-static int session_state_deserialize_protobuf_pending_key_exchange(
-        session_pending_key_exchange *result_exchange,
-        Textsecure__SessionStructure__PendingKeyExchange *exchange_structure,
-        signal_context *global_context)
-{
-    int result = 0;
-
-    ec_key_pair *local_base_key = 0;
-    ec_public_key *local_base_key_public = 0;
-    ec_private_key *local_base_key_private = 0;
-
-    ec_key_pair *local_ratchet_key = 0;
-    ec_public_key *local_ratchet_key_public = 0;
-    ec_private_key *local_ratchet_key_private = 0;
-
-    ratchet_identity_key_pair *local_identity_key = 0;
-    ec_public_key *local_identity_key_public = 0;
-    ec_private_key *local_identity_key_private = 0;
-
-    if(exchange_structure->has_localbasekey && exchange_structure->has_localbasekeyprivate) {
-        result = curve_decode_point(&local_base_key_public,
-                exchange_structure->localbasekey.data,
-                exchange_structure->localbasekey.len,
-                global_context);
-        if(result < 0) {
-            goto complete;
-        }
-
-        result = curve_decode_private_point(&local_base_key_private,
-                exchange_structure->localbasekeyprivate.data,
-                exchange_structure->localbasekeyprivate.len,
-                global_context);
-        if(result < 0) {
-            goto complete;
-        }
-
-        result = ec_key_pair_create(&local_base_key,
-                local_base_key_public, local_base_key_private);
-        if(result < 0) {
-            goto complete;
-        }
-    }
-
-    if(exchange_structure->has_localratchetkey && exchange_structure->has_localratchetkeyprivate) {
-        result = curve_decode_point(&local_ratchet_key_public,
-                exchange_structure->localratchetkey.data,
-                exchange_structure->localratchetkey.len,
-                global_context);
-        if(result < 0) {
-            goto complete;
-        }
-
-        result = curve_decode_private_point(&local_ratchet_key_private,
-                exchange_structure->localratchetkeyprivate.data,
-                exchange_structure->localratchetkeyprivate.len,
-                global_context);
-        if(result < 0) {
-            goto complete;
-        }
-
-        result = ec_key_pair_create(&local_ratchet_key,
-                local_ratchet_key_public, local_ratchet_key_private);
-        if(result < 0) {
-            goto complete;
-        }
-    }
-
-    if(exchange_structure->has_localidentitykey && exchange_structure->has_localidentitykeyprivate) {
-        result = curve_decode_point(&local_identity_key_public,
-                exchange_structure->localidentitykey.data,
-                exchange_structure->localidentitykey.len,
-                global_context);
-        if(result < 0) {
-            goto complete;
-        }
-
-        result = curve_decode_private_point(&local_identity_key_private,
-                exchange_structure->localidentitykeyprivate.data,
-                exchange_structure->localidentitykeyprivate.len,
-                global_context);
-        if(result < 0) {
-            goto complete;
-        }
-
-        result = ratchet_identity_key_pair_create(&local_identity_key,
-                local_identity_key_public,
-                local_identity_key_private);
-        if(result < 0) {
-            goto complete;
-        }
-    }
-
-    result_exchange->sequence = exchange_structure->sequence;
-    result_exchange->local_base_key = local_base_key;
-    result_exchange->local_ratchet_key = local_ratchet_key;
-    result_exchange->local_identity_key = local_identity_key;
-
-complete:
-    SIGNAL_UNREF(local_base_key_public);
-    SIGNAL_UNREF(local_base_key_private);
-    SIGNAL_UNREF(local_ratchet_key_public);
-    SIGNAL_UNREF(local_ratchet_key_private);
-    SIGNAL_UNREF(local_identity_key_public);
-    SIGNAL_UNREF(local_identity_key_private);
-
-    if(result < 0) {
-        SIGNAL_UNREF(local_base_key);
-        SIGNAL_UNREF(local_ratchet_key);
-        SIGNAL_UNREF(local_identity_key);
-    }
-
-    return result;
-}
 
 static int session_state_deserialize_protobuf_pending_pre_key(
         session_pending_pre_key *result_pre_key,
@@ -1566,90 +1310,6 @@ ratchet_chain_key *session_state_get_receiver_chain_key(session_state *state, ec
     return result;
 }
 
-void session_state_set_pending_key_exchange(session_state *state,
-        uint32_t sequence,
-        ec_key_pair *our_base_key, ec_key_pair *our_ratchet_key,
-        ratchet_identity_key_pair *our_identity_key)
-{
-    assert(state);
-    assert(our_base_key);
-    assert(our_ratchet_key);
-    assert(our_identity_key);
-
-    if(state->pending_key_exchange.local_base_key) {
-        SIGNAL_UNREF(state->pending_key_exchange.local_base_key);
-        state->pending_key_exchange.local_base_key = 0;
-    }
-    if(state->pending_key_exchange.local_ratchet_key) {
-        SIGNAL_UNREF(state->pending_key_exchange.local_ratchet_key);
-        state->pending_key_exchange.local_ratchet_key = 0;
-    }
-    if(state->pending_key_exchange.local_identity_key) {
-        SIGNAL_UNREF(state->pending_key_exchange.local_identity_key);
-        state->pending_key_exchange.local_identity_key = 0;
-    }
-
-    SIGNAL_REF(our_base_key);
-    SIGNAL_REF(our_ratchet_key);
-    SIGNAL_REF(our_identity_key);
-
-    state->has_pending_key_exchange = 1;
-    state->pending_key_exchange.sequence = sequence;
-    state->pending_key_exchange.local_base_key = our_base_key;
-    state->pending_key_exchange.local_ratchet_key = our_ratchet_key;
-    state->pending_key_exchange.local_identity_key = our_identity_key;
-}
-
-uint32_t session_state_get_pending_key_exchange_sequence(session_state *state)
-{
-    assert(state);
-    if(state->has_pending_key_exchange) {
-        return state->pending_key_exchange.sequence;
-    }
-    else {
-        return 0;
-    }
-}
-
-ec_key_pair *session_state_get_pending_key_exchange_base_key(const session_state *state)
-{
-    assert(state);
-    if(state->has_pending_key_exchange) {
-        return state->pending_key_exchange.local_base_key;
-    }
-    else {
-        return 0;
-    }
-}
-
-ec_key_pair *session_state_get_pending_key_exchange_ratchet_key(const session_state *state)
-{
-    assert(state);
-    if(state->has_pending_key_exchange) {
-        return state->pending_key_exchange.local_ratchet_key;
-    }
-    else {
-        return 0;
-    }
-}
-
-ratchet_identity_key_pair *session_state_get_pending_key_exchange_identity_key(const session_state *state)
-{
-    assert(state);
-    if(state->has_pending_key_exchange) {
-        return state->pending_key_exchange.local_identity_key;
-    }
-    else {
-        return 0;
-    }
-}
-
-int session_state_has_pending_key_exchange(const session_state *state)
-{
-    assert(state);
-    return state->has_pending_key_exchange;
-}
-
 void session_state_set_unacknowledged_pre_key_message(session_state *state,
         const uint32_t *pre_key_id, uint32_t signed_pre_key_id, ec_public_key *base_key)
 {
@@ -1833,17 +1493,6 @@ void session_state_destroy(signal_type_base *type)
     }
     session_state_free_sender_chain(state);
     session_state_free_receiver_chain(state);
-    if(state->has_pending_key_exchange) {
-        if(state->pending_key_exchange.local_base_key) {
-            SIGNAL_UNREF(state->pending_key_exchange.local_base_key);
-        }
-        if(state->pending_key_exchange.local_ratchet_key) {
-            SIGNAL_UNREF(state->pending_key_exchange.local_ratchet_key);
-        }
-        if(state->pending_key_exchange.local_identity_key) {
-            SIGNAL_UNREF(state->pending_key_exchange.local_identity_key);
-        }
-    }
     if(state->has_pending_pre_key) {
         if(state->pending_pre_key.base_key) {
             SIGNAL_UNREF(state->pending_pre_key.base_key);

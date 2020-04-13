@@ -106,32 +106,6 @@ void fill_test_session_state(session_state *state, ec_public_key *receiver_chain
         SIGNAL_UNREF(receiver_chain_chain_key2);
     }
 
-    /* Set pending key exchange */
-    ec_key_pair *our_base_key;
-    result = curve_generate_key_pair(global_context, &our_base_key);
-    ck_assert_int_eq(result, 0);
-
-    ec_key_pair *our_ratchet_key;
-    result = curve_generate_key_pair(global_context, &our_ratchet_key);
-    ck_assert_int_eq(result, 0);
-
-    ec_key_pair *our_identity_key_pair;
-    result = curve_generate_key_pair(global_context, &our_identity_key_pair);
-    ck_assert_int_eq(result, 0);
-
-    ratchet_identity_key_pair *our_identity_key;
-    result = ratchet_identity_key_pair_create(&our_identity_key,
-            ec_key_pair_get_public(our_identity_key_pair),
-            ec_key_pair_get_private(our_identity_key_pair));
-    ck_assert_int_eq(result, 0);
-    SIGNAL_UNREF(our_identity_key_pair);
-
-    session_state_set_pending_key_exchange(state, 42,
-            our_base_key, our_ratchet_key, our_identity_key);
-    SIGNAL_UNREF(our_base_key);
-    SIGNAL_UNREF(our_ratchet_key);
-    SIGNAL_UNREF(our_identity_key);
-
     /* Set pending pre-key */
     ec_public_key *pending_pre_key_base_key = create_test_ec_public_key(global_context);
     uint32_t pre_key_id = 1234;
@@ -240,54 +214,6 @@ void compare_session_states(session_state *state1, session_state *state2,
     }
     if(receiver_chain_ratchet_key2) {
         compare_session_states_receiver_chain(state1, state2, receiver_chain_ratchet_key2);
-    }
-
-    /* Compare pending key exchange */
-    int has_pending_key_exchange1 = session_state_has_pending_key_exchange(state1);
-    int has_pending_key_exchange2 = session_state_has_pending_key_exchange(state2);
-    ck_assert_int_eq(has_pending_key_exchange1, has_pending_key_exchange2);
-
-    if(has_pending_key_exchange1 == 1) {
-        /* Compare sequence numbers */
-        int sequence1 = session_state_get_pending_key_exchange_sequence(state1);
-        int sequence2 = session_state_get_pending_key_exchange_sequence(state2);
-        ck_assert_int_eq(sequence1, sequence2);
-
-        /* Compare base keys */
-        ec_key_pair *base_key1 = session_state_get_pending_key_exchange_base_key(state1);
-        ec_key_pair *base_key2 = session_state_get_pending_key_exchange_base_key(state2);
-
-        ec_public_key *base_key_public1 = ec_key_pair_get_public(base_key1);
-        ec_public_key *base_key_public2 = ec_key_pair_get_public(base_key2);
-        ck_assert_int_eq(ec_public_key_compare(base_key_public1, base_key_public2), 0);
-
-        ec_private_key *base_key_private1 = ec_key_pair_get_private(base_key1);
-        ec_private_key *base_key_private2 = ec_key_pair_get_private(base_key2);
-        ck_assert_int_eq(ec_private_key_compare(base_key_private1, base_key_private2), 0);
-
-        /* Compare ratchet keys */
-        ec_key_pair *ratchet_key1 = session_state_get_pending_key_exchange_ratchet_key(state1);
-        ec_key_pair *ratchet_key2 = session_state_get_pending_key_exchange_ratchet_key(state2);
-
-        ec_public_key *ratchet_key_public1 = ec_key_pair_get_public(ratchet_key1);
-        ec_public_key *ratchet_key_public2 = ec_key_pair_get_public(ratchet_key2);
-        ck_assert_int_eq(ec_public_key_compare(ratchet_key_public1, ratchet_key_public2), 0);
-
-        ec_private_key *ratchet_key_private1 = ec_key_pair_get_private(ratchet_key1);
-        ec_private_key *ratchet_key_private2 = ec_key_pair_get_private(ratchet_key2);
-        ck_assert_int_eq(ec_private_key_compare(ratchet_key_private1, ratchet_key_private2), 0);
-
-        /* Compare identity keys */
-        ratchet_identity_key_pair *identity_key1 = session_state_get_pending_key_exchange_identity_key(state1);
-        ratchet_identity_key_pair *identity_key2 = session_state_get_pending_key_exchange_identity_key(state2);
-
-        ec_public_key *identity_key_public1 = ratchet_identity_key_pair_get_public(identity_key1);
-        ec_public_key *identity_key_public2 = ratchet_identity_key_pair_get_public(identity_key2);
-        ck_assert_int_eq(ec_public_key_compare(identity_key_public1, identity_key_public2), 0);
-
-        ec_private_key *identity_key_private1 = ratchet_identity_key_pair_get_private(identity_key1);
-        ec_private_key *identity_key_private2 = ratchet_identity_key_pair_get_private(identity_key2);
-        ck_assert_int_eq(ec_private_key_compare(identity_key_private1, identity_key_private2), 0);
     }
 
     /* Compare pending pre-key */
