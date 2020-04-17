@@ -847,9 +847,9 @@ int signal_protocol_pre_key_load_key(signal_protocol_store_context *context, ses
     session_pre_key *result_key = 0;
 
     assert(context);
-    assert(context->pre_key_store.load_pre_key);
+    assert(context->pre_key_store.load_pre_key_func);
 
-    result = context->pre_key_store.load_pre_key(
+    result = context->pre_key_store.load_pre_key_func(
             &buffer, pre_key_id,
             context->pre_key_store.user_data);
     if(result < 0) {
@@ -876,7 +876,7 @@ int signal_protocol_pre_key_store_key(signal_protocol_store_context *context, se
     uint32_t id = 0;
 
     assert(context);
-    assert(context->pre_key_store.store_pre_key);
+    assert(context->pre_key_store.store_pre_key_func);
     assert(pre_key);
 
     id = session_pre_key_get_id(pre_key);
@@ -886,7 +886,7 @@ int signal_protocol_pre_key_store_key(signal_protocol_store_context *context, se
         goto complete;
     }
 
-    result = context->pre_key_store.store_pre_key(
+    result = context->pre_key_store.store_pre_key_func(
             id,
             signal_buffer_data(buffer), signal_buffer_len(buffer),
             context->pre_key_store.user_data);
@@ -904,9 +904,9 @@ int signal_protocol_pre_key_contains_key(signal_protocol_store_context *context,
     int result = 0;
 
     assert(context);
-    assert(context->pre_key_store.contains_pre_key);
+    assert(context->pre_key_store.contains_pre_key_func);
 
-    result = context->pre_key_store.contains_pre_key(
+    result = context->pre_key_store.contains_pre_key_func(
             pre_key_id, context->pre_key_store.user_data);
 
     return result;
@@ -917,9 +917,9 @@ int signal_protocol_pre_key_remove_key(signal_protocol_store_context *context, u
     int result = 0;
 
     assert(context);
-    assert(context->pre_key_store.remove_pre_key);
+    assert(context->pre_key_store.remove_pre_key_func);
 
-    result = context->pre_key_store.remove_pre_key(
+    result = context->pre_key_store.remove_pre_key_func(
             pre_key_id, context->pre_key_store.user_data);
 
     return result;
@@ -934,9 +934,9 @@ int signal_protocol_signed_pre_key_load_key(signal_protocol_store_context *conte
     session_signed_pre_key *result_key = 0;
 
     assert(context);
-    assert(context->signed_pre_key_store.load_signed_pre_key);
+    assert(context->signed_pre_key_store.load_signed_pre_key_func);
 
-    result = context->signed_pre_key_store.load_signed_pre_key(
+    result = context->signed_pre_key_store.load_signed_pre_key_func(
             &buffer, signed_pre_key_id,
             context->signed_pre_key_store.user_data);
     if(result < 0) {
@@ -963,7 +963,7 @@ int signal_protocol_signed_pre_key_store_key(signal_protocol_store_context *cont
     uint32_t id = 0;
 
     assert(context);
-    assert(context->signed_pre_key_store.store_signed_pre_key);
+    assert(context->signed_pre_key_store.store_signed_pre_key_func);
     assert(pre_key);
 
     id = session_signed_pre_key_get_id(pre_key);
@@ -973,7 +973,7 @@ int signal_protocol_signed_pre_key_store_key(signal_protocol_store_context *cont
         goto complete;
     }
 
-    result = context->signed_pre_key_store.store_signed_pre_key(
+    result = context->signed_pre_key_store.store_signed_pre_key_func(
             id,
             signal_buffer_data(buffer), signal_buffer_len(buffer),
             context->signed_pre_key_store.user_data);
@@ -991,9 +991,9 @@ int signal_protocol_signed_pre_key_contains_key(signal_protocol_store_context *c
     int result = 0;
 
     assert(context);
-    assert(context->signed_pre_key_store.contains_signed_pre_key);
+    assert(context->signed_pre_key_store.contains_signed_pre_key_func);
 
-    result = context->signed_pre_key_store.contains_signed_pre_key(
+    result = context->signed_pre_key_store.contains_signed_pre_key_func(
             signed_pre_key_id, context->signed_pre_key_store.user_data);
 
     return result;
@@ -1004,9 +1004,9 @@ int signal_protocol_signed_pre_key_remove_key(signal_protocol_store_context *con
     int result = 0;
 
     assert(context);
-    assert(context->signed_pre_key_store.remove_signed_pre_key);
+    assert(context->signed_pre_key_store.remove_signed_pre_key_func);
 
-    result = context->signed_pre_key_store.remove_signed_pre_key(
+    result = context->signed_pre_key_store.remove_signed_pre_key_func(
             signed_pre_key_id, context->signed_pre_key_store.user_data);
 
     return result;
@@ -1024,9 +1024,9 @@ int signal_protocol_identity_get_key_pair(signal_protocol_store_context *context
     ratchet_identity_key_pair *result_key = 0;
 
     assert(context);
-    assert(context->identity_key_store.get_identity_key_pair);
+    assert(context->identity_key_store.get_identity_key_pair_func);
 
-    result = context->identity_key_store.get_identity_key_pair(
+    result = context->identity_key_store.get_identity_key_pair_func(
             &public_buf, &private_buf,
             context->identity_key_store.user_data);
     if(result < 0) {
@@ -1072,10 +1072,11 @@ int signal_protocol_identity_get_local_registration_id(signal_protocol_store_con
     int result = 0;
 
     assert(context);
-    assert(context->identity_key_store.get_local_registration_id);
+    assert(context->identity_key_store.get_local_registration_id_func);
 
-    result = context->identity_key_store.get_local_registration_id(
-            context->identity_key_store.user_data, registration_id);
+    result = context->identity_key_store.get_local_registration_id_func(
+            registration_id,
+            context->identity_key_store.user_data);
 
     return result;
 }
@@ -1086,7 +1087,7 @@ int signal_protocol_identity_save_identity(signal_protocol_store_context *contex
     signal_buffer *buffer = 0;
 
     assert(context);
-    assert(context->identity_key_store.save_identity);
+    assert(context->identity_key_store.save_identity_func);
 
     if(identity_key) {
         result = ec_public_key_serialize(&buffer, identity_key);
@@ -1094,14 +1095,14 @@ int signal_protocol_identity_save_identity(signal_protocol_store_context *contex
             goto complete;
         }
 
-        result = context->identity_key_store.save_identity(
+        result = context->identity_key_store.save_identity_func(
                 address,
                 signal_buffer_data(buffer),
                 signal_buffer_len(buffer),
                 context->identity_key_store.user_data);
     }
     else {
-        result = context->identity_key_store.save_identity(
+        result = context->identity_key_store.save_identity_func(
                 address, 0, 0,
                 context->identity_key_store.user_data);
     }
@@ -1120,14 +1121,14 @@ int signal_protocol_identity_is_trusted_identity(signal_protocol_store_context *
     signal_buffer *buffer = 0;
 
     assert(context);
-    assert(context->identity_key_store.is_trusted_identity);
+    assert(context->identity_key_store.is_trusted_identity_func);
 
     result = ec_public_key_serialize(&buffer, identity_key);
     if(result < 0) {
         goto complete;
     }
 
-    result = context->identity_key_store.is_trusted_identity(
+    result = context->identity_key_store.is_trusted_identity_func(
             address,
             signal_buffer_data(buffer),
             signal_buffer_len(buffer),
@@ -1149,7 +1150,7 @@ int signal_protocol_sender_key_store_key(signal_protocol_store_context *context,
     size_t user_buffer_len = 0;
 
     assert(context);
-    assert(context->sender_key_store.store_sender_key);
+    assert(context->sender_key_store.store_sender_key_func);
     assert(record);
 
     result = sender_key_record_serialize(&buffer, record);
@@ -1163,7 +1164,7 @@ int signal_protocol_sender_key_store_key(signal_protocol_store_context *context,
         user_buffer_len = signal_buffer_len(user_buffer);
     }
 
-    result = context->sender_key_store.store_sender_key(
+    result = context->sender_key_store.store_sender_key_func(
             sender_key_name,
             signal_buffer_data(buffer), signal_buffer_len(buffer),
             user_buffer_data, user_buffer_len,
@@ -1185,9 +1186,9 @@ int signal_protocol_sender_key_load_key(signal_protocol_store_context *context, 
     sender_key_record *result_record = 0;
 
     assert(context);
-    assert(context->sender_key_store.load_sender_key);
+    assert(context->sender_key_store.load_sender_key_func);
 
-    result = context->sender_key_store.load_sender_key(
+    result = context->sender_key_store.load_sender_key_func(
             &buffer, &user_buffer, sender_key_name,
             context->sender_key_store.user_data);
     if(result < 0) {

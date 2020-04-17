@@ -500,7 +500,7 @@ typedef struct signal_protocol_pre_key_store {
      * @retval SG_SUCCESS if the key was found
      * @retval SG_ERR_INVALID_KEY_ID if the key could not be found
      */
-    int (*load_pre_key)(signal_buffer **record, uint32_t pre_key_id, void *user_data);
+    int (*load_pre_key_func)(signal_buffer **record, uint32_t pre_key_id, void *user_data);
 
     /**
      * Store a local serialized PreKey record.
@@ -510,7 +510,7 @@ typedef struct signal_protocol_pre_key_store {
      * @param record_len length of the serialized record
      * @return 0 on success, negative on failure
      */
-    int (*store_pre_key)(uint32_t pre_key_id, uint8_t *record, size_t record_len, void *user_data);
+    int (*store_pre_key_func)(uint32_t pre_key_id, uint8_t *record, size_t record_len, void *user_data);
 
     /**
      * Determine whether there is a committed PreKey record matching the
@@ -519,7 +519,7 @@ typedef struct signal_protocol_pre_key_store {
      * @param pre_key_id A PreKey record ID.
      * @return 1 if the store has a record for the PreKey ID, 0 otherwise
      */
-    int (*contains_pre_key)(uint32_t pre_key_id, void *user_data);
+    int (*contains_pre_key_func)(uint32_t pre_key_id, void *user_data);
 
     /**
      * Delete a PreKey record from local storage.
@@ -527,7 +527,7 @@ typedef struct signal_protocol_pre_key_store {
      * @param pre_key_id The ID of the PreKey record to remove.
      * @return 0 on success, negative on failure
      */
-    int (*remove_pre_key)(uint32_t pre_key_id, void *user_data);
+    int (*remove_pre_key_func)(uint32_t pre_key_id, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being
@@ -550,7 +550,7 @@ typedef struct signal_protocol_signed_pre_key_store {
      * @retval SG_SUCCESS if the key was found
      * @retval SG_ERR_INVALID_KEY_ID if the key could not be found
      */
-    int (*load_signed_pre_key)(signal_buffer **record, uint32_t signed_pre_key_id, void *user_data);
+    int (*load_signed_pre_key_func)(signal_buffer **record, uint32_t signed_pre_key_id, void *user_data);
 
     /**
      * Store a local serialized signed PreKey record.
@@ -560,7 +560,7 @@ typedef struct signal_protocol_signed_pre_key_store {
      * @param record_len length of the serialized record
      * @return 0 on success, negative on failure
      */
-    int (*store_signed_pre_key)(uint32_t signed_pre_key_id, uint8_t *record, size_t record_len, void *user_data);
+    int (*store_signed_pre_key_func)(uint32_t signed_pre_key_id, uint8_t *record, size_t record_len, void *user_data);
 
     /**
      * Determine whether there is a committed signed PreKey record matching
@@ -569,7 +569,7 @@ typedef struct signal_protocol_signed_pre_key_store {
      * @param signed_pre_key_id A signed PreKey record ID.
      * @return 1 if the store has a record for the signed PreKey ID, 0 otherwise
      */
-    int (*contains_signed_pre_key)(uint32_t signed_pre_key_id, void *user_data);
+    int (*contains_signed_pre_key_func)(uint32_t signed_pre_key_id, void *user_data);
 
     /**
      * Delete a SignedPreKeyRecord from local storage.
@@ -577,7 +577,7 @@ typedef struct signal_protocol_signed_pre_key_store {
      * @param signed_pre_key_id The ID of the signed PreKey record to remove.
      * @return 0 on success, negative on failure
      */
-    int (*remove_signed_pre_key)(uint32_t signed_pre_key_id, void *user_data);
+    int (*remove_signed_pre_key_func)(uint32_t signed_pre_key_id, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being
@@ -601,7 +601,7 @@ typedef struct signal_protocol_identity_key_store {
      *     The Signal Protocol library is responsible for freeing this buffer.
      * @return 0 on success, negative on failure
      */
-    int (*get_identity_key_pair)(signal_buffer **public_data, signal_buffer **private_data, void *user_data);
+    int (*get_identity_key_pair_func)(signal_buffer **public_data, signal_buffer **private_data, void *user_data);
 
     /**
      * Return the local client's registration ID.
@@ -613,7 +613,7 @@ typedef struct signal_protocol_identity_key_store {
      *     registration ID, if it was successfully retrieved.
      * @return 0 on success, negative on failure
      */
-    int (*get_local_registration_id)(void *user_data, uint32_t *registration_id);
+    int (*get_local_registration_id_func)(uint32_t *registration_id, void *user_data);
 
     /**
      * Save a remote client's identity key
@@ -628,7 +628,7 @@ typedef struct signal_protocol_identity_key_store {
      * @param key_len Length of the remote client's identity key
      * @return 0 on success, negative on failure
      */
-    int (*save_identity)(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
+    int (*save_identity_func)(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
 
     /**
      * Verify a remote client's identity key.
@@ -646,7 +646,7 @@ typedef struct signal_protocol_identity_key_store {
      * @param key_len Length of the identity key to verify
      * @return 1 if trusted, 0 if untrusted, negative on failure
      */
-    int (*is_trusted_identity)(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
+    int (*is_trusted_identity_func)(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being
@@ -672,7 +672,7 @@ typedef struct signal_protocol_sender_key_store {
      * @param user_record_len length of the application specific data
      * @return 0 on success, negative on failure
      */
-    int (*store_sender_key)(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, uint8_t *user_record, size_t user_record_len, void *user_data);
+    int (*store_sender_key_func)(const signal_protocol_sender_key_name *sender_key_name, uint8_t *record, size_t record_len, uint8_t *user_record, size_t user_record_len, void *user_data);
 
     /**
      * Returns a copy of the sender key record corresponding to the
@@ -688,7 +688,7 @@ typedef struct signal_protocol_sender_key_store {
      * @param sender_key_name the (groupId + senderId + deviceId) tuple
      * @return 1 if the record was loaded, 0 if the record was not found, negative on failure
      */
-    int (*load_sender_key)(signal_buffer **record, signal_buffer **user_record, const signal_protocol_sender_key_name *sender_key_name, void *user_data);
+    int (*load_sender_key_func)(signal_buffer **record, signal_buffer **user_record, const signal_protocol_sender_key_name *sender_key_name, void *user_data);
 
     /**
      * Function called to perform cleanup when the data store context is being
