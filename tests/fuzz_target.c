@@ -9,12 +9,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 signal_context *global_context;
 
 static signal_protocol_address alice_address = {"+14159998888", 12, 1};
-
-static signal_protocol_address bob_address = {"+14151231234", 12, 1};
 
 ec_key_pair *bob_signed_pre_key;
 int32_t bob_signed_pre_key_id;
