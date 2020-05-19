@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <check.h>
+#include <assert.h>
 
 #include "../src/signal_protocol.h"
 #include "curve.h"
@@ -169,7 +170,7 @@ void setup_test_store_context(signal_protocol_store_context **context, signal_co
 
     signal_protocol_store_context *store_context = 0;
     result = signal_protocol_store_context_create(&store_context, global_context);
-    ck_assert_int_eq(result, 0);
+    assert(result == 0);
 
     setup_test_session_store(store_context);
     setup_test_pre_key_store(store_context);

@@ -108,3 +108,23 @@ add_test(test_fingerprint ${TEST_PATH}/test_fingerprint)
 add_executable(test_device_consistency test_device_consistency.c ${common_SRCS})
 target_link_libraries(test_device_consistency ${LIBS})
 add_test(test_device_consistency ${TEST_PATH}/test_device_consistency)
+
+# Build the fuzzer executable
+find_package(Check 0.9.10 REQUIRED)
+find_package(OpenSSL 1.0 REQUIRED)
+set(LIBS 
+	${CHECK_LDFLAGS}
+	${OPENSSL_LIBRARIES}
+	signal-protocol-c
+)
+add_executable(fuzzer "fuzz_target.c" "test_common_openssl.c")
+target_link_libraries(fuzzer ${LIBS})
+set_target_properties(fuzzer
+	PROPERTIES COMPILE_FLAGS "-fsanitize=fuzzer-no-link,address"
+)
+set_target_properties(fuzzer
+	PROPERTIES LINK_FLAGS "-fsanitize=fuzzer,address -z muldefs"
+)
+
+# And run it for 2048 iterations as part of the test suite (should take at most a few seconds) to ensure it works
+add_test(test_fuzzer ${TEST_PATH}/fuzzer -use_value_profile=1 -use_memmem=1 -use_cmp=1 -runs=2048)
