@@ -1609,6 +1609,18 @@ START_TEST(test_isolated_ec_elg_algo)
 // s=c1^x
     ge_p3 Sfull_ctrl;
     ge_scalarmult(&Sfull_ctrl, get_private_data(ec_key_pair_get_private(x)), &C1full);
+
+// check that the shared secret s is the same for Bob and Alice
+    uint8_t* s_pre = malloc(DJB_KEY_LEN);
+    justx3(s_pre,&Sfull);
+    uint8_t* s_post = malloc(DJB_KEY_LEN);
+    justx3(s_post,&Sfull_ctrl);
+    result = memcmp(s_pre,s_post,DJB_KEY_LEN);
+
+    ck_assert_int_eq(result, 0);
+    if (result!=0) {
+        printf("Shared secret doesn't match!\n");
+    } else printf("\t Shared secret is the same.\n"); 
 // compute s^(-1)=c1^(q-x)
     ge_p3 Sfull_inv;
     fe S_inv_z;
