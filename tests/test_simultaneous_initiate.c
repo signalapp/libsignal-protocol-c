@@ -11,6 +11,30 @@
 #include "session_builder.h"
 #include "protocol.h"
 #include "test_common.h"
+#include "../src/curve25519/ed25519/ge.h"
+#include "session_builder.h"
+#include "session_builder_internal.h"
+
+#include <assert.h>
+#include <string.h>
+#include "session_pre_key.h"
+#include "session_record.h"
+#include "session_state.h"
+#include "ratchet.h"
+#include "protocol.h"
+#include "key_helper.h"
+#include "signal_protocol_internal.h"
+#include "generalized/gen_crypto_additions.h"
+#include "crypto_additions.h"
+
+#define DJB_KEY_LEN 32
+
+struct session_builder
+{
+    signal_protocol_store_context *store;
+    const signal_protocol_address *remote_address;
+    signal_context *global_context;
+};
 
 static signal_protocol_address alice_address = {
         "+14159998888", 12, 1
@@ -1486,6 +1510,129 @@ START_TEST(test_repeated_simultaneous_initiate_lost_message_repeated_messages)
 }
 END_TEST
 
+// originally fixed incompatible limb definitions b/n curve25519donna and ed25519,
+// but ultimately unnecessary
+void contract(uint8_t* out, const fe in) {
+	//int64_t limbs[10]={0};
+	//for(int i=0;i<10;i++)
+	//	limbs[i]=in[i];  //write 32B value to 64B spot
+	//fcontract(out,limbs);//condense
+	fe_tobytes(out,in);
+}
+
+void justx3(uint8_t* out, const ge_p3* in) {
+	fe z_inv={0};
+	fe ret={0};
+	fe_invert(z_inv,in->Z);
+	fe_mul(ret,z_inv,in->X); //prepare short x
+	contract(out,ret);
+}
+
+START_TEST(test_isolated_ec_elg_algo)
+{
+    int result = 0;
+
+    /* Create the data stores */
+    signal_protocol_store_context *alice_store = 0;
+    setup_test_store_context(&alice_store, global_context);
+    signal_protocol_store_context *bob_store = 0;
+    setup_test_store_context(&bob_store, global_context);
+
+    /* Create the session builders */
+    session_builder *alice_session_builder = 0;
+    result = session_builder_create(&alice_session_builder, alice_store, &bob_address, global_context);
+    ck_assert_int_eq(result, 0);
+
+    session_builder *bob_session_builder = 0;
+    result = session_builder_create(&bob_session_builder, bob_store, &alice_address, global_context);
+    ck_assert_int_eq(result, 0);
+
+    /* Create the session ciphers */
+    session_cipher *alice_session_cipher = 0;
+    result = session_cipher_create(&alice_session_cipher, alice_store, &bob_address, global_context);
+    ck_assert_int_eq(result, 0);
+
+    session_cipher *bob_session_cipher = 0;
+    result = session_cipher_create(&bob_session_cipher, bob_store, &alice_address, global_context);
+    ck_assert_int_eq(result, 0);
+
+    /* Create the pre key bundles */
+    session_pre_key_bundle *alice_pre_key_bundle =
+        create_alice_pre_key_bundle(alice_store);
+    session_pre_key_bundle *bob_pre_key_bundle =
+        create_bob_pre_key_bundle(bob_store);
+
+    /* Process the pre key bundles */
+    result = session_builder_process_pre_key_bundle(alice_session_builder, bob_pre_key_bundle);
+    ck_assert_int_eq(result, 0);
+
+    result = session_builder_process_pre_key_bundle(bob_session_builder, alice_pre_key_bundle);
+    ck_assert_int_eq(result, 0);
+
+// Key Gen (Alice):
+// pick x at random from {1, ..., q-1} // our_base_key->private_key
+    ec_key_pair *x = 0;
+    result = curve_generate_key_pair(alice_session_builder->global_context, &x);
+    ck_assert_int_eq(result, 0);
+    if (result!=0) {
+        printf("Failed to generate Alice's keypair!\n");
+    }
+// set h=g^x
+    ge_p3 Hfull;
+    ge_scalarmult_base(&Hfull, get_private_data(ec_key_pair_get_private(x)));
+// Encryption (Bob):
+// map msg M to point m - consider done
+    ec_key_pair *m_helper = 0;
+    result = curve_generate_key_pair(bob_session_builder->global_context, &m_helper);
+    if (result!=0) {
+        printf("Failed to generate Bob's keypair!\n");
+    }
+    ge_p3 Mfull;
+    ge_scalarmult_base(&Mfull, get_private_data(ec_key_pair_get_private(m_helper)));
+// pick y at random from {1, ..., q-1}
+    ec_key_pair *y = 0;
+    result = curve_generate_key_pair(bob_session_builder->global_context, &y);
+    if (result!=0) {
+        printf("Failed to generate Bob's keypair!\n");
+    }
+// set s=h^y
+    ge_p3 Sfull;
+    ge_scalarmult(&Sfull, get_private_data(ec_key_pair_get_private(y)), &Hfull);
+// set c1=g^y
+    ge_p3 C1full;
+    ge_scalarmult_base(&C1full, get_private_data(ec_key_pair_get_private(y)));
+// set c2=m*s
+    ge_p3 C2full;
+    ge_p3_add(&C2full, &Mfull, &Sfull);
+// c=(c1, c2)
+// Decryption (Alice):
+// s=c1^x
+    ge_p3 Sfull_ctrl;
+    ge_scalarmult(&Sfull_ctrl, get_private_data(ec_key_pair_get_private(x)), &C1full);
+// compute s^(-1)=c1^(q-x)
+    ge_p3 Sfull_inv;
+    fe S_inv_z;
+    fe_invert(S_inv_z, Sfull.Z);
+    memcpy(Sfull_inv.Z, S_inv_z, sizeof(S_inv_z));
+// m = c2*s^(-1)
+    ge_p3 Mfull_ctrl;
+    ge_p3_add(&Mfull_ctrl, &C2full, &Sfull_inv);
+// map m back to M
+
+// Check decryption:
+    uint8_t* m_pre = malloc(DJB_KEY_LEN);
+    justx3(m_pre,&Mfull);
+    uint8_t* m_post = malloc(DJB_KEY_LEN);
+    justx3(m_post,&Mfull_ctrl);
+    result = memcmp(m_pre,m_post,DJB_KEY_LEN);
+
+    ck_assert_int_eq(result, 0);
+    if (result!=0) {
+        printf("Decryption failed!\n");
+    } else printf("\t Decryption passed.\n"); 
+}
+END_TEST
+
 int is_session_id_equal(signal_protocol_store_context *alice_store, signal_protocol_store_context *bob_store)
 {
     int result = 0;
@@ -1673,6 +1820,7 @@ Suite *simultaneous_initiate_suite(void)
     tcase_add_test(tcase, test_simultaneous_initiate_repeated_messages);
     tcase_add_test(tcase, test_repeated_simultaneous_initiate_repeated_messages);
     tcase_add_test(tcase, test_repeated_simultaneous_initiate_lost_message_repeated_messages);
+    tcase_add_test(tcase, test_isolated_ec_elg_algo);
     suite_add_tcase(suite, tcase);
 
     return suite;
