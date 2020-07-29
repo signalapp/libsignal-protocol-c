@@ -1622,15 +1622,16 @@ START_TEST(test_isolated_ec_elg_algo)
         printf("Shared secret doesn't match!\n");
     } else printf("\t Shared secret is the same.\n"); 
 // compute s^(-1)=c1^(q-x)
-    ge_p3 Sfull_inv;
-    fe S_inv_z;
-    fe_invert(S_inv_z, Sfull.Z);
-    memcpy(Sfull_inv.Z, S_inv_z, sizeof(S_inv_z));
+    ge_p3 Sfull_neg;
+    ge_neg(&Sfull_neg, &Sfull);
+// Check S_neg + S = u
+    ge_p3 sum;
+    ge_p3_add(&sum, &Sfull, &Sfull_neg);
+    printf("\nCheck for ge_isneutral(sum) returned %d.\n", ge_isneutral(&sum));
 // m = c2*s^(-1)
     ge_p3 Mfull_ctrl;
-    ge_p3_add(&Mfull_ctrl, &C2full, &Sfull_inv);
-// map m back to M
-
+    ge_p3_add(&Mfull_ctrl, &C2full, &Sfull_neg);
+// map m back to M - consider done
 // Check decryption:
     uint8_t* m_pre = malloc(DJB_KEY_LEN);
     justx3(m_pre,&Mfull);
